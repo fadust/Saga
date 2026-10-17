@@ -119,7 +119,7 @@ export function reviewProposals(state, revision) {
 
 export function formatCanonEvidence(entries = []) {
     if (!entries.length) return '';
-    const rules = 'CANON BASELINE: source-era facts are background. Accepted NPC identity/development, locks, knowledge and lifecycle govern current portrayal; confirmed death forbids living action. Canon grants neither survival nor knowledge.';
+    const rules = 'CANON BASELINE: source-era facts are background. Accepted NPC identity/development, locks, knowledge and lifecycle govern current portrayal; confirmed death forbids living action. Canon grants neither survival nor knowledge. Unstated survival, life events and power growth stay unknown; do not invent them as backstory. Portrayal style cannot override these restrictions.';
     return ['high', 'normal', 'low'].map(tier => {
         const group = entries.filter(e => (e.tier || 'normal') === tier);
         if (!group.length) return '';
