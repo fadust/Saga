@@ -46,7 +46,7 @@ function setContextWorkbenchPackId(packId) { return dep('setContextWorkbenchPack
 function clearContextWorkbenchSelectedKey() { return dep('clearContextWorkbenchSelectedKey', () => null)(); }
 function renderContextWorkbench() { return dep('renderContextWorkbench', () => null)(); }
 function closeContextWorkbench() { return dep('closeContextWorkbench', () => null)(); }
-function isRuntimeMobileShell() { return dep('isRuntimeMobileShell', () => false)(); }
+
 function refreshContextHeader() { return dep('refreshContextHeader', () => null)(); }
 function clearContextIndexCache() { return dep('clearContextIndexCache', () => null)(); }
 function loadContextIndex(options) { return dep('loadContextIndex', async () => null)(options); }
@@ -383,10 +383,10 @@ function createContextWorkbenchInspector(pack, selected = null, allItems = [], c
 }
 
 export function createContextWorkbenchShell(state = {}, contextIndex = null) {
-    const mobile = isRuntimeMobileShell();
+    const mobile = false;
     const shell = document.createElement('div');
     shell.className = 'saga-lore-workbench-shell saga-context-workbench-shell';
-    if (mobile) shell.classList.add('saga-context-workbench-shell-mobile');
+
     markTourTarget(shell, 'context.workbench.shell');
     shell.addEventListener('click', event => event.stopPropagation());
 
@@ -405,7 +405,6 @@ export function createContextWorkbenchShell(state = {}, contextIndex = null) {
         body.appendChild(createContextWorkbenchContextView(state, contextIndex));
     }
     shell.appendChild(body);
-    if (mobile) shell.appendChild(createContextWorkbenchActions({ mobile: true }));
 
     return shell;
 }
@@ -460,7 +459,7 @@ function createContextWorkbenchHeader(state = {}, contextIndex = null) {
         if (activeTab === id) tab.classList.add('saga-lore-workbench-mode-tab-active');
         tab.textContent = label;
         markTourTarget(tab, `context.workbench.tab.${id}`);
-        addTooltip(tab, getContextWorkbenchTabTooltip(id), isRuntimeMobileShell() ? { showOnHover: false, showOnFocus: false } : {});
+        addTooltip(tab, getContextWorkbenchTabTooltip(id), {});
         tab.addEventListener('click', () => {
             setContextWorkbenchTab(id);
             renderContextWorkbench();
@@ -469,7 +468,7 @@ function createContextWorkbenchHeader(state = {}, contextIndex = null) {
     }
     header.appendChild(tabs);
 
-    if (!isRuntimeMobileShell()) header.appendChild(createContextWorkbenchActions());
+    header.appendChild(createContextWorkbenchActions());
     return header;
 }
 

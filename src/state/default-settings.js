@@ -16,7 +16,7 @@ export const DEFAULT_SETTINGS = {
     enabled: true,
     runtimeWindowOpen: false,
     injectMemo: true,
-    injectContinuity: true,
+    injectContinuity: false,
     autoExtract: false,
     autoApplyDelta: false,
     extractionInterval: 1,
@@ -123,6 +123,11 @@ export const DEFAULT_SETTINGS = {
 
     // Lore matrix
     injectLore: true,
+    semanticCanonEnabled: false,
+    semanticCanonApiUrl: 'http://127.0.0.1:1234',
+    semanticCanonModel: 'text-embedding-embeddinggemma-2',
+    semanticCanonTokenBudget: 1000,
+    layer1Sources: {},
     maxLoreEntriesInMemo: 0, // 0 = unlimited; users control injection by muting entries
     // Accepted Lore Matrix is intentionally uncapped. UI uses paging so hundreds of entries remain usable.
     maxLoreEntriesInMatrix: 0,
@@ -200,7 +205,6 @@ export const DEFAULT_SETTINGS = {
     loreAutomationCurationWordBudget: 1800,
     loreAutomationRunJournalLimit: 20,
     loreAutomationLevelsMigrated20260615: true,
-    mobileLorecardListTagsVisible: false,
 
     // Prompt injection transport / placement
     // 'extension_prompt' uses SillyTavern setExtensionPrompt with role/depth.
@@ -308,7 +312,6 @@ Direct injection block:
         'session.instructions': true,
         'session.automationMode.section': true,
         'session.storyMaker': true,
-        'session.storyMaker.mobile': true,
         'context.commandCenter': false,
         'context.loadedLoredecks': false,
         'context.advancedBrief': true,
@@ -366,8 +369,6 @@ Direct injection block:
         'continuity.prompt.objectives': true,
     },
 
-
-
     // Continuity scan prompt overrides. These are appended to the extractor prompt only
     // when the corresponding section is enabled/tracked for the current chat.
     continuitySectionPrompts: {
@@ -421,4 +422,3 @@ Direct injection block:
     loreMaxTokens: 8192,
     loreRepairOnParseFail: true,
 };
-

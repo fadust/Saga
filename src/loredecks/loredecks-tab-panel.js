@@ -36,9 +36,7 @@ import {
     runBusyAction,
     toast,
 } from '../ui/runtime-ui-kit.js';
-import {
-    isRuntimeMobileShell,
-} from '../runtime/runtime-shell.js';
+
 import {
     preserveInputFocusAfterRender,
 } from '../ui/input-focus-preservation.js';
@@ -101,7 +99,7 @@ function waitForNextUiFrame() {
 
 export function renderLoredecksTab(container, state) {
     const basic = isBasicExperienceMode();
-    const mobile = isRuntimeMobileShell();
+    const mobile = false;
     const canonDb = getCanonLoreDatabaseSync();
     container.classList.add('saga-operator-tab', 'saga-loredecks-operator-tab');
     if (!canonDb) {
@@ -121,11 +119,6 @@ export function renderLoredecksTab(container, state) {
 
     const creatorProjects = !basic ? createLoredeckCreatorProjectsSection(state, { mobile }) : null;
 
-    if (mobile) {
-        if (creatorProjects) container.appendChild(creatorProjects.section);
-        return;
-    }
-
     if (creatorProjects) container.appendChild(creatorProjects.section);
 }
 
@@ -133,14 +126,14 @@ function createLoredeckCreatorProjectsSection(state = getState(), options = {}) 
     const mobile = options.mobile === true;
     const projectModels = getLoredeckCreatorProjectShelfModels(state);
     const creatorSection = createCollapsibleSection(
-        mobile ? 'loredecks.creatorProjects.mobile' : 'loredecks.creatorProjects',
+        'loredecks.creatorProjects',
         'In-Progress Deck Maker Projects',
         projectModels.length ? `${projectModels.length} unfinished` : 'none',
-        mobile && projectModels.length > 0,
+        false,
         () => createLoredeckCreatorProjectShelf(state, projectModels),
         {
             tooltip: 'Resume unfinished Generated Lorepacks from the staged Deck Maker.',
-            className: mobile ? 'saga-loredeck-creator-projects-mobile-section' : '',
+            className: '',
         }
     );
     creatorSection.dataset.sagaCreatorProjectCount = String(projectModels.length);
@@ -645,7 +638,7 @@ function moveLoredeckCreatorProjectsToFolder(jobIds = [], folderId = 'unfiled', 
 function createLoredeckCreatorProjectCard(model = {}, options = {}) {
     const card = document.createElement('div');
     card.className = 'saga-loredeck-creator-project-card';
-    const mobile = isRuntimeMobileShell();
+    const mobile = false;
     markTourTarget(card, 'loredecks.creator.projectCard');
     if (options.active) card.classList.add('saga-loredeck-creator-project-card-active');
     if (options.selected) card.classList.add('saga-loredeck-creator-project-card-selected');

@@ -489,13 +489,8 @@ export function createEmptyMessage(text) {
 
 function shouldUseFloatingTooltip(el, options = {}) {
     if (options.floating === false) return false;
-    if (isMobileRuntimeTooltipSurface(el)) return false;
-    return String(el?.tagName || '').toUpperCase() !== 'SELECT';
-}
 
-function isMobileRuntimeTooltipSurface(el) {
-    if (!el?.closest) return false;
-    return !!el.closest('.saga-runtime-mobile, .saga-mobile-touch, .saga-mobile-touch-surface, .saga-loredeck-library-shell-mobile, .saga-context-workbench-shell-mobile, .saga-loredeck-creator-workbench-shell-mobile');
+    return String(el?.tagName || '').toUpperCase() !== 'SELECT';
 }
 
 export function addTooltip(el, text, options = {}) {
@@ -518,10 +513,7 @@ export function addTooltip(el, text, options = {}) {
 }
 
 function showFloatingTooltip(anchor) {
-    if (isMobileRuntimeTooltipSurface(anchor)) {
-        hideFloatingTooltip();
-        return;
-    }
+
     const text = anchor?.dataset?.sagaTooltip;
     if (!text) return;
     tooltipAnchor = anchor;

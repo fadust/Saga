@@ -809,7 +809,7 @@ async function runContextPacketStage(session = {}, state = {}, options = {}) {
     const signal = getStoryOpenerRunSignal(run, options);
     try {
         if (isStoryOpenerSignalAborted(signal)) throw new DOMException('Story Maker generation was cancelled.', 'AbortError');
-        const result = await buildStoryOpenerContextPacket(working, state);
+        const result = await buildStoryOpenerContextPacket(working, state, { signal });
         if (isStoryOpenerSignalAborted(signal)) throw new DOMException('Story Maker generation was cancelled.', 'AbortError');
         working = normalizeStoryOpenerSession({
             ...working,

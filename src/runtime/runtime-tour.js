@@ -334,8 +334,8 @@ function repositionSagaTourPopover() {
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 1024;
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 768;
     const mobile = viewportWidth <= 640;
-    popover.style.width = mobile ? `${Math.max(220, viewportWidth - (margin * 2))}px` : '';
-    popover.style.maxHeight = mobile ? `${Math.max(180, Math.round(viewportHeight * 0.42))}px` : '';
+    popover.style.width = '';
+    popover.style.maxHeight = '';
     const popRect = popover.getBoundingClientRect();
 
     if (!target) {
@@ -370,14 +370,7 @@ function repositionSagaTourPopover() {
     };
     const centeredLeft = rect.left + (rect.width / 2) - (popWidth / 2);
     const centeredTop = rect.top + (rect.height / 2) - (popHeight / 2);
-    const candidates = mobile
-        ? [
-            makeCandidate('bottom', centeredLeft, rect.bottom + margin, 0),
-            makeCandidate('top', centeredLeft, rect.top - popHeight - margin, 1),
-            makeCandidate('bottom-sheet', margin, viewportHeight - popHeight - margin, 2),
-            makeCandidate('top-sheet', margin, margin, 3),
-        ]
-        : [
+    const candidates = [
             makeCandidate('right', rect.right + margin, centeredTop, 0),
             makeCandidate('left', rect.left - popWidth - margin, centeredTop, 1),
             makeCandidate('bottom', centeredLeft, rect.bottom + margin, 2),

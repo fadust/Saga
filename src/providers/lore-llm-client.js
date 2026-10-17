@@ -896,6 +896,7 @@ async function sendViaConnectionProfile(cfg, systemPrompt, userPrompt, options =
     });
 
     async function send(messages, lengthMultiplier = 1) {
+        options.onRequest?.();
         return await service.sendRequest(
             cfg.profileId,
             messages,
@@ -919,6 +920,7 @@ async function sendViaConnectionProfile(cfg, systemPrompt, userPrompt, options =
     ];
 
     let raw = await send(messages, 1);
+    options.onUsage?.(raw?.usage || null);
     if (options.signal?.aborted) throw new DOMException('Request aborted', 'AbortError');
     assertLoreOutputSize(typeof raw === 'string' ? raw : JSON.stringify(raw), options);
     if (raw && typeof raw === 'object') assertNotTokenLimitedResponse(cfg, raw, options);
@@ -937,7 +939,7 @@ async function sendViaConnectionProfile(cfg, systemPrompt, userPrompt, options =
     }
 
     const reasoning = raw && typeof raw === 'object' ? extractChatCompletionReasoning(raw) : '';
-    if (reasoning) {
+    if (reasoning && options.maxRetries !== 0) {
         emitLoreRequestProgress(options, {
             type: 'reasoning',
             phase: 'reasoning',
@@ -1025,9 +1027,12 @@ export function getLoreProviderCapabilities(kind = 'lore') {
 
 export async function sendLoreRequest(systemPrompt, userPrompt, options = {}) {
     const cfg = getProviderSettings(options.providerKind || 'lore');
-    const capabilities = getLoreProviderCapabilities(cfg.kind);
+    if (options.profileId) Object.assign(cfg, { provider: 'profile', profileId: options.profileId });
+    const capabilities = options.profileId
+        ? { provider: 'profile', cancellation: 'signal', maxConcurrency: 1, routeKey: `st:profile:${cfg.profileId}` }
+        : getLoreProviderCapabilities(cfg.kind);
     return runBoundedLoreRequest(capabilities.routeKey, async requestOptions => {
-        const validation = await validateLoreProviderConfigurationAsync(cfg.kind);
+        const validation = options.profileId ? validateProviderShape(cfg) : await validateLoreProviderConfigurationAsync(cfg.kind);
         if (!validation.ok) throw createProviderResourceError('provider_missing_config', validation.message);
         throwIfLoreRequestAborted(requestOptions.signal);
         const prompts = prepareLoreRequestPrompts(systemPrompt, userPrompt, requestOptions);

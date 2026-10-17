@@ -9,11 +9,7 @@ import {
     toast,
     wireOverlayBackdropClose,
 } from '../ui/runtime-ui-kit.js';
-import {
-    getRuntimeMobileActiveSubview,
-    isRuntimeMobileShell,
-    pushRuntimeMobileSubview,
-} from '../runtime/runtime-shell.js';
+
 import { formatLoredeckContextUpdatedAt } from './context-formatters.js';
 import { getContextIndexSync, loadContextIndex } from './context-index.js';
 
@@ -71,7 +67,7 @@ export function renderContextTab(container, state) {
     const settings = getSettings();
     const basic = isBasicExperienceMode();
     const contextIndex = getContextIndexSync();
-    const mobileSubview = getContextMobileSubview(state, settings);
+    const mobileSubview = null;
     container.classList.add('saga-operator-tab', 'saga-context-operator-tab');
     if (!contextIndex) {
         loadContextIndex()
@@ -84,7 +80,6 @@ export function renderContextTab(container, state) {
         'Set and audit where this chat sits inside each loaded Loredeck.'
     ));
     container.appendChild(createContextOperatorSummary(state, contextIndex, { mobileSubview }));
-    if (isRuntimeMobileShell() && !mobileSubview) return;
 
     const contextStack = getContextWorkbenchStack(state);
     const contextProposals = getContextResolutionProposals(state);
@@ -111,18 +106,6 @@ export function renderContextTab(container, state) {
     if (!basic) container.appendChild(createContextAdvancedBriefSection(state));
 }
 
-function getContextMobileSubview(state, settings = getSettings()) {
-    if (!isRuntimeMobileShell()) return null;
-    return getRuntimeMobileActiveSubview(state?.lorePanel, 'context', settings);
-}
-
-function openContextMobileDetails() {
-    pushRuntimeMobileSubview('context', {
-        id: 'context-details',
-        title: 'Context Details',
-    });
-}
-
 function getContextOperatorActionLabel(actionId, label, nextActionId = '') {
     void actionId;
     void nextActionId;
@@ -136,7 +119,7 @@ function getContextOperatorActionClass(actionId, nextActionId = '', fallbackClas
 
 function createContextOperatorSummary(state = {}, contextIndex = null, options = {}) {
     const basic = isBasicExperienceMode();
-    const mobileSubview = options.mobileSubview || null;
+    const mobileSubview = null;
     const stack = getContextWorkbenchStack(state);
     const proposals = getContextResolutionProposals(state);
     const selectedRows = stack
@@ -144,7 +127,7 @@ function createContextOperatorSummary(state = {}, contextIndex = null, options =
         .filter(row => hasSelectedLoredeckContext(row.context));
     const primary = selectedRows[0] || (stack[0] ? { item: stack[0], context: getLoredeckContext(state, stack[0].packId) } : null);
     const primarySummary = primary ? formatContextSummary(primary.context) : 'No loaded Loredeck Context.';
-    const mobileRoot = isRuntimeMobileShell() && !mobileSubview;
+    const mobileRoot = false;
     const nextActionId = '';
 
     const card = document.createElement('div');
@@ -177,24 +160,7 @@ function createContextOperatorSummary(state = {}, contextIndex = null, options =
         chips.appendChild(createStatusPill(`${proposals.length} proposal${proposals.length === 1 ? '' : 's'}`, 'Reasoner-backed Context proposals waiting for review.', { tone: proposals.length ? 'review' : 'muted', kind: 'count' }));
     }
     header.appendChild(chips);
-    if (mobileRoot) {
-        header.classList.add('saga-operator-summary-header-tappable');
-        header.tabIndex = 0;
-        header.setAttribute('role', 'button');
-        addTooltip(header, 'Tap to open loaded Loredeck Context rows and resolver diagnostics.');
-        header.setAttribute('aria-label', 'Open Context Details');
-        const openDetails = event => {
-            if (event?.target?.closest?.('button, input, select, textarea, label, a')) return;
-            openContextMobileDetails();
-        };
-        header.addEventListener('click', openDetails);
-        header.addEventListener('keydown', event => {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
-            event.preventDefault();
-            openDetails(event);
-        });
-        markTourTarget(header, 'context.operator.details');
-    }
+
     card.appendChild(header);
 
     const actions = document.createElement('div');
@@ -869,13 +835,13 @@ export function renderContextProposalReview() {
 
 export function createContextProposalReviewShell(state = {}) {
     const basic = isBasicExperienceMode();
-    const mobile = isRuntimeMobileShell();
+    const mobile = false;
     const proposals = getContextResolutionProposals(state);
     const meta = state?.lorePanel?.contextResolutionProposalMeta || {};
     const shell = document.createElement('div');
     shell.className = 'saga-lore-workbench-shell saga-context-proposal-review-shell';
     if (basic) shell.classList.add('saga-context-proposal-review-shell-basic');
-    if (mobile) shell.classList.add('saga-context-proposal-review-shell-mobile');
+
     shell.addEventListener('click', event => event.stopPropagation());
 
     const header = document.createElement('div');
@@ -905,7 +871,7 @@ export function createContextProposalReviewShell(state = {}) {
     titleWrap.appendChild(chips);
     header.appendChild(titleWrap);
 
-    if (!mobile) header.appendChild(createContextProposalReviewActions(proposals));
+    header.appendChild(createContextProposalReviewActions(proposals));
     shell.appendChild(header);
 
     const body = document.createElement('div');
@@ -917,7 +883,7 @@ export function createContextProposalReviewShell(state = {}) {
     }
     body.appendChild(list);
     shell.appendChild(body);
-    if (mobile) shell.appendChild(createContextProposalReviewActions(proposals, { mobile: true }));
+
     return shell;
 }
 

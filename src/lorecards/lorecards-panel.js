@@ -56,14 +56,7 @@ import {
 import {
     truncateCleanText as truncateText,
 } from '../runtime/runtime-formatters.js';
-import {
-    getDefaultRuntimeLorecardsStage,
-    getRuntimeLorecardsStage,
-    getRuntimeMobileLorecardsStage,
-    isRuntimeMobileShell,
-    selectRuntimeLorecardsStage,
-    selectRuntimeMobileLorecardsStage,
-} from '../runtime/runtime-shell.js';
+import { getDefaultRuntimeLorecardsStage, getRuntimeLorecardsStage, selectRuntimeLorecardsStage } from "../runtime/runtime-shell.js";
 import {
     createLoreTimelineCard,
     openLoreTimeline,
@@ -84,7 +77,6 @@ let loreWorkbenchPendingQuery = '';
 let loreWorkbenchFocusSelector = '';
 let loreWorkbenchFocusSnapshot = null;
 const loreWorkbenchScrollState = { accepted: 0, pending: 0 };
-let mobileLorecardsStageRenderToken = 0;
 
 const LORE_AUTOMATION_SETTING_KEYS = Object.freeze([
     'loreAutomationMode',
@@ -159,7 +151,7 @@ const LORE_ENTRY_TYPE_FILTERS = Object.freeze([
 ]);
 
 const LORECARD_LIFECYCLE_STAGES = Object.freeze(['suggested', 'pending', 'accepted', 'active']);
-const MOBILE_LORECARD_LIFECYCLE_STAGES = Object.freeze(['generate', 'automation', 'lore']);
+
 const ACCEPTED_LORE_VISIBLE_BATCH_SIZE = 200;
 const LORECARD_LIFECYCLE_STAGE_META = Object.freeze({
     lore: {
@@ -213,6 +205,7 @@ const LORECARD_WORKSPACE_SORTS = Object.freeze([
 ]);
 const LORE_SOURCE_FILTER_OPTIONS = Object.freeze([
     ['all', 'Source: All'],
+    ['layer1', 'Canon consequences'],
     ['canon-db', 'Canon Database'],
     ['story-generation', 'Story Scan'],
     ['creator', 'Deck Maker Drafts'],
@@ -315,6 +308,14 @@ function openLoreWorkbench(mode = 'accepted') {
     loreWorkbenchMode = mode === 'pending' ? 'pending' : 'accepted';
     ensureLoreWorkbenchSelection(getState());
     renderLoreWorkbench();
+}
+
+export function openLayer1Review(revision) {
+    if (revision) { const state = getState(); state.layer1ReviewRevision = revision; saveState(state); }
+    loreWorkbenchPendingQuery = '';
+    setPendingReviewTypeFilter('all');
+    setPendingReviewSourceFilter('all');
+    openLoreWorkbench('pending');
 }
 
 export function closeLoreWorkbench() {
@@ -704,6 +705,9 @@ function createPendingLoreWorkbenchView(state) {
 function createPendingWorkbenchControls(state) {
     const controls = document.createElement('div');
     controls.className = 'saga-lore-workbench-controls';
+    if (state.layer1ReviewRevision) controls.appendChild(createButton('Show all pending proposals', 'Clear this analysis filter.', () => {
+        const current = getState(); delete current.layer1ReviewRevision; saveState(current); refreshLoreWorkbench();
+    }, 'saga-small-button'));
 
     const search = document.createElement('input');
     search.type = 'text';
@@ -897,13 +901,12 @@ function getFilteredPendingLoreRows(state = getState(), options = {}) {
     const pending = normalizeLoreMatrix(state?.pendingLoreEntries || []);
     const typeFilter = getPendingReviewTypeFilter(state);
     const sourceFilter = getPendingReviewSourceFilter(state);
-    const lifecycleStage = isRuntimeMobileShell()
-        ? normalizeMobileLorecardLifecycleStage(options.lifecycleStage)
-        : normalizeLorecardLifecycleStage(options.lifecycleStage);
+    const lifecycleStage = normalizeLorecardLifecycleStage(options.lifecycleStage);
     return pending
         .map((entry, index) => ({ entry, index }))
+        .filter(row => !state.layer1ReviewRevision || row.entry.extensions?.layer1?.revision === state.layer1ReviewRevision)
         .filter(row => lifecycleStage !== 'suggested' || isSuggestedPendingLore(row.entry))
-        .filter(row => lifecycleStage !== 'pending' || isRuntimeMobileShell() || !isSuggestedPendingLore(row.entry))
+        .filter(row => lifecycleStage !== 'pending' || !isSuggestedPendingLore(row.entry))
         .filter(row => sourceFilter === 'all' || getLoreSourceBucket(row.entry) === sourceFilter)
         .filter(row => entryMatchesLoreTypeFilter(row.entry, typeFilter));
 }
@@ -925,6 +928,7 @@ function createWorkbenchTextCell(primary, secondary = '') {
 }
 
 function getLoreSourceBucketLabel(bucket) {
+    if (bucket === 'layer1') return 'Canon consequence';
     if (bucket === 'canon-db') return 'Canon DB';
     if (bucket === 'story-generation') return 'Story Scan';
     if (bucket === 'creator') return 'Deck Maker';
@@ -934,39 +938,14 @@ function getLoreSourceBucketLabel(bucket) {
 }
 
 export function createPendingLoreBulkControls(pendingLore, state) {
+    if (state.layer1ReviewRevision) pendingLore = pendingLore.filter(entry => entry.extensions?.layer1?.revision === state.layer1ReviewRevision);
     const selectedIds = getPendingReviewSelectedIds(state);
     const pendingRows = pendingLore.map((entry, index) => ({ entry, index, id: getLoreReviewId(entry) })).filter(row => row.id);
     const pendingIds = pendingRows.map(row => row.id);
     const selectedCount = pendingIds.filter(id => selectedIds.has(id)).length;
-    const mobileShell = isRuntimeMobileShell();
 
     const card = document.createElement('div');
     card.className = 'saga-runtime-card saga-review-bulk-card';
-    if (mobileShell) {
-        card.classList.add('saga-pending-mobile-action-tray');
-        const header = document.createElement('div');
-        header.className = 'saga-review-selected-summary';
-        const label = document.createElement('span');
-        label.textContent = `${selectedCount} selected`;
-        header.appendChild(label);
-        card.appendChild(header);
-
-        const actions = document.createElement('div');
-        actions.className = 'saga-primary-actions';
-        actions.appendChild(createButton(selectedCount > 1 ? 'Accept Selected' : 'Accept', 'Accepts selected Pending Review entries into Accepted Lorecards.', () => {
-            applySelectedPendingLore(pendingIds);
-        }, 'saga-primary-button'));
-        actions.appendChild(createButton(selectedCount > 1 ? 'Reject Selected' : 'Reject', 'Rejects selected Pending Review entries.', () => {
-            dismissSelectedPendingLore(pendingIds);
-        }, 'saga-small-button'));
-        actions.appendChild(createButton('Clear', 'Clears the current Pending Review selection.', () => {
-            clearPendingReviewSelection();
-            refreshPanelBody({ preserveScroll: true });
-            refreshLoreWorkbench();
-        }, 'saga-small-button'));
-        card.appendChild(actions);
-        return card;
-    }
 
     const header = document.createElement('label');
     header.className = 'saga-review-select-all';
@@ -1015,15 +994,6 @@ export function createPendingLoreBulkControls(pendingLore, state) {
     return card;
 }
 
-function createPendingLoreBatchSelectionHint(count = 0) {
-    const hint = document.createElement('div');
-    hint.className = 'saga-runtime-help saga-pending-selection-hint';
-    hint.textContent = count > 1
-        ? 'Tap pending cards to select them and show review actions.'
-        : 'Tap the pending card to select it and show review actions.';
-    addTooltip(hint, 'Mobile Accept/Reject controls appear after at least one Pending Review entry is selected.');
-    return hint;
-}
 
 function getPendingLoreTargetEntry(entry = {}) {
     const generation = entry.extensions?.sagaGeneration || {};
@@ -1172,75 +1142,20 @@ export function createPendingLoreReviewCard(entry, index, selected = false, opti
     const allowSelection = workspaceRow ? false : (!basicReview || options.allowSelection === true);
     const reviewId = getLoreReviewId(entry);
     const editId = entry.id || reviewId;
-    const mobileShell = isRuntimeMobileShell();
-    const editing = (!workspaceRow || mobileShell) && getState()?.lorePanel?.selectedEntryId === editId;
+    const editing = (!workspaceRow) && getState()?.lorePanel?.selectedEntryId === editId;
     const card = document.createElement('div');
     card.className = 'saga-lore-entry-card saga-lore-entry-pending saga-pending-review-entry-card';
     markTourTarget(card, 'lore.pending.entry');
     if (selected) card.classList.add('saga-review-lore-card-selected');
     if (basicReview) card.classList.add('saga-basic-review-entry-card');
-    if (mobileShell) card.classList.add('saga-pending-review-entry-card-tappable');
 
     const inspectPendingEntry = () => {
         loreWorkbenchSelectedId = reviewId;
-        if (mobileShell) {
-            setPanelState({ selectedEntryId: editId }, { deferSave: true });
-            refreshPanelBody({ preserveScroll: true });
-            refreshLoreWorkbench();
-        } else if (basicReview) openAdvancedLoreReview('pending');
+        if (basicReview) openAdvancedLoreReview('pending');
         else openLoreWorkbench('pending');
     };
 
-    if (mobileShell) {
-        let longPressTimer = null;
-        let longPressFired = false;
-        let longPressStartX = 0;
-        let longPressStartY = 0;
-        const interactiveSelector = 'button, input, select, textarea, label, a';
-        const clearLongPressTimer = () => {
-            if (longPressTimer) {
-                clearTimeout(longPressTimer);
-                longPressTimer = null;
-            }
-        };
-        card.addEventListener('pointerdown', (event) => {
-            if (event.target?.closest?.(interactiveSelector)) return;
-            longPressFired = false;
-            longPressStartX = event.clientX || 0;
-            longPressStartY = event.clientY || 0;
-            clearLongPressTimer();
-            longPressTimer = setTimeout(() => {
-                longPressFired = true;
-                inspectPendingEntry();
-            }, 520);
-        });
-        card.addEventListener('pointermove', (event) => {
-            if (!longPressTimer) return;
-            const deltaX = Math.abs((event.clientX || 0) - longPressStartX);
-            const deltaY = Math.abs((event.clientY || 0) - longPressStartY);
-            if (deltaX > 8 || deltaY > 8) clearLongPressTimer();
-        });
-        card.addEventListener('pointerup', clearLongPressTimer);
-        card.addEventListener('pointerleave', clearLongPressTimer);
-        card.addEventListener('pointercancel', clearLongPressTimer);
-        card.addEventListener('contextmenu', (event) => {
-            if (event.target?.closest?.(interactiveSelector)) return;
-            event.preventDefault();
-            clearLongPressTimer();
-            inspectPendingEntry();
-        });
-        card.addEventListener('click', (event) => {
-            if (event.target?.closest?.(interactiveSelector)) return;
-            if (longPressFired) {
-                longPressFired = false;
-                return;
-            }
-            const currentSelected = isPendingLoreSelected(getState(), entry);
-            togglePendingReviewSelection(reviewId, !currentSelected);
-            refreshPanelBody({ preserveScroll: true });
-            refreshLoreWorkbench();
-        });
-    } else if (workspaceRow) {
+    if (workspaceRow) {
         card.addEventListener('click', (event) => {
             if (event.target?.closest?.('button, input, select, textarea, label, a')) return;
             setPanelState({ selectedEntryId: editId }, { deferSave: true });
@@ -1281,11 +1196,9 @@ export function createPendingLoreReviewCard(entry, index, selected = false, opti
         appendEntrySourceAndContextBadges(meta, entry);
         meta.appendChild(createBadge(`P${Number(entry.priority || 50)}`, 'Priority used for sorting, injection preference, and canon-lore suggestion limits.', { tone: 'relevance', kind: 'metadata' }));
         if (generation.operation) meta.appendChild(createBadge(`Op: ${generation.operation}`, 'Generated lore operation proposed by the story-lore scan.', { tone: 'source', kind: 'source', maxChars: 34 }));
-    } else if (mobileShell) {
-        appendEntrySourceAndContextBadges(meta, entry);
     }
     appendPendingLoreReviewStateChips(meta, entry, inspectPendingEntry);
-    if (!basicReview || mobileShell) {
+    if (!basicReview) {
         if (generation.qualityRoute || reviewMeta.qualityRoute) meta.appendChild(createBadge(`Quality: ${generation.qualityRoute || reviewMeta.qualityRoute}`, generation.qualityReason || reviewMeta.qualityReason || 'Generated-lore quality route.', { tone: 'warning', kind: 'severity', maxChars: 34 }));
         if (generation.similarityRoute || reviewMeta.reviewRoute) meta.appendChild(createBadge(`Route: ${generation.similarityRoute || reviewMeta.reviewRoute}`, generation.similarityReason || reviewMeta.similarityReason || 'Similarity/update routing result.', { tone: 'source', kind: 'source', maxChars: 34 }));
     }
@@ -1294,7 +1207,7 @@ export function createPendingLoreReviewCard(entry, index, selected = false, opti
     if (!basicReview) {
         meta.appendChild(createSpellMetadataBadges(entry));
     }
-    if ((!basicReview || mobileShell) && entry.confidence !== undefined) meta.appendChild(createBadge(`confidence ${entry.confidence}`, 'Model-provided confidence for this entry.', { tone: Number(entry.confidence) >= 0.75 ? 'success' : 'warning', kind: 'metadata' }));
+    if ((!basicReview) && entry.confidence !== undefined) meta.appendChild(createBadge(`confidence ${entry.confidence}`, 'Model-provided confidence for this entry.', { tone: Number(entry.confidence) >= 0.75 ? 'success' : 'warning', kind: 'metadata' }));
     card.appendChild(meta);
 
     const targetId = generation.targetEntryId || reviewMeta.targetEntryId || '';
@@ -1338,7 +1251,7 @@ export function createPendingLoreReviewCard(entry, index, selected = false, opti
         card.appendChild(constraints);
     }
 
-    if (!mobileShell || workspaceRow) {
+    {
         const actionsRow = document.createElement('div');
         actionsRow.className = 'saga-primary-actions saga-pending-entry-actions';
         markTourTarget(actionsRow, 'lore.pending.actions');
@@ -1673,6 +1586,7 @@ function getEntrySourceSearchText(entry = {}) {
 }
 
 function getLoreSourceOriginMeta(entry = {}) {
+    if (entry.extensions?.layer1) return { bucket: 'layer1', label: 'Source: Canon consequence', tooltip: 'Unsupported consequence awaiting user approval; its source basis is revision-checked.' };
     const sourceText = getEntrySourceSearchText(entry);
     const userEdited = !!entry?.userEdited;
     if (/loredeck_creator|creator lorecard|creator draft|creator_entry|creator entry/.test(sourceText)) {
@@ -2726,12 +2640,11 @@ export function createAutoRelevanceCard(state) {
     const loreAutomationStyle = normalizeLoreAutomationStyle(settings.loreAutomationStyle || 'balanced');
     const loreAutomationCadenceMode = normalizeLoreAutomationCadenceModeValue(settings.loreAutomationCadenceMode || 'auto');
     const automationConfigEnabled = loreAutomationCadenceMode === 'auto';
-    const mobileShell = isRuntimeMobileShell();
     const card = document.createElement('div');
     card.className = 'saga-runtime-card saga-auto-relevance-card';
-    if (mobileShell) card.classList.add('saga-mobile-lore-automation-card');
+
     markTourTarget(card, 'lore.autoRelevance');
-    card.appendChild(createLoreAutomationHeader(mobileShell ? 'Automate' : 'Lore Automation', settings));
+    card.appendChild(createLoreAutomationHeader('Lore Automation', settings));
 
     const modeRow = document.createElement('div');
     modeRow.className = 'saga-lore-automation-choice-row';
@@ -3792,107 +3705,12 @@ function createEditablePriorityBadge(entry) {
     return wrap;
 }
 
-function createMobileLorecardEditorTagsControl(entry = {}) {
-    const field = document.createElement('div');
-    field.className = 'saga-lore-editor-field saga-mobile-lorecard-tags-editor';
-
-    const title = document.createElement('span');
-    title.textContent = 'Tags';
-    field.appendChild(title);
-
-    const tags = (Array.isArray(entry.tags) ? entry.tags : String(entry.tags || '').split(','))
-        .map(normalizeLoreTag)
-        .filter(Boolean);
-    const chips = document.createElement('div');
-    chips.className = 'saga-mobile-lorecard-tags-chip-stack';
-    field.appendChild(chips);
-
-    const addRow = document.createElement('div');
-    addRow.className = 'saga-mobile-lorecard-tags-add-row';
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'saga-lore-editor-input saga-mobile-lorecard-tags-input';
-    input.placeholder = 'Add tag';
-    input.setAttribute('aria-label', 'Add Lorecard tag');
-    for (const eventName of ['click', 'mousedown', 'pointerdown', 'touchstart']) {
-        input.addEventListener(eventName, event => event.stopPropagation(), eventName === 'touchstart' ? { passive: true } : undefined);
-    }
-    const addButton = document.createElement('button');
-    addButton.type = 'button';
-    addButton.className = 'saga-runtime-button saga-mobile-lorecard-tags-add-button';
-    addButton.textContent = '+';
-    addButton.setAttribute('aria-label', 'Add Lorecard tag');
-    addRow.appendChild(input);
-    addRow.appendChild(addButton);
-    field.appendChild(addRow);
-
-    const render = () => {
-        chips.innerHTML = '';
-        if (!tags.length) {
-            const empty = document.createElement('div');
-            empty.className = 'saga-runtime-help saga-mobile-lorecard-tags-empty';
-            empty.textContent = 'No tags yet.';
-            chips.appendChild(empty);
-            return;
-        }
-        tags.forEach((tag, index) => {
-            const chip = document.createElement('div');
-            chip.className = 'saga-mobile-lorecard-tags-chip saga-chip saga-chip-tag';
-            const label = document.createElement('span');
-            label.className = 'saga-mobile-lorecard-tags-chip-label';
-            label.textContent = tag;
-            chip.appendChild(label);
-            const remove = document.createElement('button');
-            remove.type = 'button';
-            remove.className = 'saga-mobile-lorecard-tags-remove saga-runtime-icon-button';
-            remove.textContent = 'x';
-            remove.setAttribute('aria-label', `Remove tag: ${tag}`);
-            remove.addEventListener('click', (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                tags.splice(index, 1);
-                render();
-            });
-            chip.appendChild(remove);
-            chips.appendChild(chip);
-        });
-    };
-
-    const addTag = () => {
-        const clean = normalizeLoreTag(input.value);
-        if (!clean) return;
-        if (!tags.some(tag => tag.toLowerCase() === clean.toLowerCase())) tags.push(clean);
-        input.value = '';
-        render();
-    };
-
-    addButton.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        addTag();
-        input.focus();
-    });
-    input.addEventListener('keydown', (event) => {
-        if (event.key !== 'Enter') return;
-        event.preventDefault();
-        event.stopPropagation();
-        addTag();
-    });
-
-    render();
-    return {
-        element: field,
-        getTags: () => tags.slice(),
-    };
-}
-
 function createEditableLoreEntryEditor(entry, options = {}) {
     const basicReview = !!options.basicReview;
     const pendingReview = !!options.pendingReview || entry?.isPending === true;
-    const mobileEditor = options.mobileEditor === true;
     const editor = document.createElement('div');
     editor.className = 'saga-lore-entry-editor';
-    if (mobileEditor) editor.classList.add('saga-mobile-lorecard-entry-editor');
+
     addTooltip(editor, pendingReview
         ? 'Edit this Pending Review entry directly. Changes are saved only when you click Save Entry.'
         : (basicReview ? 'Edit this Accepted Lorecard directly. Changes are saved only when you click Save Entry.' : 'Edit this Accepted Lorecard directly. Changes are saved only when you click Save Entry.'));
@@ -3943,9 +3761,8 @@ function createEditableLoreEntryEditor(entry, options = {}) {
     const prioritySelect = basicReview ? null : createNewLoreSelect(metaGrid, 'Priority', getLorePriorityValues().map(String), String(entry.priority || 50));
     const truthSelect = basicReview ? null : createNewLoreSelect(metaGrid, 'Truth', getLoreRegistryValues('truthStatuses', ['true', 'rumor', 'contested', 'hidden']), entry.truthStatus || 'true');
     const revealSelect = basicReview ? null : createNewLoreSelect(metaGrid, 'Reveal', getLoreRegistryValues('revealPolicies', ['private', 'public', 'do_not_reveal']), entry.revealPolicy || 'private');
-    const tagsControl = mobileEditor ? createMobileLorecardEditorTagsControl(entry) : null;
-    const tagsInput = tagsControl ? null : makeField('Tags', (entry.tags || []).join(', '), false);
-    if (tagsControl) editor.appendChild(tagsControl.element);
+    const tagsControl = null;
+    const tagsInput = makeField('Tags', (entry.tags || []).join(', '), false);
 
     const actions = document.createElement('div');
     actions.className = 'saga-primary-actions';
@@ -3967,7 +3784,7 @@ function createEditableLoreEntryEditor(entry, options = {}) {
             priority: prioritySelect ? Number(prioritySelect.value) || 50 : raw.priority,
             truthStatus: truthSelect ? truthSelect.value : raw.truthStatus,
             revealPolicy: revealSelect ? revealSelect.value : raw.revealPolicy,
-            tags: tagsControl ? tagsControl.getTags() : tagsInput.value,
+            tags: tagsInput.value,
             content: {
                 ...(raw.content || {}),
                 fact,
@@ -4155,13 +3972,10 @@ function createWandEditIcon() {
 function openAcceptedLoreEntryEditor(entryId = '') {
     const id = String(entryId || '').trim();
     if (!id) return;
-    if (isRuntimeMobileShell()) {
-        openAcceptedLorecardMobileEditor(id);
-        return;
-    }
+
     setPanelState({
         selectedEntryId: id,
-        mobileLifecycleStage: 'accepted',
+        lifecycleStage: 'accepted',
         lorecardWorkspaceEditId: id,
     }, { deferSave: true });
     refreshPanelBody({ preserveScroll: true });
@@ -4238,39 +4052,9 @@ function createLorecardElevateToggleButton(entry = {}, options = {}) {
     return button;
 }
 
-function createMobileLorecardStatusControls(entry = {}) {
-    const controls = document.createElement('div');
-    controls.className = 'saga-mobile-lorecard-status-controls';
-    const currentTier = getLifecycleStatus(entry);
-    const elevated = isElevatedLorecardEntry(entry);
-    const nextTier = getNextRelevanceTier(currentTier);
-    const relevance = document.createElement('button');
-    relevance.type = 'button';
-    relevance.className = 'saga-mobile-lorecard-relevance-status';
-    relevance.dataset.sagaRelevance = currentTier;
-    relevance.setAttribute('aria-label', elevated
-        ? 'Elevated: effective High relevance. Remove Elevation before changing relevance.'
-        : `${LORE_RELEVANCE_LABELS[currentTier] || 'Normal'} relevance. Tap to change to ${LORE_RELEVANCE_LABELS[nextTier] || nextTier}.`);
-    relevance.setAttribute('aria-disabled', elevated ? 'true' : 'false');
-    addTooltip(relevance, elevated
-        ? 'Elevated temporarily forces High relevance. Remove Elevation before changing relevance.'
-        : `${LORE_RELEVANCE_LABELS[currentTier] || 'Normal'} relevance. Tap to cycle to ${LORE_RELEVANCE_LABELS[nextTier] || nextTier}.`);
-    relevance.appendChild(createRelevanceDotIcon(currentTier));
-    relevance.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (elevated) return;
-        cycleLorecardRelevanceByTap(entry.id, relevance);
-    });
-    controls.appendChild(relevance);
-    controls.appendChild(createLorecardMuteToggleButton(entry, { className: 'saga-mobile-lorecard-mute-toggle' }));
-    return controls;
-}
-
 export function createEntryCard(entry, state, options = {}) {
     const basicReview = !!options.basicReview;
     const workspaceRow = options.workspaceRow === true;
-    const mobileShell = isRuntimeMobileShell();
     const activeNow = isActiveLorecardEntry(entry);
     const elevatedNow = isElevatedLorecardEntry(entry);
     const card = document.createElement('div');
@@ -4284,16 +4068,15 @@ export function createEntryCard(entry, state, options = {}) {
     if (elevatedNow) card.classList.add('saga-lore-entry-elevated');
     if (entry.isSuppressed) card.classList.add('saga-lore-entry-suppressed');
     if (getAcceptedSelectionSet(state).has(entry.id)) card.classList.add('saga-lore-entry-selected');
-    if (mobileShell && !entry.isPending) card.classList.add('saga-lore-entry-card-tappable');
 
     const panelState = state?.lorePanel || {};
-    const isExpanded = !workspaceRow && !mobileShell && panelState.selectedEntryId === entry.id;
+    const isExpanded = !workspaceRow && panelState.selectedEntryId === entry.id;
     if (isExpanded) card.classList.add('saga-lore-entry-expanded');
 
     const headerRow = document.createElement('div');
     headerRow.className = 'saga-lore-entry-header';
 
-    if (!basicReview && !mobileShell && !workspaceRow) {
+    if (!basicReview && !workspaceRow) {
         const selectBox = document.createElement('input');
         selectBox.type = 'checkbox';
         selectBox.className = 'saga-lore-entry-select';
@@ -4315,15 +4098,13 @@ export function createEntryCard(entry, state, options = {}) {
     const titleEl = document.createElement('span');
     titleEl.className = 'saga-lore-entry-title';
     titleEl.textContent = entry.title || '(Untitled lore)';
-    addTooltip(titleEl, mobileShell
-        ? 'Double-tap this Accepted Lorecard to toggle Elevation. Long-press to edit it. Tap the relevance dots to change tier.'
-        : (workspaceRow ? 'Select this Accepted Lorecard to review its details.' : 'Use Edit to open this Accepted Lorecard.'));
+    addTooltip(titleEl, workspaceRow ? 'Select this Accepted Lorecard to review its details.' : 'Use Edit to open this Accepted Lorecard.');
     titleWrap.appendChild(titleEl);
     headerRow.appendChild(titleWrap);
 
     const actions = document.createElement('div');
     actions.className = 'saga-lore-entry-actions';
-    if (!mobileShell && !entry.isPending) {
+    if (!entry.isPending) {
         actions.appendChild(createLorecardEditButton(entry, {
             className: workspaceRow ? 'saga-lorecard-row-edit-toggle' : 'saga-lorecard-entry-edit-toggle',
             tooltip: basicReview ? 'Open this Accepted Lorecard for editing.' : 'Edit this Accepted Lorecard.',
@@ -4346,9 +4127,7 @@ export function createEntryCard(entry, state, options = {}) {
         }));
     }
 
-    if (mobileShell && !entry.isPending) {
-        headerRow.appendChild(createMobileLorecardStatusControls(entry));
-    } else if (actions.children.length && (!mobileShell || workspaceRow)) {
+    if (actions.children.length) {
         headerRow.appendChild(actions);
     }
     card.appendChild(headerRow);
@@ -4376,26 +4155,17 @@ export function createEntryCard(entry, state, options = {}) {
     if (entry.isSuppressed) metaRow.appendChild(createBadge('muted', 'Muted entries are excluded from injection.', { tone: 'muted', kind: 'status' }));
     card.appendChild(metaRow);
 
-    if (!workspaceRow && (!mobileShell || shouldShowLorecardListTags())) {
-        card.appendChild(createTagsRow(entry, { editable: !mobileShell }));
+    if (!workspaceRow) {
+        card.appendChild(createTagsRow(entry, { editable: true }));
     }
 
     const factEl = document.createElement('div');
     factEl.className = 'saga-lore-entry-fact';
     factEl.textContent = truncateText(entry.fact || '', 140);
-    addTooltip(factEl, mobileShell
-        ? 'Lore fact text. Double-tap the card to toggle Elevation, tap the relevance dots to change tier, or long-press to edit.'
-        : (workspaceRow ? 'Lore fact text. Select this Lorecard to review its details.' : 'Lore fact text. Use Edit to review the full entry.'));
+    addTooltip(factEl, workspaceRow ? 'Lore fact text. Select this Lorecard to review its details.' : 'Lore fact text. Use Edit to review the full entry.');
     card.appendChild(factEl);
 
-    if (mobileShell && !entry.isPending) {
-        const interactiveSelector = 'button, input, select, textarea, label, a';
-        attachMobileLorecardGestures(card, entry.id, { interactiveSelector });
-        card.addEventListener('contextmenu', (event) => {
-            if (event.target?.closest?.(interactiveSelector)) return;
-            event.preventDefault();
-        });
-    } else {
+    {
         card.addEventListener('click', (event) => {
             if (event.target?.closest?.('button, input, select, textarea, label, a')) return;
             if (!workspaceRow) return;
@@ -4482,7 +4252,7 @@ export function createEntryCard(entry, state, options = {}) {
 }
 
 function shouldShowLorecardListTags() {
-    return !isRuntimeMobileShell() || getSettings().mobileLorecardListTagsVisible === true;
+    return true;
 }
 
 function createTagsRow(entry, options = {}) {
@@ -4601,11 +4371,11 @@ function normalizeLorecardLifecycleStage(value = '') {
     return LORECARD_LIFECYCLE_STAGES.includes(stage) ? stage : '';
 }
 
-function normalizeMobileLorecardLifecycleStage(value = '') {
+function normalizeLorecardWorkflowStage(value = '') {
     const stage = String(value || '').trim().toLowerCase();
     if (stage === 'pending' || stage === 'accepted' || stage === 'active' || stage === 'approved' || stage === 'cards') return 'lore';
     if (stage === 'suggested' || stage === 'generation') return 'generate';
-    return MOBILE_LORECARD_LIFECYCLE_STAGES.includes(stage) ? stage : '';
+    return ['generate', 'automation', 'lore'].includes(stage) ? stage : '';
 }
 
 function isSuggestedPendingLore(entry = {}) {
@@ -4803,7 +4573,7 @@ function setLorecardWorkspaceSort(sort = 'alphabetical') {
         lorecardWorkspaceSort: normalizeLorecardWorkspaceSort(sort),
         acceptedLoreVisibleLimit: getAcceptedLoreInitialVisibleLimit(),
     }, { deferSave: true });
-    if (isRuntimeMobileShell() && refreshLorecardWorkspaceListOnly()) return;
+
     refreshPanelBody({ preserveScroll: true });
 }
 
@@ -4823,7 +4593,6 @@ function refreshLorecardWorkspaceListOnly() {
     }
     renderLorecardWorkspaceList(list, state, getFilteredLorecardWorkspaceRows(state), {
         basic: isBasicExperience(),
-        mobileShell: isRuntimeMobileShell(),
     });
     scheduleAcceptedLoreLayoutUpdate();
     return true;
@@ -4881,7 +4650,6 @@ function createLorecardWorkspaceSortToggle(activeSort = 'alphabetical') {
 
 function createLorecardWorkspace(state = getState(), options = {}) {
     const basic = !!options.basic;
-    const mobileShell = isRuntimeMobileShell();
     const rows = getLorecardWorkspaceRows(state);
     const filteredRows = getFilteredLorecardWorkspaceRows(state);
     const counts = getLorecardWorkspaceCounts(rows);
@@ -4892,7 +4660,7 @@ function createLorecardWorkspace(state = getState(), options = {}) {
 
     const workspace = document.createElement('div');
     workspace.className = 'saga-runtime-card saga-lorecard-workspace';
-    if (mobileShell) workspace.classList.add('saga-lorecard-workspace-mobile');
+
     markTourTarget(workspace, 'lore.workspace');
 
     const status = document.createElement('div');
@@ -4901,24 +4669,6 @@ function createLorecardWorkspace(state = getState(), options = {}) {
     status.appendChild(createStatusPill(`High: ${counts.high}`, 'Accepted Lorecards in the High relevance tier, including Elevated cards.', { tone: counts.high ? 'selected' : 'muted', kind: 'count' }));
     status.appendChild(createStatusPill(`Elevated: ${counts.elevated}`, 'Accepted Lorecards temporarily forced to High relevance and protected from Lore Automation.', { tone: counts.elevated ? 'success' : 'muted', kind: 'count' }));
     if (selectedCount) status.appendChild(createStatusPill(`Selected: ${selectedCount}`, 'Lorecards selected for contextual actions.', { tone: 'source', kind: 'count' }));
-    if (mobileShell) {
-        const header = document.createElement('div');
-        header.className = 'saga-lorecard-workspace-header';
-        const titleWrap = document.createElement('div');
-        titleWrap.className = 'saga-operator-summary-title-wrap';
-        const title = document.createElement('div');
-        title.className = 'saga-runtime-card-title saga-operator-summary-title';
-        title.textContent = 'Lore';
-        addTooltip(title, 'Unified Lorecards workspace. Pending, High, Elevated, and Muted are states in one list.');
-        titleWrap.appendChild(title);
-        const subtitle = document.createElement('div');
-        subtitle.className = 'saga-runtime-help saga-operator-summary-subtitle';
-        subtitle.textContent = 'Needs review, High, Elevated, and Muted cards in one list.';
-        titleWrap.appendChild(subtitle);
-        header.appendChild(titleWrap);
-        header.appendChild(status);
-        workspace.appendChild(header);
-    }
 
     const toolbar = document.createElement('div');
     toolbar.className = 'saga-lorecard-workspace-toolbar';
@@ -4943,7 +4693,7 @@ function createLorecardWorkspace(state = getState(), options = {}) {
     searchRow.appendChild(createLorecardWorkspaceSortToggle(activeSort));
     toolbar.appendChild(searchRow);
 
-    if (!mobileShell) {
+    {
         const utilities = document.createElement('div');
         utilities.className = 'saga-lorecard-workspace-utilities';
         if (!basic) {
@@ -4975,10 +4725,10 @@ function createLorecardWorkspace(state = getState(), options = {}) {
     markTourTarget(list, 'lore.cards.list');
     list.setAttribute('role', 'region');
     list.setAttribute('aria-label', 'Lorecards');
-    renderLorecardWorkspaceList(list, state, filteredRows, { basic, mobileShell });
+    renderLorecardWorkspaceList(list, state, filteredRows, { basic });
     body.appendChild(list);
 
-    if (!mobileShell) {
+    {
         body.appendChild(createLorecardWorkspaceDetailPane(state, filteredRows, { basic }));
     }
     workspace.appendChild(body);
@@ -5006,9 +4756,7 @@ function renderLorecardWorkspaceList(list, state, rows, options = {}) {
     summary.className = 'saga-lore-list-summary saga-lorecard-workspace-list-summary';
     const summaryCount = document.createElement('span');
     summaryCount.className = 'saga-lorecard-workspace-list-summary-count';
-    summaryCount.textContent = options.mobileShell
-        ? 'Long-press Cards to Edit'
-        : safeRows.length > visible.length
+    summaryCount.textContent = safeRows.length > visible.length
             ? `Showing ${visible.length} of ${safeRows.length} Lorecards.`
             : `Showing ${safeRows.length} Lorecard${safeRows.length === 1 ? '' : 's'}.`;
     summary.appendChild(summaryCount);
@@ -5147,30 +4895,21 @@ function createAcceptedLorecardWorkspaceDetail(entry = {}, options = {}) {
 }
 
 function getRecommendedLorecardLifecycleStage(state = getState(), stats = getLorecardLifecycleStats(state)) {
-    if (isRuntimeMobileShell()) {
-        void state;
-        void stats;
-        return 'generate';
-    }
-    if (!isRuntimeMobileShell() && stats.suggestedCount) return 'suggested';
+
+    if (stats.suggestedCount) return 'suggested';
     if (stats.pendingCount) return 'pending';
     return 'accepted';
 }
 
 function getLorecardLifecycleStage(state = getState(), stats = getLorecardLifecycleStats(state)) {
-    const savedStage = isRuntimeMobileShell()
-        ? normalizeMobileLorecardLifecycleStage(state?.lorePanel?.mobileLifecycleStage)
-        : normalizeLorecardLifecycleStage(state?.lorePanel?.mobileLifecycleStage);
+    const savedStage = normalizeLorecardLifecycleStage(state?.lorePanel?.lifecycleStage);
     return savedStage
         || getRecommendedLorecardLifecycleStage(state, stats);
 }
 
 function openLorecardLifecycleStage(stage) {
-    const normalized = (isRuntimeMobileShell() ? normalizeMobileLorecardLifecycleStage(stage) : normalizeLorecardLifecycleStage(stage)) || (isRuntimeMobileShell() ? 'generate' : 'accepted');
-    if (isRuntimeMobileShell()) {
-        selectRuntimeMobileLorecardsStage(normalized);
-        return;
-    }
+    const normalized = (normalizeLorecardLifecycleStage(stage)) || ('accepted');
+
     const workspaceFilter = normalized === 'pending'
         ? 'needs-review'
         : normalized === 'active'
@@ -5178,7 +4917,7 @@ function openLorecardLifecycleStage(stage) {
             : 'all';
     setPanelState({
         lorecardsStage: normalized === 'suggested' ? 'generate' : 'lore',
-        mobileLifecycleStage: normalized === 'suggested' ? 'generate' : 'lore',
+        lifecycleStage: normalized === 'suggested' ? 'generate' : 'lore',
         lorecardWorkspaceFilter: workspaceFilter,
         pendingReviewVisibleLimit: 10,
         acceptedLoreVisibleLimit: getAcceptedLoreInitialVisibleLimit(),
@@ -5262,7 +5001,7 @@ function createLorecardActiveSetSection(state = getState(), stats = getLorecardL
         section.appendChild(available);
     }
 
-    if (!isRuntimeMobileShell()) {
+    {
         const actions = document.createElement('div');
         actions.className = 'saga-primary-actions saga-lore-active-set-actions';
         actions.appendChild(createButton('Accepted Lorecards', 'Show the Accepted Lorecards list for relevance, mute, Elevate, and edit controls.', () => openLorecardLifecycleStage('accepted'), hasAcceptedEntries ? 'saga-primary-button' : ''));
@@ -5316,334 +5055,10 @@ function appendActiveSetStateChips(main, entry = {}, mode = 'active') {
     main.appendChild(row);
 }
 
-function makeActiveSetItemMobileEditable(item, entryId = '') {
-    const id = String(entryId || '').trim();
-    if (!item || !id) return item;
-    if (!isRuntimeMobileShell()) return item;
-    item.classList.add('saga-lore-active-set-item-tappable');
-    item.dataset.sagaAcceptedLoreId = id;
-    const press = attachMobileLorecardLongPress(item, () => openAcceptedLorecardMobileEditor(id, { selectionLock: true }));
-    item.addEventListener('click', (event) => {
-        if (event.target?.closest?.('button, input, select, textarea, label, a')) return;
-        if (press.consume()) return;
-        event.preventDefault();
-        event.stopPropagation();
-    });
-    return item;
-}
-
-function getNextRelevanceTier(tier = 'normal') {
-    const index = RELEVANCE_SEGMENT_ORDER.indexOf(normalizeLoreRelevance(tier));
-    const safeIndex = index >= 0 ? index : RELEVANCE_SEGMENT_ORDER.indexOf('normal');
-    return RELEVANCE_SEGMENT_ORDER[(safeIndex + 1) % RELEVANCE_SEGMENT_ORDER.length] || 'normal';
-}
-
-function playMobileLorecardRelevanceFeedback(card, direction = 0, tier = 'normal') {
-    if (!card) return;
-    const raised = direction > 0;
-    const normalizedTier = normalizeLoreRelevance(tier);
-    card.dataset.sagaGestureFeedback = raised ? 'up' : 'down';
-    card.dataset.sagaGestureTier = normalizedTier;
-    card.classList.remove('saga-mobile-lorecard-gesture-up', 'saga-mobile-lorecard-gesture-down');
-    card.classList.add('saga-mobile-lorecard-gesture-feedback', raised ? 'saga-mobile-lorecard-gesture-up' : 'saga-mobile-lorecard-gesture-down');
-    const status = card.querySelector?.('.saga-mobile-lorecard-relevance-status');
-    status?.classList?.add?.('saga-mobile-lorecard-relevance-flash');
-    try { navigator.vibrate?.(12); } catch (_) {}
-    setTimeout(() => {
-        card.classList.remove('saga-mobile-lorecard-gesture-feedback', 'saga-mobile-lorecard-gesture-up', 'saga-mobile-lorecard-gesture-down');
-        status?.classList?.remove?.('saga-mobile-lorecard-relevance-flash');
-        delete card.dataset.sagaGestureFeedback;
-        delete card.dataset.sagaGestureTier;
-    }, 520);
-}
-
-function cycleLorecardRelevanceByTap(entryId = '', source = null) {
-    const id = String(entryId || '').trim();
-    if (!id) return false;
-    const state = getState();
-    const currentEntry = normalizeLoreMatrix(state?.loreMatrix || []).find(entry => entry.id === id);
-    if (!currentEntry) return false;
-    if (isLoreEntryElevated(state, id)) return false;
-    const currentTier = getBaseLorecardRelevance(currentEntry);
-    const nextTier = getNextRelevanceTier(currentTier);
-    if (nextTier === currentTier) return false;
-    const updated = updateLoreEntryById(id, raw => ({
-        ...raw,
-        relevance: nextTier,
-        lifecycle: {
-            ...(raw.lifecycle || {}),
-            status: '',
-            computedStatus: '',
-            manualOverride: false,
-            reason: `Relevance changed to ${nextTier} by mobile tap.`,
-            lastEvaluatedAt: Date.now(),
-        },
-        extensions: {
-            ...(raw.extensions || {}),
-            autoRelevance: {
-                ...(raw.extensions?.autoRelevance || {}),
-                mode: 'manual',
-                confidence: 1,
-                reason: `User set relevance to ${nextTier} by mobile tap.`,
-                updatedAt: Date.now(),
-            },
-        },
-    }), {
-        deferSave: true,
-        timelineType: 'relevance',
-        timelineSummary: `Set Lorecard relevance to ${nextTier} by mobile tap.`,
-        loreAutomationDisableReason: LORE_AUTOMATION_MANUAL_DISABLE_REASONS.relevance,
-    });
-    if (!updated) return false;
-    const direction = RELEVANCE_SEGMENT_ORDER.indexOf(nextTier) > RELEVANCE_SEGMENT_ORDER.indexOf(currentTier) ? 1 : -1;
-    const card = source?.closest?.('.saga-lore-entry-card') || source;
-    playMobileLorecardRelevanceFeedback(card, direction, nextTier);
-    setTimeout(() => refreshAcceptedLoreSurfaces(id, { sortSensitive: true }), 180);
-    return true;
-}
-
-function toggleLorecardElevationByGesture(entryId = '', card = null) {
-    const id = String(entryId || '').trim();
-    if (!id) return false;
-    const updated = toggleElevateEntry(id, { deferSave: true });
-    if (!updated) return false;
-    if (card) {
-        card.classList.add('saga-mobile-lorecard-elevation-pop');
-        setTimeout(() => card.classList.remove('saga-mobile-lorecard-elevation-pop'), 420);
-    }
-    setTimeout(() => refreshAcceptedLoreSurfaces(id, { sortSensitive: true }), 120);
-    return true;
-}
-
-function getMobileLorecardSelectionElement(node) {
-    if (!node) return null;
-    if (node.nodeType === 1) return node;
-    return node.parentElement || null;
-}
-
-function clearMobileLorecardNativeSelection(scope = null) {
-    const getSelection = typeof window !== 'undefined' && typeof window.getSelection === 'function'
-        ? () => window.getSelection()
-        : (typeof document !== 'undefined' && typeof document.getSelection === 'function' ? () => document.getSelection() : null);
-    const selection = getSelection?.();
-    if (!selection?.rangeCount) return;
-    const targetScope = scope || document.getElementById('saga-mobile-lorecard-editor') || document.getElementById('saga-lore-panel');
-    const anchor = getMobileLorecardSelectionElement(selection.anchorNode);
-    const focus = getMobileLorecardSelectionElement(selection.focusNode);
-    const insideScope = !targetScope || (anchor && targetScope.contains(anchor)) || (focus && targetScope.contains(focus));
-    if (insideScope) selection.removeAllRanges();
-}
-
-function armMobileLorecardEditorSelectionLock(overlay, shell) {
-    if (!overlay || !shell) return;
-    shell.classList.add('saga-mobile-lorecard-editor-selection-locked');
-    overlay.dataset.sagaSelectionLocked = 'true';
-    clearMobileLorecardNativeSelection(overlay);
-    requestAnimationFrame(() => clearMobileLorecardNativeSelection(overlay));
-    setTimeout(() => clearMobileLorecardNativeSelection(overlay), 80);
-
-    let released = false;
-    let safetyTimer = null;
-    const releaseEvents = ['pointerup', 'pointercancel', 'touchend', 'touchcancel', 'mouseup'];
-    const release = () => {
-        if (released) return;
-        released = true;
-        if (safetyTimer) clearTimeout(safetyTimer);
-        for (const eventName of releaseEvents) {
-            document.removeEventListener(eventName, release, true);
-        }
-        clearMobileLorecardNativeSelection(overlay);
-        requestAnimationFrame(() => {
-            clearMobileLorecardNativeSelection(overlay);
-            shell.classList.remove('saga-mobile-lorecard-editor-selection-locked');
-            overlay.dataset.sagaSelectionLocked = 'false';
-        });
-    };
-    for (const eventName of releaseEvents) {
-        document.addEventListener(eventName, release, true);
-    }
-    safetyTimer = setTimeout(release, 3200);
-}
-
-function attachMobileLorecardGestures(element, entryId = '', options = {}) {
-    if (!element || !entryId) return { consume: () => false };
-    const interactiveSelector = options.interactiveSelector || 'button, input, select, textarea, label, a';
-    let pointerId = null;
-    let startX = 0;
-    let startY = 0;
-    let committed = false;
-    let longPressFired = false;
-    let scrolling = false;
-    let moved = false;
-    let longPressTimer = null;
-    let lastTapAt = 0;
-
-    const clearLongPress = () => {
-        if (longPressTimer) clearTimeout(longPressTimer);
-        longPressTimer = null;
-        element.classList.remove('saga-mobile-lorecard-longpress-armed');
-    };
-    const isInteractiveTarget = event => !!event.target?.closest?.(interactiveSelector);
-    const resetPointer = () => {
-        pointerId = null;
-        clearLongPress();
-    };
-    const commitLongPress = (event = null) => {
-        if (longPressFired || committed || scrolling) return false;
-        longPressFired = true;
-        clearLongPress();
-        element.classList.add('saga-mobile-lorecard-longpress-commit');
-        setTimeout(() => element.classList.remove('saga-mobile-lorecard-longpress-commit'), 220);
-        event?.preventDefault?.();
-        event?.stopPropagation?.();
-        clearMobileLorecardNativeSelection(element);
-        openAcceptedLorecardMobileEditor(entryId, { selectionLock: true });
-        return true;
-    };
-
-    element.addEventListener('pointerdown', (event) => {
-        if (isInteractiveTarget(event)) return;
-        pointerId = event.pointerId;
-        startX = event.clientX || 0;
-        startY = event.clientY || 0;
-        committed = false;
-        longPressFired = false;
-        scrolling = false;
-        moved = false;
-        clearLongPress();
-        const rect = element.getBoundingClientRect?.();
-        if (rect?.width && rect?.height) {
-            element.style?.setProperty?.('--saga-press-x', `${Math.max(0, Math.min(100, ((startX - rect.left) / rect.width) * 100))}%`);
-            element.style?.setProperty?.('--saga-press-y', `${Math.max(0, Math.min(100, ((startY - rect.top) / rect.height) * 100))}%`);
-        }
-        element.classList.add('saga-mobile-lorecard-longpress-armed');
-        longPressTimer = setTimeout(() => {
-            commitLongPress();
-        }, Number(options.longPressMs) || 560);
-    });
-
-    element.addEventListener('pointermove', (event) => {
-        if (pointerId !== event.pointerId || longPressFired || committed) return;
-        const deltaX = (event.clientX || 0) - startX;
-        const deltaY = (event.clientY || 0) - startY;
-        const absX = Math.abs(deltaX);
-        const absY = Math.abs(deltaY);
-        if (absX > 6 || absY > 6) moved = true;
-        if (absY > 18 && absY > absX * 1.15) {
-            scrolling = true;
-            clearLongPress();
-            return;
-        }
-        if (absX > 10 || absY > 10) clearLongPress();
-    });
-
-    element.addEventListener('pointerup', (event) => {
-        if (pointerId !== event.pointerId) return;
-        const shouldConsiderTap = !committed && !longPressFired && !scrolling && !moved;
-        resetPointer();
-        if (!shouldConsiderTap || isInteractiveTarget(event)) return;
-        const now = Date.now();
-        if (now - lastTapAt <= 320) {
-            lastTapAt = 0;
-            event.preventDefault?.();
-            event.stopPropagation?.();
-            toggleLorecardElevationByGesture(entryId, element);
-            return;
-        }
-        lastTapAt = now;
-    });
-    element.addEventListener('pointercancel', resetPointer);
-    element.addEventListener('pointerleave', (event) => {
-        if (pointerId === event.pointerId && !committed) resetPointer();
-    });
-    element.addEventListener('contextmenu', (event) => {
-        if (isInteractiveTarget(event)) return;
-        event.preventDefault?.();
-        if (longPressFired) return;
-        commitLongPress(event);
-    });
-    return {
-        consume() {
-            return committed || longPressFired;
-        },
-    };
-}
-
-function attachMobileLorecardLongPress(element, handler, options = {}) {
-    let longPressTimer = null;
-    let longPressFired = false;
-    let longPressStartX = 0;
-    let longPressStartY = 0;
-    const interactiveSelector = options.interactiveSelector || 'button, input, select, textarea, label, a';
-    const armedClass = options.armedClass || 'saga-mobile-lorecard-longpress-armed';
-    const commitClass = options.commitClass || 'saga-mobile-lorecard-longpress-commit';
-    const clearLongPressState = () => {
-        element.classList?.remove?.(armedClass);
-    };
-    const fireLongPress = (event) => {
-        if (longPressFired) return;
-        longPressTimer = null;
-        longPressFired = true;
-        clearLongPressState();
-        element.classList?.add?.(commitClass);
-        setTimeout(() => element.classList?.remove?.(commitClass), 220);
-        event?.preventDefault?.();
-        event?.stopPropagation?.();
-        clearMobileLorecardNativeSelection(element);
-        handler?.(event);
-    };
-    const clearLongPressTimer = () => {
-        if (longPressTimer) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-        }
-        clearLongPressState();
-    };
-    const isInteractiveTarget = event => !!event.target?.closest?.(interactiveSelector);
-    element.addEventListener('pointerdown', (event) => {
-        if (isInteractiveTarget(event)) return;
-        longPressFired = false;
-        longPressStartX = event.clientX || 0;
-        longPressStartY = event.clientY || 0;
-        clearLongPressTimer();
-        const rect = element.getBoundingClientRect?.();
-        if (rect?.width && rect?.height) {
-            const pressX = Math.max(0, Math.min(100, ((longPressStartX - rect.left) / rect.width) * 100));
-            const pressY = Math.max(0, Math.min(100, ((longPressStartY - rect.top) / rect.height) * 100));
-            element.style?.setProperty?.('--saga-press-x', `${pressX}%`);
-            element.style?.setProperty?.('--saga-press-y', `${pressY}%`);
-        }
-        element.classList?.add?.(armedClass);
-        longPressTimer = setTimeout(() => fireLongPress(event), Number(options.delayMs) || 520);
-    });
-    element.addEventListener('pointermove', (event) => {
-        if (!longPressTimer) return;
-        const deltaX = Math.abs((event.clientX || 0) - longPressStartX);
-        const deltaY = Math.abs((event.clientY || 0) - longPressStartY);
-        if (deltaX > 8 || deltaY > 8) clearLongPressTimer();
-    });
-    element.addEventListener('pointerup', clearLongPressTimer);
-    element.addEventListener('pointerleave', clearLongPressTimer);
-    element.addEventListener('pointercancel', clearLongPressTimer);
-    element.addEventListener('contextmenu', (event) => {
-        if (isInteractiveTarget(event)) return;
-        event.preventDefault();
-        clearLongPressTimer();
-        fireLongPress(event);
-    });
-    return {
-        consume() {
-            if (!longPressFired) return false;
-            longPressFired = false;
-            return true;
-        },
-    };
-}
-
 function createLorecardActiveSetItem(entry = {}) {
     const item = document.createElement('div');
     item.className = 'saga-lore-active-set-item';
-    makeActiveSetItemMobileEditable(item, entry.id);
+
     const main = document.createElement('div');
     main.className = 'saga-lore-active-set-main';
     const title = document.createElement('div');
@@ -5657,7 +5072,7 @@ function createLorecardActiveSetItem(entry = {}) {
     appendActiveSetStateChips(main, entry, 'active');
     item.appendChild(main);
 
-    if (!isRuntimeMobileShell()) {
+    {
         const actions = document.createElement('div');
         actions.className = 'saga-primary-actions saga-lore-active-set-item-actions';
         actions.appendChild(createLorecardEditButton(entry, {
@@ -5675,7 +5090,7 @@ function createLorecardActiveSetItem(entry = {}) {
 function createLorecardAvailableSetItem(entry = {}) {
     const item = document.createElement('div');
     item.className = 'saga-lore-active-set-item saga-lore-available-set-item';
-    makeActiveSetItemMobileEditable(item, entry.id);
+
     const main = document.createElement('div');
     main.className = 'saga-lore-active-set-main';
     const title = document.createElement('div');
@@ -5689,7 +5104,7 @@ function createLorecardAvailableSetItem(entry = {}) {
     appendActiveSetStateChips(main, entry, 'available');
     item.appendChild(main);
 
-    if (!isRuntimeMobileShell()) {
+    {
         const actions = document.createElement('div');
         actions.className = 'saga-primary-actions saga-lore-active-set-item-actions';
         actions.appendChild(createLorecardEditButton(entry, {
@@ -5707,124 +5122,10 @@ function createLorecardAvailableSetItem(entry = {}) {
 function inspectAcceptedLoreEntry(entryId = '') {
     const id = String(entryId || '').trim();
     if (!id) return;
-    if (isRuntimeMobileShell()) {
-        openAcceptedLorecardMobileEditor(id);
-        return;
-    }
-    setPanelState({ selectedEntryId: id, mobileLifecycleStage: 'accepted' }, { deferSave: true });
+
+    setPanelState({ selectedEntryId: id, lifecycleStage: 'accepted' }, { deferSave: true });
     refreshPanelBody({ preserveScroll: true });
     refreshLoreWorkbench();
-}
-
-function closeMobileLorecardEditorOverlay(overlay) {
-    if (!overlay || overlay.dataset.sagaClosing === 'true') return;
-    overlay.dataset.sagaClosing = 'true';
-    overlay.classList.add('saga-mobile-lorecard-editor-overlay-closing');
-    overlay.setAttribute('aria-hidden', 'true');
-    requestAnimationFrame(() => overlay.remove());
-}
-
-function openAcceptedLorecardMobileEditor(entryId = '', options = {}) {
-    const id = String(entryId || '').trim();
-    if (!id) return;
-    const entry = (getPanelLoreState(getState()).entries || []).find(item => item?.id === id && !item?.isPending);
-    if (!entry) return;
-
-    document.getElementById('saga-mobile-lorecard-editor')?.remove();
-    const overlay = document.createElement('div');
-    overlay.id = 'saga-mobile-lorecard-editor';
-    overlay.className = 'saga-lore-workbench-overlay saga-mobile-lorecard-editor-overlay';
-    overlay.tabIndex = -1;
-    overlay.dataset.sagaEditorReady = 'false';
-    wireOverlayBackdropClose(overlay, () => closeMobileLorecardEditorOverlay(overlay));
-    overlay.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') closeMobileLorecardEditorOverlay(overlay);
-    });
-
-    const shell = document.createElement('div');
-    shell.className = 'saga-lore-workbench-shell saga-mobile-lorecard-editor-shell saga-mobile-touch-surface';
-    shell.setAttribute('role', 'dialog');
-    shell.setAttribute('aria-modal', 'true');
-    shell.setAttribute('aria-label', 'Edit Accepted Lorecard');
-    shell.addEventListener('click', event => event.stopPropagation());
-    shell.addEventListener('mousedown', event => event.stopPropagation());
-    shell.addEventListener('pointerdown', event => event.stopPropagation());
-    shell.addEventListener('touchstart', event => event.stopPropagation(), { passive: true });
-
-    const header = document.createElement('div');
-    header.className = 'saga-lore-workbench-header saga-mobile-lorecard-editor-header';
-    const titleWrap = document.createElement('div');
-    titleWrap.className = 'saga-lore-workbench-title-wrap';
-    const title = document.createElement('div');
-    title.className = 'saga-lore-workbench-title';
-    title.textContent = entry.title || '(Untitled lore)';
-    titleWrap.appendChild(title);
-    const subtitle = document.createElement('div');
-    subtitle.className = 'saga-lore-workbench-subtitle';
-    subtitle.textContent = 'Accepted Lorecard';
-    titleWrap.appendChild(subtitle);
-    header.appendChild(titleWrap);
-    shell.appendChild(header);
-
-    const footer = document.createElement('div');
-    footer.className = 'saga-mobile-lorecard-editor-footer';
-    const footerActions = document.createElement('div');
-    footerActions.className = 'saga-mobile-lorecard-editor-action-slot';
-    footer.appendChild(footerActions);
-    const close = createButton('Close', 'Close the Lorecard editor.', () => closeMobileLorecardEditorOverlay(overlay), 'saga-small-button saga-lore-workbench-close');
-    footer.appendChild(close);
-
-    const body = document.createElement('div');
-    body.className = 'saga-lore-workbench-body saga-mobile-lorecard-editor-body';
-    const loading = document.createElement('div');
-    loading.className = 'saga-mobile-lorecard-editor-loading';
-    loading.setAttribute('aria-busy', 'true');
-    const spinner = document.createElement('span');
-    spinner.className = 'saga-runtime-button-spinner saga-mobile-lorecard-editor-loading-spinner';
-    spinner.setAttribute('aria-hidden', 'true');
-    loading.appendChild(spinner);
-    const loadingCopy = document.createElement('span');
-    loadingCopy.textContent = 'Opening editor...';
-    loading.appendChild(loadingCopy);
-    body.appendChild(loading);
-
-    shell.appendChild(body);
-    shell.appendChild(footer);
-    overlay.appendChild(shell);
-    document.body.appendChild(overlay);
-    if (options.selectionLock) armMobileLorecardEditorSelectionLock(overlay, shell);
-    requestAnimationFrame(() => overlay.focus?.());
-    requestAnimationFrame(() => {
-        if (!overlay.isConnected || overlay.dataset.sagaClosing === 'true') return;
-        const fragment = document.createDocumentFragment();
-        const status = document.createElement('div');
-        status.className = 'saga-lore-entry-meta saga-mobile-lorecard-editor-status';
-        status.appendChild(createRegistryBadge('category', entry.category || 'other', `Category: ${entry.category || 'canon'}.`));
-        status.appendChild(createLorePurposeBadge(entry));
-        status.appendChild(createRegistryBadge('canonStatus', entry.canon || entry.canonStatus || 'canon', `Canon/Story: ${entry.canon || entry.canonStatus || 'canon'}.`));
-    if (entry.isElevated) status.appendChild(createBadge('elevated', 'Elevated entries are forced to High relevance, protected from Lore Automation, and injected directly.', { tone: 'success', kind: 'status' }));
-        if (entry.isSuppressed) status.appendChild(createBadge('muted', 'Muted entries are excluded from injection.', { tone: 'muted', kind: 'status' }));
-        fragment.appendChild(status);
-
-        const editor = createEditableLoreEntryEditor(entry, { mobileEditor: true, actionsContainer: footerActions });
-        fragment.appendChild(editor);
-
-        const details = document.createElement('div');
-        details.className = 'saga-mobile-lorecard-editor-details';
-        const detailRows = [];
-        if (entry.source) detailRows.push(['Source', entry.source]);
-        if (hasDisplayableScope(entry.scope)) detailRows.push(['Scope', entry.scope]);
-        if (entry.appliesTo?.length) detailRows.push(['Applies to', entry.appliesTo.join(', ')]);
-        if (entry.validFrom || entry.validTo) detailRows.push(['Valid window', `${entry.validFrom || '...'} to ${entry.validTo || '...'}`]);
-        for (const [label, value] of detailRows) {
-            details.appendChild(createKeyValue(label, value, `${label} metadata for this lore entry.`));
-        }
-        if (detailRows.length) fragment.appendChild(details);
-
-        body.replaceChildren(fragment);
-        overlay.dataset.sagaEditorReady = 'true';
-        shell.dataset.sagaEditorReady = 'true';
-    });
 }
 
 function activateAcceptedLoreEntry(entryId = '') {
@@ -5849,25 +5150,15 @@ function refreshAcceptedLoreSurfaces(entryId = '', options = {}) {
 export function renderLorecardsTab(container, state) {
     const basic = isBasicExperience();
     const lifecycleStats = getLorecardLifecycleStats(state);
-    const mobileShell = isRuntimeMobileShell();
     const recommendedLifecycleStage = getRecommendedLorecardLifecycleStage(state, lifecycleStats);
-    const lifecycleStage = mobileShell
-        ? getRuntimeMobileLorecardsStage(state?.lorePanel, recommendedLifecycleStage, getSettings())
-        : getRuntimeLorecardsStage(state?.lorePanel, recommendedLifecycleStage, getSettings());
+    const lifecycleStage = getRuntimeLorecardsStage(state?.lorePanel, recommendedLifecycleStage, getSettings());
     const stageMeta = LORECARD_LIFECYCLE_STAGE_META[lifecycleStage] || LORECARD_LIFECYCLE_STAGE_META.lore;
     container.classList.add('saga-operator-tab', 'saga-lorecards-lifecycle-tab', 'saga-lorecards-workspace-tab', `saga-lore-stage-filter-${lifecycleStage}`);
     container.dataset.sagaLoreLifecycleStage = lifecycleStage;
     container.appendChild(createSectionHeader(
-        mobileShell ? 'Lorecards' : `Lorecards: ${stageMeta.label || 'Lore'}`,
+        `Lorecards: ${stageMeta.label || 'Lore'}`,
         getLorecardsStageSummary(lifecycleStage, { basic, lifecycleStats })
     ));
-
-    if (mobileShell) {
-        const mount = createMobileLorecardsStageLoadingShell(lifecycleStage, lifecycleStats);
-        container.appendChild(mount);
-        scheduleMobileLorecardsStageRender(mount, state, { basic, lifecycleStats, lifecycleStage });
-        return;
-    }
 
     container.appendChild(createLorecardsStageContent(state, { basic, lifecycleStats, lifecycleStage }));
 }
@@ -5889,61 +5180,11 @@ function getLorecardsStageSummary(lifecycleStage = 'lore', options = {}) {
         : 'Review pending and accepted Lorecards in one workspace with search, filters, timeline tools, and card details.';
 }
 
-function createMobileLorecardsStageLoadingShell(lifecycleStage = 'lore', lifecycleStats = {}) {
-    const meta = LORECARD_LIFECYCLE_STAGE_META[lifecycleStage] || LORECARD_LIFECYCLE_STAGE_META.lore;
-    const shell = document.createElement('div');
-    shell.className = 'saga-runtime-card saga-mobile-lorecards-loading-shell';
-    shell.dataset.mobileLorecardsStage = lifecycleStage;
-    shell.setAttribute('aria-live', 'polite');
-    shell.setAttribute('aria-busy', 'true');
-
-    const spinner = document.createElement('div');
-    spinner.className = 'saga-runtime-button-spinner saga-mobile-lorecards-loading-spinner';
-    spinner.setAttribute('aria-hidden', 'true');
-    shell.appendChild(spinner);
-
-    const copy = document.createElement('div');
-    copy.className = 'saga-mobile-lorecards-loading-copy';
-    const title = document.createElement('div');
-    title.className = 'saga-runtime-card-title';
-    title.textContent = `Loading ${meta.label || 'Lorecards'}`;
-    copy.appendChild(title);
-    const hint = document.createElement('div');
-    hint.className = 'saga-runtime-help';
-    hint.textContent = getMobileLorecardsLoadingCopy(lifecycleStage, lifecycleStats);
-    copy.appendChild(hint);
-    shell.appendChild(copy);
-
-    return shell;
-}
-
-function getMobileLorecardsLoadingCopy(lifecycleStage = 'lore', lifecycleStats = {}) {
-    if (lifecycleStage === 'lore') {
-        const total = Number(lifecycleStats.allPendingCount || lifecycleStats.pendingCount || 0) + Number(lifecycleStats.acceptedCount || 0);
-        return `${total} Lorecards are being prepared in one list.`;
-    }
-    if (lifecycleStage === 'automation') {
-        return 'Lore Automation controls and recent activity are being prepared.';
-    }
-    return 'Generation controls are being prepared.';
-}
-
-function scheduleMobileLorecardsStageRender(mount, state, options = {}) {
-    const token = String(++mobileLorecardsStageRenderToken);
-    mount.dataset.mobileLorecardsRenderToken = token;
-    const render = () => {
-        if (!mount.isConnected || mount.dataset.mobileLorecardsRenderToken !== token) return;
-        mount.replaceWith(createMobileLorecardsStageContent(state, options));
-    };
-    const schedule = globalThis.requestAnimationFrame || (callback => setTimeout(callback, 0));
-    schedule(() => setTimeout(render, 0));
-}
-
 function createLorecardsStageContent(state, options = {}) {
     const fragment = document.createDocumentFragment();
     const basic = !!options.basic;
     const lifecycleStats = options.lifecycleStats || getLorecardLifecycleStats(state);
-    const requestedStage = normalizeMobileLorecardLifecycleStage(options.lifecycleStage);
+    const requestedStage = normalizeLorecardWorkflowStage(options.lifecycleStage);
     const lifecycleStage = basic && requestedStage === 'automation'
         ? getDefaultRuntimeLorecardsStage(getSettings())
         : requestedStage;
@@ -5959,15 +5200,11 @@ function createLorecardsStageContent(state, options = {}) {
     return fragment;
 }
 
-function createMobileLorecardsStageContent(state, options = {}) {
-    return createLorecardsStageContent(state, options);
-}
-
 function createLoreAutomationPage(state = getState()) {
     const page = document.createElement('div');
     page.className = 'saga-lore-automation-page';
-    if (isRuntimeMobileShell()) page.classList.add('saga-mobile-lore-automation-page');
-    markTourTarget(page, 'lore.autoRelevance.mobilePage');
+
+    markTourTarget(page, 'lore.autoRelevance.page');
     page.appendChild(createAutoRelevanceCard(state));
     return page;
 }
@@ -5975,7 +5212,7 @@ function createLoreAutomationPage(state = getState()) {
 function createLorecardGenerationCollapsible(state, options = {}) {
     const basic = !!options.basic;
     const lifecycleStats = options.lifecycleStats || getLorecardLifecycleStats(state);
-    const lifecycleStage = normalizeMobileLorecardLifecycleStage(options.lifecycleStage) || normalizeLorecardLifecycleStage(options.lifecycleStage);
+    const lifecycleStage = normalizeLorecardWorkflowStage(options.lifecycleStage) || normalizeLorecardLifecycleStage(options.lifecycleStage);
     const generationSection = createCollapsibleSection(
         'lore.generation',
         'Generate',
@@ -6040,13 +5277,16 @@ export function createPendingLoreReviewSection(state, options = {}) {
     const pendingLore = normalizeLoreMatrix(state?.pendingLoreEntries || []);
     const filteredPendingRows = getFilteredPendingLoreRows(state, { lifecycleStage: options.lifecycleStage });
     const filteredPendingEntries = filteredPendingRows.map(row => row.entry);
-    const allowBasicMobileBatch = basicReview && isRuntimeMobileShell();
-    const allowSelection = !basicReview || allowBasicMobileBatch;
+    const allowSelection = !basicReview;
     const section = document.createElement('div');
     section.className = 'saga-review-section saga-pending-lore-section';
+    if (state.layer1ReviewRevision) section.appendChild(createButton('Show all pending proposals', 'Clear this analysis filter.', () => {
+        const current = getState(); delete current.layer1ReviewRevision; saveState(current);
+        refreshPanelBody({ preserveScroll: true }); refreshLoreWorkbench();
+    }));
     if (basicReview) section.classList.add('saga-basic-review-pending-section');
 
-    if (!basicReview && !isRuntimeMobileShell()) {
+    if (!basicReview) {
         section.appendChild(createLoreWorkbenchLaunchRow('pending', pendingLore.length ? `${pendingLore.length} Pending Review entries` : 'No Pending Review entries yet'));
     }
 
@@ -6091,13 +5331,10 @@ export function createPendingLoreReviewSection(state, options = {}) {
         }));
         section.appendChild(filterRow);
 
-        const mobileBatchDrawer = isRuntimeMobileShell();
         const selectedBatchCount = countPendingReviewSelections(state, filteredPendingEntries);
-        if (filteredPendingEntries.length && (!basicReview || allowBasicMobileBatch) && (!mobileBatchDrawer || selectedBatchCount > 0)) {
+        if (filteredPendingEntries.length && (!basicReview)) {
             section.appendChild(markTourTarget(createPendingLoreBulkControls(filteredPendingEntries, state), 'lore.pending.bulk'));
-        } else if (filteredPendingEntries.length && allowSelection && mobileBatchDrawer) {
-            section.appendChild(createPendingLoreBatchSelectionHint(filteredPendingEntries.length));
-        } else if (basicReview && !allowBasicMobileBatch && pendingLore.length > 8) {
+        } else if (basicReview && pendingLore.length > 8) {
             const advancedRow = document.createElement('div');
             advancedRow.className = 'saga-basic-advanced-handoff';
             advancedRow.appendChild(createButton('Bulk Tools in Advanced', 'Switch to Advanced Lorecards and open the Pending Review workbench.', () => openAdvancedLoreReview('pending'), 'saga-small-button'));
@@ -6136,10 +5373,9 @@ export function createPendingLoreReviewSection(state, options = {}) {
 
 export function createAcceptedLoreEntriesSection(state, options = {}) {
     const basicReview = !!options.basicReview;
-    const mobileShell = isRuntimeMobileShell();
     const section = document.createElement('div');
     section.className = 'saga-accepted-lore-section';
-    if (mobileShell) section.classList.add('saga-accepted-lore-section-mobile');
+
     if (basicReview) section.classList.add('saga-basic-review-accepted-section');
 
     const controls = document.createElement('div');
@@ -6150,7 +5386,7 @@ export function createAcceptedLoreEntriesSection(state, options = {}) {
     const { entries, categories, counts } = loreState;
     const acceptedCount = Math.max(0, (counts?.all || 0) - (counts?.pending || 0));
 
-    if (!basicReview && !mobileShell) {
+    if (!basicReview) {
         controls.appendChild(createLoreWorkbenchLaunchRow('accepted', `${acceptedCount} Accepted Lorecards`));
     } else if (basicReview && acceptedCount > 12) {
         const advancedRow = document.createElement('div');
@@ -6159,7 +5395,7 @@ export function createAcceptedLoreEntriesSection(state, options = {}) {
         controls.appendChild(advancedRow);
     }
 
-    if (!basicReview && !mobileShell) {
+    if (!basicReview) {
         const tabs = document.createElement('div');
         tabs.className = 'saga-lore-tabs';
         markTourTarget(tabs, 'lore.accepted.categoryTabs');
@@ -6199,15 +5435,7 @@ export function createAcceptedLoreEntriesSection(state, options = {}) {
     });
     filterRow.appendChild(searchInput);
 
-    if (!basicReview && mobileShell) {
-        const filterButton = createButton(
-            getAcceptedMobileFilterSummary(panelState),
-            'Open Accepted Lorecard filters.',
-            () => openMobileAcceptedLoreFilters(),
-            'saga-mobile-accepted-filter-button'
-        );
-        filterRow.appendChild(filterButton);
-    } else if (!basicReview) {
+    if (!basicReview) {
         const sourceSelect = document.createElement('select');
         sourceSelect.className = 'saga-lore-source-filter';
         addTooltip(sourceSelect, 'Filter Accepted Lorecards by origin: canon database, story scan, Deck Maker drafts, Context suggestions, or manual/user-created entries.');
@@ -6269,7 +5497,7 @@ export function createAcceptedLoreEntriesSection(state, options = {}) {
     }
     controls.appendChild(filterRow);
 
-    if (!basicReview && !mobileShell) {
+    if (!basicReview) {
         const pinHelp = document.createElement('div');
         pinHelp.className = 'saga-runtime-help saga-pin-help';
         markTourTarget(pinHelp, 'lore.accepted.pinMuteHelp');
@@ -6353,129 +5581,4 @@ export function renderAcceptedLoreEntryList(list, state, options = {}) {
     }
 
     list.appendChild(fragment);
-}
-
-function getAcceptedMobileFilterSummary(panelState = {}) {
-    const active = [];
-    if ((panelState.selectedCategory || 'all') !== 'all') active.push(getLoreDisplayLabel('category', panelState.selectedCategory));
-    if ((panelState.sourceFilter || 'all') !== 'all') active.push('Source');
-    if ((panelState.acceptedDeckFilter || 'all') !== 'all') active.push('Deck');
-    if ((panelState.acceptedContextFilter || 'all') !== 'all') active.push('Context');
-    if ((panelState.loreTypeFilter || 'all') !== 'all') active.push('Type');
-    return active.length ? `Filters (${active.length})` : 'Filters';
-}
-
-function openMobileAcceptedLoreFilters() {
-    const state = getState();
-    const panelState = state?.lorePanel || {};
-    const loreState = getPanelLoreState(state);
-    const entries = loreState.entries || [];
-    const acceptedPool = entries.filter(entry => !entry.isPending);
-
-    document.getElementById('saga-mobile-accepted-filters')?.remove();
-    const overlay = document.createElement('div');
-    overlay.id = 'saga-mobile-accepted-filters';
-    overlay.className = 'saga-lore-workbench-overlay saga-mobile-accepted-filters-overlay';
-    overlay.tabIndex = -1;
-    wireOverlayBackdropClose(overlay, () => overlay.remove());
-    overlay.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') overlay.remove();
-    });
-
-    const shell = document.createElement('div');
-    shell.className = 'saga-lore-workbench-shell saga-mobile-accepted-filters-shell saga-mobile-touch-surface';
-    shell.setAttribute('role', 'dialog');
-    shell.setAttribute('aria-modal', 'true');
-    shell.setAttribute('aria-label', 'Accepted Lorecard filters');
-    shell.addEventListener('click', event => event.stopPropagation());
-
-    const header = document.createElement('div');
-    header.className = 'saga-lore-workbench-header saga-mobile-accepted-filters-header';
-    const titleWrap = document.createElement('div');
-    titleWrap.className = 'saga-lore-workbench-title-wrap';
-    const title = document.createElement('div');
-    title.className = 'saga-lore-workbench-title';
-    title.textContent = 'Accepted Filters';
-    titleWrap.appendChild(title);
-    const subtitle = document.createElement('div');
-    subtitle.className = 'saga-lore-workbench-subtitle';
-    subtitle.textContent = `${acceptedPool.length} Accepted Lorecards`;
-    titleWrap.appendChild(subtitle);
-    header.appendChild(titleWrap);
-    header.appendChild(createButton('Close', 'Close Accepted Lorecard filters.', () => overlay.remove(), 'saga-small-button saga-lore-workbench-close'));
-    shell.appendChild(header);
-
-    const body = document.createElement('div');
-    body.className = 'saga-lore-workbench-body saga-mobile-accepted-filters-body';
-
-    const categorySelect = createMobileAcceptedFilterSelect(
-        'Category',
-        (loreState.categories || []).map(cat => [cat, `${getLoreDisplayLabel('category', cat)} (${getCategoryCount(cat, entries, loreState.counts || {})})`]),
-        panelState.selectedCategory || 'all',
-    );
-    body.appendChild(categorySelect.field);
-
-    const sourceSelect = createMobileAcceptedFilterSelect('Source', LORE_SOURCE_FILTER_OPTIONS, panelState.sourceFilter || 'all');
-    body.appendChild(sourceSelect.field);
-
-    const deckSelect = createMobileAcceptedFilterSelect('Deck', getAcceptedLoreDeckFilterOptions(acceptedPool), panelState.acceptedDeckFilter || 'all');
-    body.appendChild(deckSelect.field);
-
-    const contextSelect = createMobileAcceptedFilterSelect('Context', getAcceptedLoreContextFilterOptions(acceptedPool), panelState.acceptedContextFilter || 'all');
-    body.appendChild(contextSelect.field);
-
-    const typeSelect = createMobileAcceptedFilterSelect('Type', getLoreEntryTypeFilterOptions(acceptedPool), panelState.loreTypeFilter || 'all');
-    body.appendChild(typeSelect.field);
-
-    const actions = document.createElement('div');
-    actions.className = 'saga-primary-actions saga-mobile-accepted-filters-actions';
-    actions.appendChild(createButton('Clear Filters', 'Clear Accepted Lorecard filters.', () => {
-        setPanelState({
-            selectedCategory: 'all',
-            sourceFilter: 'all',
-            acceptedDeckFilter: 'all',
-            acceptedContextFilter: 'all',
-            loreTypeFilter: 'all',
-            acceptedLoreVisibleLimit: getAcceptedLoreInitialVisibleLimit(),
-        }, { deferSave: true });
-        overlay.remove();
-        refreshPanelBody({ preserveScroll: true });
-    }, 'saga-small-button'));
-    actions.appendChild(createButton('Apply', 'Apply Accepted Lorecard filters.', () => {
-        setPanelState({
-            selectedCategory: categorySelect.select.value,
-            sourceFilter: sourceSelect.select.value,
-            acceptedDeckFilter: deckSelect.select.value,
-            acceptedContextFilter: contextSelect.select.value,
-            loreTypeFilter: typeSelect.select.value,
-            acceptedLoreVisibleLimit: getAcceptedLoreInitialVisibleLimit(),
-        }, { deferSave: true });
-        overlay.remove();
-        refreshPanelBody({ preserveScroll: true });
-    }, 'saga-primary-button'));
-    body.appendChild(actions);
-
-    shell.appendChild(body);
-    overlay.appendChild(shell);
-    document.body.appendChild(overlay);
-    requestAnimationFrame(() => categorySelect.select.focus?.());
-}
-
-function createMobileAcceptedFilterSelect(labelText, options = [], currentValue = 'all') {
-    const field = document.createElement('label');
-    field.className = 'saga-mobile-accepted-filter-field';
-    const label = document.createElement('span');
-    label.textContent = labelText;
-    field.appendChild(label);
-    const select = document.createElement('select');
-    select.className = 'saga-lore-workbench-select';
-    for (const [value, labelValue] of options) {
-        const opt = document.createElement('option');
-        opt.value = value;
-        opt.textContent = labelValue;
-        if (String(currentValue || 'all') === String(value)) opt.selected = true;
-        select.appendChild(opt);
-    }
-    field.appendChild(select);
-    return { field, select };
 }

@@ -454,7 +454,7 @@ export function getStoryOpenerReadiness(session = {}, options = {}) {
     const missing = [];
     if (!normalized.controls.userPrompt) missing.push('User Prompt');
     if (!normalized.controls.context) missing.push('Context');
-    if (!sourceIntent.stackItems.length && !sourceIntent.packIds.length) missing.push('Loredeck stack');
+    if (!globalThis.Saga?.bridge?.canonStatus?.().enabled && !sourceIntent.stackItems.length && !sourceIntent.packIds.length) missing.push('Loredeck stack');
     return {
         ready: missing.length === 0,
         missing,

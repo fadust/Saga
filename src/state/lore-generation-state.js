@@ -533,7 +533,7 @@ export function appendPendingLoreEntries(entries, meta = {}, options = {}) {
         storyLoreCountBefore: Math.max(0, Number(meta.storyLoreCountBefore ?? oldMeta.storyLoreCountBefore) || 0),
         bulkBatchId: meta.bulkBatchId || oldMeta.bulkBatchId || '',
         bulkChunkId: meta.bulkChunkId || oldMeta.bulkChunkId || '',
-        bulk: meta.bulk === undefined ? (oldMeta.bulk || false) : !!meta.bulk,
+        bulk: meta.bulk === undefined ? (oldMeta.bulk) : !!meta.bulk,
     };
 
     if (!state.loreGeneration || typeof state.loreGeneration !== 'object') {
@@ -558,7 +558,6 @@ export function appendPendingLoreEntries(entries, meta = {}, options = {}) {
     saveState(state, { syncPrompt, sanitize: full });
     return { state, changed: true, appendedCount: Math.max(0, merged.length - before.length), pendingCount: merged.length };
 }
-
 
 /**
  * Patches pending lore metadata without changing pending entries.
@@ -755,7 +754,6 @@ function applyAcceptedLoreSelectionRecommendations(state, entries = []) {
     }
 }
 
-
 function getPendingLoreTimelineSource(meta = {}, entries = []) {
     const source = String(meta?.source || entries?.[0]?.source || entries?.[0]?.sourceInfo?.work || '').toLowerCase();
     if (source.includes('canon')) return 'canon_database';
@@ -770,17 +768,27 @@ function recordAcceptedLoreTimelineMutation(state, before, type, source, summary
     recordLoreTimelineEvent(state, { before, after, type, source, summary });
 }
 
-
 /**
  * Accepts Pending Review entries by merging them into loreMatrix.
  * Updates the generation ledger so the context is marked as accepted.
  * Locked/user-edited entries in the matrix are preserved.
  * @returns {Object} Updated state
  */
+function canAcceptLayer1(state, entry) {
+    const layer = entry.extensions?.layer1;
+    return !layer || (layer.revision === state.layer1Analysis?.revision && ['ready', 'partial'].includes(state.layer1Analysis?.status));
+}
+
+function recordLayer1Rejection(state, entry) {
+    if (entry.extensions?.layer1) (state.layer1Decisions ||= {})[entry.id] = { decision: 'rejected', at: Date.now() };
+}
+
 export function acceptPendingLoreEntries() {
     const settings = getSettings();
     const state = getState();
-    const pending = normalizeLoreMatrix(state.pendingLoreEntries || []);
+    const pending = normalizeLoreMatrix(state.pendingLoreEntries || []).filter(entry =>
+        (!state.layer1ReviewRevision || entry.extensions?.layer1?.revision === state.layer1ReviewRevision)
+        && canAcceptLayer1(state, entry));
     const existing = normalizeLoreMatrix(state.loreMatrix || []);
 
     if (pending.length === 0) return state;
@@ -800,7 +808,7 @@ export function acceptPendingLoreEntries() {
     // so large matrices stay usable without deleting lower-priority entries.
     state.loreMatrix = merged;
     applyAcceptedLoreSelectionRecommendations(state, prepared);
-    state.pendingLoreEntries = [];
+    state.pendingLoreEntries = state.pendingLoreEntries.filter(entry => !pending.some(p => p.id === entry.id));
     state.pendingLoreMeta = null;
 
     if (state.loreContext) {
@@ -833,7 +841,7 @@ export function acceptPendingLoreEntries() {
 export function rejectPendingLoreEntries() {
     const state = getState();
     const contextKey = state.pendingLoreMeta?.contextKey || buildLoreGenerationKey(state);
-    const pending = normalizeLoreMatrix(state.pendingLoreEntries || []);
+    const pending = normalizeLoreMatrix(state.pendingLoreEntries || []).filter(entry => !state.layer1ReviewRevision || entry.extensions?.layer1?.revision === state.layer1ReviewRevision);
 
     if (pending.length) {
         appendStateBackupRecord(state, 'before_reject_pending_lore', {
@@ -841,7 +849,8 @@ export function rejectPendingLoreEntries() {
         });
     }
 
-    state.pendingLoreEntries = [];
+    for (const entry of pending) recordLayer1Rejection(state, entry);
+    state.pendingLoreEntries = state.pendingLoreEntries.filter(entry => !pending.some(p => p.id === entry.id));
     state.pendingLoreMeta = null;
 
     if (state.loreContext) {
@@ -877,6 +886,7 @@ export function acceptPendingLoreEntry(entryIndex) {
     if (entryIndex < 0 || entryIndex >= pending.length || pending.length === 0) {
         return { state, accepted: null };
     }
+    if (!canAcceptLayer1(state, pending[entryIndex])) return { state, accepted: null };
 
     const beforeTimeline = captureLoreTimelineState(state);
     const acceptedEntry = preparePendingLoreEntryForAcceptance(pending[entryIndex], existing);
@@ -932,6 +942,7 @@ export function rejectPendingLoreEntry(entryIndex) {
     }
 
     const rejectedEntry = pending[entryIndex];
+    recordLayer1Rejection(state, rejectedEntry);
     const contextKey = state.pendingLoreMeta?.contextKey || buildLoreGenerationKey(state);
 
     // Remove the rejected entry from pending
@@ -960,7 +971,6 @@ export function rejectPendingLoreEntry(entryIndex) {
     saveState(state);
     return { state, rejected: rejectedEntry };
 }
-
 
 // ── Utility: deep-merge defaults ────────────────────────────────────────────────
 

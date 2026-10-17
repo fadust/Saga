@@ -298,7 +298,6 @@ export function getSettings() {
     merged.loreAutomationRemapWordBudget = Math.max(100, Math.min(20000, Number(merged.loreAutomationRemapWordBudget) || DEFAULT_SETTINGS.loreAutomationRemapWordBudget || 900));
     merged.loreAutomationCurationWordBudget = Math.max(200, Math.min(40000, Number(merged.loreAutomationCurationWordBudget) || DEFAULT_SETTINGS.loreAutomationCurationWordBudget || 1800));
     merged.loreAutomationRunJournalLimit = Math.max(1, Math.min(100, Number(merged.loreAutomationRunJournalLimit) || DEFAULT_SETTINGS.loreAutomationRunJournalLimit || 20));
-    merged.mobileLorecardListTagsVisible = merged.mobileLorecardListTagsVisible === true;
     // Keep legacy AR switches readable while making Lore Automation the canonical visible mode.
     merged.autoRelevanceEnabled = merged.loreAutomationMode !== 'off';
     merged.autoRelevanceMode = 'apply_high_confidence';
@@ -344,6 +343,10 @@ export function getSettings() {
         merged.continuityPerformanceDefaultsMigrated20260603 = true;
     }
 
+    // This fork owns canon; interface mode changes must not start competing story writers.
+    Object.assign(merged, { automationMode: 'manual', workflowMode: 'manual', continuityTrackingMode: 'manual',
+        loreGenerationMode: 'manual', contextDetectionMode: 'manual', autoExtract: false, autoApplyDelta: false, autoGenerateLore: false,
+        injectContinuity: false, injectionTransport: 'extension_prompt', autoRelevanceEnabled: false, loreAutomationMode: 'off' });
     extensionSettings[MODULE_KEY] = compactExternalizedStorageSettings(cloneJson(merged));
     return merged;
 }

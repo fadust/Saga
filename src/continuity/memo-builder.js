@@ -227,7 +227,6 @@ function buildContinuityDirectMemo(state, settingsOverride = {}) {
         }
     }
 
-
     const body = lines.join('\n').trim();
     return body ? `## Continuity State\n${body}` : '';
 }
@@ -295,7 +294,6 @@ function buildLoreDirectMemo(state, settingsOverride = {}) {
     return lines.join('\n');
 }
 
-
 function getCurrentChatLength() {
     try {
         const ctx = SillyTavern.getContext();
@@ -356,9 +354,9 @@ function compressLine(text, settings, kind) {
 }
 
 function getLoreInjectionText(entry, state = null) {
-    const resolved = state ? getResolvedLoreInjection(entry, state) : '';
     const content = entry?.content || {};
-    const text = resolved || content.injection || content.fact || entry.fact || '';
+    const text = state ? getResolvedLoreInjection(entry, state) : content.injection || content.fact || entry.fact || '';
+    if (!text) return '';
     const constraints = Array.isArray(content.constraints) && content.constraints.length
         ? ` Constraints: ${content.constraints.join(' ')}`
         : '';

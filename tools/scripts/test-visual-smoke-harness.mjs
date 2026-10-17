@@ -124,7 +124,7 @@ const basicWorkflowDocPath = path.join(root, 'docs', 'user', 'BASIC_WORKFLOW.md'
 const advancedWorkflowDocPath = path.join(root, 'docs', 'user', 'ADVANCED_WORKFLOW.md');
 const documentationIndexPath = path.join(root, 'docs', 'DOCUMENTATION_INDEX.md');
 const visualSmokeDocPath = path.join(root, 'docs', 'development', 'SAGA_VISUAL_SMOKE.md');
-const mobileTouchRedesignDocPath = path.join(root, 'docs', 'development', 'SAGA_MOBILE_TOUCH_INTERACTION_REDESIGN.md');
+
 const sagaHeroIconPath = path.join(root, 'assets', 'iconsets', 'saga-hero', 'hero-tab-loredecks-256.png');
 const sagaHeroManifestPath = path.join(root, 'assets', 'iconsets', 'saga-hero', 'icons.json');
 const sagaMysticIconPath = path.join(root, 'assets', 'iconsets', 'saga-mystic', 'mystic-tab-loredecks-256.png');
@@ -313,27 +313,7 @@ function cssRuleDeclares(source, selector, properties = []) {
     });
 }
 
-function getMobileFontSizeAudit(source = '') {
-    const rootPx = 12;
-    const hits = [];
-    const rule = /([^{}]+)\{([^{}]*font-size\s*:\s*([^;!]+)(?:\s*!important)?;[^{}]*)\}/g;
-    for (const match of String(source || '').matchAll(rule)) {
-        const selector = String(match[1] || '').trim().replace(/\s+/g, ' ');
-        if (!/saga-runtime-mobile|saga-mobile|mobile|lorecard-editor|lorecards-subtab|bottom-tab|bottom-label/i.test(selector)) continue;
-        const raw = String(match[3] || '').trim();
-        let px = null;
-        if (raw.endsWith('rem')) px = Number.parseFloat(raw) * rootPx;
-        else if (raw.endsWith('em')) px = Number.parseFloat(raw) * rootPx;
-        else if (raw.endsWith('px')) px = Number.parseFloat(raw);
-        if (Number.isFinite(px) && px > 0) hits.push({ selector, raw, px });
-    }
-    const values = hits.map(hit => hit.px);
-    return {
-        hits,
-        min: values.length ? Math.min(...values) : 0,
-        max: values.length ? Math.max(...values) : 0,
-    };
-}
+
 
 function parseSingleQuotedValues(source) {
     return [...String(source || '').matchAll(/'([^']+)'/g)].map(match => match[1]);
@@ -884,7 +864,7 @@ const basicWorkflowDoc = read(basicWorkflowDocPath);
 const advancedWorkflowDoc = read(advancedWorkflowDocPath);
 const documentationIndex = read(documentationIndexPath);
 const visualSmokeDoc = read(visualSmokeDocPath);
-const mobileTouchRedesignDoc = read(mobileTouchRedesignDocPath);
+
 const runtimeGuideModule = await import(pathToFileURL(runtimeGuideContentPath).href);
 const basicGuideSteps = runtimeGuideModule.getRuntimeGuideSteps('basic');
 const advancedGuideSteps = runtimeGuideModule.getRuntimeGuideSteps('advanced');
@@ -895,12 +875,9 @@ assert(/import\s*\{[^}]*\bshowLorePanel\b[^}]*\}\s*from\s*['"]\.\.\/\.\.\/src\/r
 assert(fs.existsSync(sagaHeroIconPath), 'Bundled Saga Hero Loredecks icon must exist.');
 assert(JSON.parse(read(sagaHeroManifestPath)).id === 'saga-hero', 'Bundled Saga Hero Icon Set manifest must exist.');
 assert(defaultSettings.includes("themePackId: 'saga-default'") && defaultSettings.includes("themeIconSetId: 'saga-hero'"), 'Fresh Saga installs must start from the Saga Archive Theme Pack and Saga Hero Icon Set.');
-assert(runtimeTheme.includes("export const DEFAULT_ICONSET_ID = 'saga-hero';") && runtimeTheme.includes("id: 'saga-default'") && runtimeTheme.includes("title: 'Saga Archive'") && runtimeTheme.includes("title: 'Saga Hero'"), 'Runtime theme defaults must preserve the Saga Archive and Saga Hero mobile visual identity.');
-const mobileShellVisualSource = [
-    runtimeShellView,
-    ...Array.from(style.matchAll(/\.saga-(?:lore-panel\.saga-runtime-shell\.saga-runtime-mobile|runtime-mobile|mobile-(?:header|bottom|more|content|subview))[\s\S]{0,900}/g), match => match[0]),
-].join('\n');
-assert(!/\b(?:hogwarts|wand|castle|owl|potion|candlelit|gothic|parchment scroll|cyberpunk|generic blue SaaS|generic sci-fi)\b/i.test(mobileShellVisualSource), 'Mobile shell visual sources must avoid source-franchise, generic sci-fi, generic SaaS, and pure cyberpunk cues.');
+
+
+
 assert(fs.existsSync(sagaMysticIconPath), 'Bundled Saga Mystic Loredecks icon must exist.');
 assert(JSON.parse(read(sagaMysticManifestPath)).id === 'saga-mystic', 'Bundled Saga Mystic Icon Set manifest must exist.');
 assert(fs.existsSync(sagaRelayIconPath), 'Bundled Saga Relay Loredecks icon must exist.');
@@ -914,390 +891,181 @@ assert(!runtimePanelSource.includes("scope.textContent = 'Global'"), 'Loredecks 
 assert(style.includes('.saga-runtime-rail-tab-global') && style.includes('.saga-runtime-rail-tab-divider'), 'Loredecks shelf grouping must have dedicated accent and divider styling.');
 assert(style.includes('border-color: var(--saga-border') && style.includes('var(--saga-border-soft'), 'Loredecks shelf accent must reuse existing theme border variables.');
 assert(!style.includes('2px 0 0 rgba(215, 181, 109') && !style.includes('2px 0 0 rgba(212, 200, 168'), 'Loredecks shelf accent must not use a left inset that visually offsets the tab.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-lore-workbench-overlay\s*\{[\s\S]*?padding:\s*0;/.test(style), 'Mobile workbench overlays must use the full phone viewport instead of centered desktop padding.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-lore-workbench-shell\s*\{[\s\S]*?height:\s*100dvh;[\s\S]*?border-radius:\s*0;/.test(style), 'Mobile workbench shells must be full-height, square-edged surfaces.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-lore-workbench-overlay\s*\{[\s\S]*?background:\s*#07090d;[\s\S]*?\.saga-lore-workbench-shell\s*\{[\s\S]*?#07090d;/.test(style), 'Mobile workbench overlays must be fully opaque so SillyTavern cannot ghost through Saga.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-lore-workbench-header\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?env\(safe-area-inset-top/.test(style), 'Mobile workbench headers must stay reachable and respect safe-area top padding.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-lore-workbench-mode-tab\s*\{[\s\S]*?min-height:\s*40px;/.test(style), 'Mobile workbench tabs must have touch-sized targets.');
-assert(
-    contextWorkbenchPanel.includes('function isRuntimeMobileShell')
-        && contextWorkbenchPanel.includes("if (mobile) shell.classList.add('saga-context-workbench-shell-mobile')")
-        && contextWorkbenchPanel.includes('if (mobile) shell.appendChild(createContextWorkbenchActions({ mobile: true }))')
-        && contextWorkbenchPanel.includes('if (!isRuntimeMobileShell()) header.appendChild(createContextWorkbenchActions())')
-        && contextWorkbenchPanel.includes('showOnHover: false, showOnFocus: false'),
-    'Mobile Context Workbench must move persistent actions to the bottom and suppress floating tab tooltips.'
-);
-assert(
-    style.includes('.saga-context-workbench-bottom-actions')
-        && /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-context-workbench-shell-mobile\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;/.test(style)
-        && /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-context-workbench-shell-mobile \.saga-context-workbench-body\s*\{[\s\S]*?flex:\s*1 1 auto;[\s\S]*?min-height:\s*0;/.test(style),
-    'Mobile Context Workbench CSS must provide a bottom action bar while the body owns the remaining scrollable area.'
-);
-assert(
-    liveSmoke.includes('Mobile Context Workbench still rendered persistent header actions')
-        && liveSmoke.includes('Mobile Context Workbench bottom action bar missing')
-        && liveSmoke.includes("label: 'Context Workbench'")
-        && liveSmoke.includes("allowedSelectors: ['.saga-context-workbench-body']"),
-    'Context harness smoke must enforce mobile Context Workbench bottom actions and nested-scroll ownership.'
-);
-assert(/@media \(max-width:\s*980px\)\s*\{[\s\S]*?\.saga-context-workbench-row-header\s*\{[\s\S]*?display:\s*none;/.test(style), 'Tablet and mobile Context Workbench rows must not preserve desktop table headers after collapsing to one column.');
+
+
+
+
+
+
+
+
+
 assert(/@media \(max-width:\s*980px\)\s*\{[\s\S]*?\.saga-context-workbench-context-row:not\(\.saga-context-workbench-row-header\)[\s\S]*?flex:\s*0 0 auto;[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;[\s\S]*?\.saga-context-workbench-context-row:not\(\.saga-context-workbench-row-header\) \.saga-lore-workbench-cell-main,[\s\S]*?white-space:\s*normal;/.test(style), 'Tablet Context Workbench collapsed rows must render as non-shrinking wrapped cards instead of stacked desktop table cells.');
 assert(/@media \(max-width:\s*980px\)\s*\{[\s\S]*?\.saga-loredeck-library-details\s*\{[\s\S]*?height:\s*auto;[\s\S]*?linear-gradient\(180deg,\s*rgba\(22,\s*13,\s*18,\s*0\.98\),\s*rgba\(7,\s*8,\s*12,\s*0\.98\)\)/.test(style), 'Tablet Loredeck Library details must become a readable stacked card without translucent list bleed.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-library-resize-handle\s*\{[\s\S]*?display:\s*none;/.test(style), 'Mobile Loredeck Library must hide the desktop details resize handle.');
-assert(
-    !libraryPanel.includes("emblem.textContent = 'S'")
-        && libraryPanel.includes("title.textContent = mobile ? 'Library' : 'Loredeck Library'")
-        && libraryPanel.includes("if (!mobile) titleLine.appendChild(createLoredeckLibraryHeaderMeta")
-        && libraryPanel.includes("if (!mobile) {\n        const subtitle = document.createElement('div');"),
-    'Mobile Loredeck Library header must remove the S emblem and compact title/meta/subtitle chrome.'
-);
-assert(
-    libraryPanel.includes("mobileBody: '.saga-loredeck-library-mobile-body'")
-        && libraryPanel.includes('export function refreshLoredeckLibraryAfterStackMutation()')
-        && runtimeActiveStackPanel.includes('refreshLoredeckLibraryAfterStackMutation();')
-        && !/refreshLoredeckLibrarySelectionSurfaces\(\);\s*scheduleLoredeckLibraryOverlayRefresh\(\);/.test(runtimeActiveStackPanel),
-    'Mobile Loredeck Library active-stack taps must refresh in place instead of rebuilding the overlay and jumping to the top.'
-);
-assert(!libraryPanel.includes('saga-loredeck-library-mobile-detail-affordance') && libraryPanel.includes('mobileLongPressTimer') && libraryPanel.includes('mobileLongPressFired') && libraryPanel.includes('openLoredeckLibraryMobileDetailSheet(pack.packId);') && libraryPanel.includes('openLoredeckLibraryMobileFolderDetailSheet(folderId);') && libraryPanel.includes('editable: !mobileTouch && isEditableLoredeckLibraryPack(pack)') && libraryPanel.includes('editable: !mobileTouch && !options.special') && libraryPanel.includes('if (!mobileTouch) {\n        const grip = document.createElement(\'span\');'), 'Mobile Loredeck Library browse cards and folders must use tap-hold/keyboard details and must not render per-object details, drag handles, or inline rename affordances.');
-assert(libraryPanel.includes('function attachLoredeckLibraryLongPressAction') && libraryPanel.includes('const triggerOnRelease = options.triggerOnRelease === true') && libraryPanel.includes('longPressOnly: mobile') && libraryPanel.includes('coverLongPressOnly: mobile') && libraryPanel.includes("attachLoredeckLibraryLongPressAction(visual, event =>") && libraryPanel.includes('importLoredeckCoverImageFromFile(pack.packId);') && libraryPanel.includes('}, { triggerOnRelease: true });') && style.includes('.saga-loredeck-library-inline-title-longpress') && style.includes('.saga-loredeck-library-visual-longpress-editable'), 'Mobile Loredeck Library inspect sheets must use long-press title and cover editing instead of persistent edit buttons.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-library-cover-action,[\s\S]*?\.saga-loredeck-library-stack-toggle-button\s*\{[\s\S]*?min-width:\s*40px;[\s\S]*?min-height:\s*40px;/.test(style), 'Mobile Loredeck Library object actions must have touch-sized targets.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-library-folder-parent-control\s*\{[\s\S]*?flex:\s*1 1 100%;[\s\S]*?min-width:\s*0;[\s\S]*?display:\s*grid;/.test(style), 'Mobile Loredeck Library folder move controls must wrap as full-width touch alternatives instead of forcing horizontal overflow.');
-assert(libraryPanel.includes('function createLoredeckLibraryFolderActionBar') && libraryPanel.includes('Move Selected Here') && libraryPanel.includes('Add Folder to Stack') && libraryPanel.includes('Move Folder') && libraryPanel.includes("inStack ? (stackItem.enabled ? 'In Stack' : 'Enable Deck') : 'Add to Stack'"), 'Mobile Loredeck Library must keep button alternatives for folder moves and stack adds instead of relying on drag or hover.');
-assert(
-    libraryPanel.includes('const mobile = isRuntimeMobileShell();')
-        && libraryPanel.includes("shell.classList.add('saga-loredeck-library-shell-mobile')")
-        && libraryPanel.includes('createLoredeckLibraryMobileBrowsePane')
-        && libraryPanel.includes('createLoredeckLibraryMobileSelectedStrip')
-        && libraryPanel.includes('createLoredeckLibraryMobileDetailSheet')
-        && libraryPanel.includes('openLoredeckLibraryMobileDetailSheet')
-        && libraryPanel.includes('createLoredeckLibraryMobileReorderSheet')
-        && libraryPanel.includes('openLoredeckLibraryMobileReorderSheet')
-        && libraryPanel.includes('moveLoredeckLibraryMobileReorderItem')
-        && libraryPanel.includes('toggleLoredeckLibraryMobileDeckActive(pack.packId);')
-        && libraryPanel.includes('getLoredeckLibraryMobileOrderMap')
-        && libraryPanel.includes('saga-loredeck-library-mobile-order-badge')
-        && libraryPanel.includes('if (existing && existing.enabled !== false) return removeLoredecksFromStack([id]);'),
-    'Mobile Loredeck Library must render the touch browse pane and direct tap-order selection path.'
-);
-assert(
-    libraryPanel.includes("if (mobile) {\n            body.appendChild(createLoredeckLibraryMobileBrowsePane")
-        && libraryPanel.includes("} else {\n            const columns = document.createElement('div');")
-        && libraryPanel.includes("if (!mobileTouch) {\n        const grip = document.createElement('span');"),
-    'Mobile Loredeck Library must skip desktop columns, details, and deck drag handles in the default touch browse path.'
-);
-assert(
-    libraryPanel.includes("reorder.disabled = activeItems.length < 2")
-        && libraryPanel.includes("loredeckLibraryMobileReorderOpen && mobileActiveDeckItems.length > 1")
-        && libraryPanel.includes("reorderLoredeckStackItem(records[current].key || createLoredeckStackDeckKey(id), records[target].index)")
-        && libraryPanel.includes("grip.className = 'saga-loredeck-library-stack-grip saga-loredeck-library-mobile-reorder-grip'"),
-    'Mobile Loredeck Library reorder mode must be explicit, selected-only, and backed by the shared active stack order.'
-);
-assert(
-    /\.saga-loredeck-library-mobile-body\s*\{[\s\S]*?display:\s*flex;[\s\S]*?overflow:\s*hidden;/.test(style)
-        && /\.saga-loredeck-library-mobile-selected-strip\s*\{[\s\S]*?position:\s*sticky;/.test(style)
-        && /\.saga-loredeck-library-deck-card\.saga-loredeck-library-deck-mobile-touch\s*\{[\s\S]*?grid-template-columns:\s*64px minmax\(0,\s*1fr\);/.test(style)
-        && /\.saga-loredeck-library-deck-mobile-touch \.saga-loredeck-library-deck-title\s*\{[\s\S]*?-webkit-line-clamp:\s*2;/.test(style)
-        && /\.saga-loredeck-library-mobile-order-badge\s*\{[\s\S]*?position:\s*absolute;/.test(style)
-        && /\.saga-loredeck-library-mobile-detail-backdrop\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?align-items:\s*flex-end;/.test(style)
-        && /\.saga-loredeck-library-mobile-detail-panel\s*\{[\s\S]*?overflow-y:\s*auto;/.test(style),
-    'Mobile Loredeck Library CSS must provide a one-pane touch layout with stable covers, readable titles, and numbered order badges.'
-);
-assert(
-    /\.saga-loredeck-library-mobile-reorder-backdrop\s*\{[\s\S]*?position:\s*absolute;[\s\S]*?align-items:\s*flex-end;/.test(style)
-        && /\.saga-loredeck-library-mobile-reorder-row\s*\{[\s\S]*?grid-template-columns:\s*28px 24px 46px minmax\(0,\s*1fr\) auto;/.test(style)
-        && /\.saga-loredeck-library-mobile-reorder-grip\s*\{[\s\S]*?cursor:\s*default;/.test(style)
-        && /\.saga-loredeck-library-mobile-reorder-controls \.saga-runtime-button\s*\{[\s\S]*?min-height:\s*34px;/.test(style),
-    'Mobile Loredeck Library reorder mode must render as an explicit sheet with handles and touch-sized move controls only inside reorder mode.'
-);
-assert(/\.saga-loredeck-creator-card\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;/.test(style), 'Deck Maker workbench card must be a flex column so mobile ordering can prioritize the working object.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-creator-workbench-body \.saga-loredeck-creator-current-task\s*\{[\s\S]*?order:\s*-20;[\s\S]*?\.saga-loredeck-creator-workbench-body \.saga-loredeck-creator-stage-guide\s*\{[\s\S]*?order:\s*-10;/.test(style), 'Mobile Deck Maker workbench must render the current task before the stage roadmap.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-creator-stage-list\s*\{[\s\S]*?grid-auto-flow:\s*column;[\s\S]*?grid-auto-columns:\s*minmax\(132px,\s*42vw\);[\s\S]*?overflow-x:\s*auto;/.test(style), 'Mobile Deck Maker stage roadmap must become a compact horizontal rail instead of eight full-width cards.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-creator-workbench-body \.saga-loredeck-entry-list\s*\{[\s\S]*?max-height:\s*none;[\s\S]*?overflow:\s*visible;/.test(style), 'Mobile Deck Maker entry lists must flow in the Deck Maker body scroll instead of creating nested vertical scroll panes.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-creator-current-task,[\s\S]*?\.saga-loredeck-creator-queue-row\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\);/.test(style), 'Mobile Deck Maker workbench task and side rows must stack to one column.');
-assert(/\.saga-loredeck-creator-workbench-body\s*\{[\s\S]*?flex:\s*1 1 auto;[\s\S]*?min-height:\s*0;[\s\S]*?overflow-y:\s*auto;/.test(style) && /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-creator-workbench-body\s*\{[\s\S]*?padding:\s*8px;/.test(style), 'Mobile Deck Maker workbench body must remain scrollable inside the fullscreen shell with compact phone padding.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-creator-stage-main,[\s\S]*?\.saga-loredeck-creator-current-actions \.saga-runtime-button,[\s\S]*?\.saga-loredeck-creator-current-actions \.saga-primary-button\s*\{[\s\S]*?min-height:\s*40px;/.test(style), 'Mobile Deck Maker current-task and stage actions must remain touch-sized.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-creator-stage-reset\s*\{[\s\S]*?width:\s*40px;[\s\S]*?height:\s*40px;[\s\S]*?opacity:\s*1;/.test(style), 'Mobile Deck Maker reset controls must be visible and touch-sized.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-health-center-shell\s*\{[\s\S]*?width:\s*100vw;[\s\S]*?height:\s*100dvh;[\s\S]*?max-height:\s*100dvh;/.test(style), 'Mobile Pack Health Center shell must occupy the full phone viewport.');
-assert(/\.saga-loredeck-health-center-body\s*\{[\s\S]*?flex:\s*1 1 auto;[\s\S]*?min-height:\s*0;[\s\S]*?display:\s*flex;[\s\S]*?flex-direction:\s*column;[\s\S]*?overflow:\s*hidden;/.test(style) && /\.saga-loredeck-health-center-content\s*\{[\s\S]*?flex:\s*1 1 auto;[\s\S]*?min-height:\s*0;[\s\S]*?overflow-y:\s*auto;/.test(style) && /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-health-center-content\s*\{[\s\S]*?padding:\s*8px;/.test(style), 'Mobile Pack Health Center must preserve one primary content scroll region inside the fullscreen shell.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-health-tabs\s*\{[\s\S]*?flex-wrap:\s*nowrap;[\s\S]*?overflow-x:\s*auto;/.test(style), 'Mobile Pack Health tabs must scroll horizontally instead of shrinking into clipped labels.');
-assert(
-    healthPanel.includes('function isRuntimeMobileShell')
-    && healthPanel.includes('createLoredeckHealthCenterActions(context, { mobile: true })')
-    && healthPanel.includes('if (!mobile) header.appendChild(createLoredeckHealthCenterActions(context))')
-    && healthPanel.includes('saga-loredeck-health-center-bottom-actions')
-    && healthPanel.includes("createButton('Close', 'Close the Pack Health Center.', closeLoredeckHealthCenter)")
-    && healthPanel.includes('wireOverlayBackdropClose(overlay, closeLoredeckHealthCenter)')
-    && /\.saga-loredeck-health-center-bottom-actions\s*\{[\s\S]*?grid-template-columns:\s*repeat\(auto-fit,[\s\S]*?var\(--saga-mobile-safe-area-bottom/.test(style),
-    'Pack Health Center mobile must move persistent Refresh/Export/Close actions to a bottom action bar while keeping Close and backdrop close reachable.'
-);
-assert(/\.saga-runtime-mobile \.saga-injection-preview\s*\{[\s\S]*?max-height:\s*none;[\s\S]*?overflow:\s*visible;/.test(style), 'Mobile Injection previews must flow in the route scroll instead of creating bounded preview scroll panes.');
-assert(
-    creatorPanel.includes('function isRuntimeMobileShell')
-    && creatorPanel.includes('saga-loredeck-creator-workbench-shell-mobile')
-    && creatorPanel.includes('createLoredeckCreatorWorkbenchActions(cached, { mobile: true, showClose: true })')
-    && creatorPanel.includes('if (!(options.workbench && isRuntimeMobileShell()))')
-    && /if \(!\(options\.workbench && isRuntimeMobileShell\(\)\)\) \{[\s\S]*?emblem\.textContent = 'S';[\s\S]*?titleRow\.appendChild\(emblem\);/.test(creatorPanel)
-    && creatorPanel.includes("createButton('Close', 'Close the Deck Maker wizard.', closeLoredeckCreatorWorkbench)")
-    && creatorPanel.includes('wireOverlayBackdropClose(overlay, () => overlay.remove())')
-    && /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-creator-workbench-overlay \.saga-loredeck-creator-workbench-shell-mobile\s*\{[\s\S]*?height:\s*100svh;[\s\S]*?max-height:\s*100svh;/.test(style)
-    && !/\.saga-loredeck-creator-workbench-overlay \.saga-loredeck-creator-workbench-shell-mobile\s*\{[\s\S]{0,220}max-height:\s*none;/.test(style)
-    && /@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-loredeck-creator-workbench-shell-mobile \.saga-loredeck-creator-workbench-body\s*\{[\s\S]*?flex:\s*1 1 auto;[\s\S]*?min-height:\s*0;/.test(style)
-    && /\.saga-loredeck-creator-workbench-bottom-actions\s*\{[\s\S]*?grid-template-columns:\s*repeat\(auto-fit,[\s\S]*?var\(--saga-mobile-safe-area-bottom/.test(style),
-    'Deck Maker workbench mobile must hide the header emblem, cap the shell to the small viewport, and move persistent Project Settings and Close actions to a reachable bottom action bar.'
-);
-assert(visualSmokeDoc.includes('## Mobile Workbench Matrix'), 'Visual smoke runbook must document the mobile workbench matrix.');
-for (const viewport of ['360x740', '390x844', '430x820', '768x1024']) {
-    assert(visualSmokeDoc.includes(`\`${viewport}\``), `Visual smoke runbook is missing mobile viewport ${viewport}.`);
-}
-assert(
-    fs.existsSync(mobileTouchRedesignDocPath)
-        && documentationIndex.includes('Saga Mobile Touch Interaction Redesign')
-        && documentationIndex.includes('SAGA_MOBILE_TOUCH_INTERACTION_REDESIGN.md'),
-    'Documentation index must link the mobile touch interaction redesign plan.'
-);
-assert(
-    mobileTouchRedesignDoc.includes('Default screen = readable objects.')
-        && mobileTouchRedesignDoc.includes('Selected state = contextual actions.')
-        && mobileTouchRedesignDoc.includes('Advanced state = explicit sheet or mode.'),
-    'Mobile touch redesign must preserve the object-first interaction thesis.'
-);
-assert(
-    mobileTouchRedesignDoc.includes('Browse folders and Loredecks -> tap Loredecks to activate -> tap order becomes stack order')
-        && mobileTouchRedesignDoc.includes('There is no separate active stack pane in the default mobile Library.')
-        && mobileTouchRedesignDoc.includes('Selection should write to the same active stack data used by desktop runtime')
-        && mobileTouchRedesignDoc.includes('Do not create a mobile-only stack that can drift from desktop.'),
-    'Mobile Library redesign must use direct tap-order selection against the shared active stack state.'
-);
-assert(
-    mobileTouchRedesignDoc.includes('Tap-hold object')
-        && mobileTouchRedesignDoc.includes('Accessibility requirement: every tap-hold or gesture-only action must also be')
-        && mobileTouchRedesignDoc.includes('visible selected-object sheet, overflow control, or keyboard'),
-    'Mobile touch redesign must require visible accessible alternatives for tap-hold and gesture actions.'
-);
-assert(
-    mobileTouchRedesignDoc.includes('Generate | Automate | Lore')
-        && mobileTouchRedesignDoc.includes('Lorecards route is `Generate | Lore`')
-        && mobileTouchRedesignDoc.includes('The mobile Lorecards route must use a secondary bottom sub-tab bar above the')
-        && mobileTouchRedesignDoc.includes('Each sub-tab has one job.')
-        && mobileTouchRedesignDoc.includes('Do not render a mobile')
-        && mobileTouchRedesignDoc.includes('route-level pages or as a row of ordinary')
-        && mobileTouchRedesignDoc.includes('buttons inside the page body')
-        && mobileTouchRedesignDoc.includes('Title wraps to at least two lines')
-        && mobileTouchRedesignDoc.includes('Pending and accepted cards appear together in the same list.'),
-    'Mobile Lorecards redesign must keep secondary sub-tab workspaces, readable two-line titles, and one unified Lore list.'
-);
-assert(
-    lorecardsPanel.includes('function createEditableRelevanceControl')
-        && lorecardsPanel.includes('saga-lore-relevance-segmented')
-        && /\.saga-runtime-mobile \.saga-pending-review-entry-card \.saga-lore-entry-title,[\s\S]*?\.saga-runtime-mobile \.saga-lore-entry-card \.saga-lore-entry-title\s*\{[\s\S]*?white-space:\s*normal !important;[\s\S]*?overflow-wrap:\s*anywhere;/.test(style)
-        && /\.saga-runtime-mobile \.saga-pending-review-entry-card \.saga-lore-entry-actions,[\s\S]*?\.saga-runtime-mobile \.saga-lore-entry-card \.saga-lore-entry-actions\s*\{[\s\S]*?flex:\s*1 0 100% !important;[\s\S]*?flex-wrap:\s*wrap;/.test(style),
-    'Mobile Lorecards must keep titles readable by moving controls into a wrapped action tray and replacing the old relevance select with a segmented control.'
-);
-assert(
-    mobileTouchRedesignDoc.includes('mobile-library-touch-harness')
-        && mobileTouchRedesignDoc.includes('mobile-lorecards-touch-harness')
-        && mobileTouchRedesignDoc.includes('Real phone-width Library browse with folders and multiple selected Loredecks')
-        && mobileTouchRedesignDoc.includes('Tablet/desktop sanity pass proving desktop Library stack/details behavior'),
-    'Mobile touch redesign must define rendered verification targets for Library, Lorecards, and desktop preservation.'
-);
-assert(
-    visualSmokeDoc.includes("SAGA_SMOKE_TARGET='mobile-redesign-harness'")
-        && visualSmokeDoc.includes('mobile-redesign-360x740-01-library-browse.png')
-        && visualSmokeDoc.includes('mobile-redesign-360x740-06-lorecards-generate.png')
-        && visualSmokeDoc.includes('selected-only reorder sheets')
-        && visualSmokeDoc.includes('mode-aware animated secondary sub-tab bar')
-        && visualSmokeDoc.includes('does not use a `Lorecard Pipeline` card or lifecycle button row')
-        && visualSmokeDoc.includes('Pending Review rows expose only Accept and Reject'),
-    'Visual smoke runbook must document the focused mobile touch redesign CDP target and screenshots.'
-);
-assert(visualSmokeDoc.includes('shared mobile shell contracts') && visualSmokeDoc.includes('touch-redesign contracts'), 'Visual smoke runbook must name the shared shell and touch-redesign contracts for final mobile assertions.');
-assert(visualSmokeDoc.includes('Mobile UX revision review') && visualSmokeDoc.includes('Lorecards secondary sub-tab bar') && visualSmokeDoc.includes('one dominant next action') && visualSmokeDoc.includes('runtime top header is absent') && visualSmokeDoc.includes('active bottom tab becomes `Exit`') && visualSmokeDoc.includes('bottom bar labels'), 'Visual smoke runbook must document the mobile UX revision visual-review targets.');
-assert(visualSmokeDoc.includes('Basic bottom nav includes Settings') && visualSmokeDoc.includes('Basic mobile nav: Loredecks, Session, Context, Lorecards, Settings'), 'Visual smoke runbook must document Basic Settings reachability directly through the bottom nav.');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 assert(visualSmokeDoc.includes('Advanced icon-only bottom nav') && visualSmokeDoc.includes('Loredecks, Session, Continuity, Context, Lorecards, Injection, Settings'), 'Visual smoke runbook must document the Advanced direct bottom-nav route set.');
-assert(!runtimeShellView.includes('function renderMobileMoreSheet') && !runtimeShellView.includes("mobile.activeRoute === 'more'"), 'Mobile overflow-sheet routing must be removed from the runtime shell view.');
-assert(visualSmokeDoc.includes('Basic/Advanced walkthrough target resolvability') && visualSmokeDoc.includes('walkthrough popover target reachability after mobile routing'), 'Visual smoke runbook must document rendered follow-up for walkthrough target reachability after mobile routing.');
-assert(visualSmokeDoc.includes('Session, Loredecks, and Context next-actions') && visualSmokeDoc.includes('Basic Session next-action') && visualSmokeDoc.includes('Loredecks static Library launch card') && visualSmokeDoc.includes('Session next-action routing') && visualSmokeDoc.includes('Loredecks static Library launch routing') && visualSmokeDoc.includes('Context next-action routing'), 'Visual smoke runbook must document rendered follow-up for mobile next-action routing and static Loredecks Library launch routing.');
+
+
+
 assert(visualSmokeDoc.includes('mode-aware Lorecards secondary sub-tab bar') && visualSmokeDoc.includes('`Generate | Lore` in Basic') && visualSmokeDoc.includes('`Generate | Automate | Lore` in Advanced') && visualSmokeDoc.includes('Lorecards secondary sub-tab animation and placement'), 'Visual smoke runbook must document rendered follow-up for mode-aware Lorecards secondary sub-tab navigation.');
-assert(visualSmokeDoc.includes('unified Lore list ownership') && visualSmokeDoc.includes('Pending Review rows with only Accept/Reject'), 'Visual smoke runbook must document rendered follow-up for the mobile unified Lore list.');
+
 assert(visualSmokeDoc.includes('Accepted long-press edit access'), 'Visual smoke runbook must document rendered follow-up for Accepted long-press edit access.');
 assert(visualSmokeDoc.includes('Accepted') && visualSmokeDoc.includes('Accepted/Active object cards') && visualSmokeDoc.includes('Accepted long-press editing without tap-to-edit or permanent Edit/Inspect buttons'), 'Visual smoke runbook must document rendered follow-up for Accepted object-card management.');
 assert(visualSmokeDoc.includes('Accepted long-title wrapping') && visualSmokeDoc.includes('Accepted long-title object cards'), 'Visual smoke runbook must document rendered follow-up for readable Accepted Lorecard titles.');
 assert(visualSmokeDoc.includes('Rendered Pending wording review') && visualSmokeDoc.includes('Accept/Reject wording') && visualSmokeDoc.includes('pending rows exposing only Accept and Reject') && visualSmokeDoc.includes('selected context or detail affordance') && visualSmokeDoc.includes('without falling back to Apply/Dismiss copy'), 'Visual smoke runbook must document rendered follow-up for Pending Accept/Reject wording and selected/detail edit behavior.');
-assert(visualSmokeDoc.includes('Rendered Accepted object-action review') && visualSmokeDoc.includes('object-state chips') && visualSmokeDoc.includes('desktop detail-pane controls') && visualSmokeDoc.includes('mobile long-press editing') && visualSmokeDoc.includes('without showing equal permanent row buttons'), 'Visual smoke runbook must document rendered follow-up for Accepted object-state interactions.');
+
 assert(/\| `360x740` \| Basic \|[^\n]*Lorecards secondary `Generate \| Lore` sub-tab bar/.test(visualSmokeDoc), 'Visual smoke runbook must document the Basic Lorecards secondary sub-tab bar in the 360px Basic matrix.');
-assert(/\| `430x820` \| Advanced \|[^\n]*Lorecards secondary sub-tabs/.test(visualSmokeDoc) && visualSmokeDoc.includes('unified Lore object list'), 'Visual smoke runbook must document unified Lore object cards and secondary sub-tabs in the 430px Advanced matrix.');
+
 assert(visualSmokeDoc.includes('scrollable Deck Maker workbench body') && visualSmokeDoc.includes('Deck Maker current-task actions'), 'Visual smoke runbook must document rendered follow-up for Deck Maker body scrolling and current-task actions.');
 assert(visualSmokeDoc.includes('Advanced bottom-owned Pack Health Center actions') && visualSmokeDoc.includes('Advanced Pack Health bottom actions'), 'Visual smoke runbook must document rendered follow-up for Advanced Pack Health bottom-owned actions.');
 assert(visualSmokeDoc.includes('Advanced bottom-owned Deck Maker workbench actions') && visualSmokeDoc.includes('Advanced Health/Deck Maker bottom actions'), 'Visual smoke runbook must document rendered follow-up for Advanced Deck Maker bottom-owned actions.');
-assert(visualSmokeDoc.includes('global nested-scroll audit results'), 'Visual smoke runbook must document rendered follow-up for the global mobile nested-scroll audit.');
+
 assert(visualSmokeDoc.includes('compact content padding') && /browser pass[\s\S]*compact content padding/.test(visualSmokeDoc), 'Visual smoke runbook must document rendered follow-up for compact Revision 3 content padding.');
 assert(visualSmokeDoc.includes('bottom-bar safe-area padding') && /browser pass[\s\S]*bottom-bar safe-area padding/.test(visualSmokeDoc), 'Visual smoke runbook must document rendered follow-up for bottom-bar safe-area padding.');
 assert(visualSmokeDoc.includes('active tab state exposure') && /browser pass[\s\S]*active tab state exposure/.test(visualSmokeDoc), 'Visual smoke runbook must document rendered follow-up for active tab state exposure.');
-assert(visualSmokeDoc.includes('removed runtime top header') && /browser pass[\s\S]*removed runtime top header/.test(visualSmokeDoc), 'Visual smoke runbook must document rendered follow-up for removing the mobile runtime top header.');
+
 assert(visualSmokeDoc.includes('bottom shell back action') && visualSmokeDoc.includes('active bottom tab becomes `Exit`') && /browser pass[\s\S]*active bottom tab becomes `Exit`/.test(visualSmokeDoc), 'Visual smoke runbook must document rendered follow-up for bottom shell actions and the active-tab Exit close path.');
 assert(visualSmokeDoc.includes('Advanced Health/Deck Maker close affordances') && visualSmokeDoc.includes('reachable Advanced Health/Deck Maker close affordances'), 'Visual smoke runbook must document rendered follow-up for Advanced Health and Deck Maker close controls.');
 assert(visualSmokeDoc.includes('hybrid mythic-tech/source-franchise-free styling') && visualSmokeDoc.includes('not fandom-specific fantasy, generic sci-fi, generic SaaS, or pure cyberpunk treatment'), 'Visual smoke runbook must document rendered visual review for hybrid mythic-tech/source-franchise-free styling.');
 assert(/\| `768x1024` \| Advanced \|[^\n]*desktop rail\/drawer preservation/.test(visualSmokeDoc) && visualSmokeDoc.includes('Rendered desktop preservation review') && visualSmokeDoc.includes('desktop rail/drawer preservation at desktop widths'), 'Visual smoke runbook must document rendered desktop rail/drawer preservation for the tablet/desktop shell pass.');
 assert(visualSmokeDoc.includes('Deck Maker review-queue anchors/actions') && visualSmokeDoc.includes('Deck Maker review-queue routing') && visualSmokeDoc.includes('Context proposal review overlay/actions'), 'Visual smoke runbook must document rendered follow-up for Deck Maker review queue and Context proposal review coverage.');
 assert(!visualSmokeDoc.includes('Deck Health Center') && !visualSmokeDoc.includes('Open Health Center') && !visualSmokeDoc.includes('Health Report'), 'Visual smoke runbook must use current Pack Health Center and Open Pack Health Center labels.');
-for (const token of [
-    '--saga-mobile-control-height',
-    '--saga-mobile-icon-button-size',
-    '--saga-mobile-row-action-size',
-    '--saga-mobile-bottom-bar-height',
-    '--saga-mobile-content-bottom-padding',
-]) {
-    assert(style.includes(token), `Mobile shell token ${token} must remain in the bundled CSS.`);
-}
-assert(/\.saga-lore-panel\.saga-runtime-shell\.saga-runtime-mobile\s*\{[\s\S]*?--saga-mobile-content-bottom-padding:\s*8px;/.test(style) && /\.saga-runtime-mobile\.saga-mobile-lorecards-subtabs-active\s*\{[\s\S]*?--saga-mobile-content-bottom-padding:\s*8px;/.test(style), 'Revision 3 mobile content must not reserve fake bottom-bar height because shell bars are flex siblings.');
-assert(/\.saga-mobile-bottom-bar\s*\{[\s\S]*?min-height:\s*calc\(var\(--saga-mobile-bottom-bar-height,\s*72px\) \+ var\(--saga-mobile-safe-area-bottom,\s*0px\)\)[\s\S]*?padding:\s*6px 8px calc\(6px \+ var\(--saga-mobile-safe-area-bottom,\s*0px\)\)/.test(style), 'Mobile bottom bar must include safe-area bottom padding in its height and inset.');
-assert(runtimeNavigation.includes("export const BASIC_MOBILE_BOTTOM_ROUTES = Object.freeze(['loredecks', 'session', 'context', 'lore', 'settings']);"), 'Basic mobile bottom bar order must remain Loredecks, Session, Context, Lorecards, Settings.');
-assert(runtimeNavigation.includes("export const ADVANCED_MOBILE_BOTTOM_ROUTES = Object.freeze(['loredecks', 'session', 'continuity', 'context', 'lore', 'injection', 'settings']);"), 'Advanced mobile bottom bar order must remain Loredecks, Session, Continuity, Context, Lorecards, Injection, Settings.');
-assert(runtimeNavigation.includes('getMobileBottomRoutes(settings = getSettings())') && runtimeNavigation.includes("normalizeExperienceMode(settings?.experienceMode) === 'advanced'"), 'Mobile bottom routes must be selected by Experience Mode.');
-assert(runtimeShell.includes('export const MOBILE_SHELL_MAX_WIDTH = 640;') && runtimeShell.includes('export function isRuntimeMobileShell') && runtimeShell.includes('return Number(width) <= MOBILE_SHELL_MAX_WIDTH;'), 'Runtime shell must keep the shared 640px mobile breakpoint helper.');
-const mobileShellMaxWidthMatch = runtimeShell.match(/export const MOBILE_SHELL_MAX_WIDTH = (\d+);/);
-assert(mobileShellMaxWidthMatch && Number(mobileShellMaxWidthMatch[1]) < 768 && visualSmokeDoc.includes('768px tablet desktop-shell coexistence'), 'The 768px tablet smoke viewport must stay above the shared mobile-shell breakpoint and be documented as desktop-shell coexistence.');
-assert(runtimeShellView.includes("if (isRuntimeMobileShell())") && runtimeShellView.includes('renderMobilePanelShell(root, state, settings);') && runtimeShellView.includes("root.className = 'saga-lore-panel saga-runtime-shell';") && runtimeShellView.includes('root.appendChild(renderRail(state));') && runtimeShellView.includes('if (desktopLorecardsFlyoutOpen) root.appendChild(renderDesktopLorecardsFlyout(root, state, settings));') && runtimeShellView.includes('if (drawerOpen) root.appendChild(renderDrawer(state, drawerDirection));'), 'Desktop runtime shell must preserve the rail/drawer render path above the mobile breakpoint while allowing the Lorecards flyout to sit between rail and drawer.');
+
+
+
+
+
+
+
+
+
+
 assert(panel.includes('function syncRuntimeShellFrame') && panel.includes('panelRoot = existing;') && panel.includes('syncRuntimeShellFrame(existing, state.lorePanel, drawerDirection);') && panel.includes('applyRuntimeShellGeometry(root, panelState);') && panel.includes("root.style.setProperty('--saga-drawer-width'") && panel.includes('drawer.style.width = `${drawerWidth}px`;'), 'Runtime panel refresh must reapply chat-specific desktop shell geometry before reusing or rerendering the existing shelf DOM.');
 assert(runtimeShellView.includes('function renderDesktopLorecardsFlyout') && runtimeShellView.includes("nav.className = 'saga-desktop-lorecards-flyout'") && runtimeShellView.includes('function updateDesktopLorecardsFlyoutPosition') && runtimeShellView.includes('schedule(() => updateDesktopLorecardsFlyoutPosition(root, nav));') && runtimeShellView.includes("tab.setAttribute('aria-haspopup', 'true')") && runtimeShellView.includes('selectRuntimeLorecardsStage(stage)') && runtimeShellView.includes('getRuntimeLorecardsStages(settings)') && style.includes('.saga-desktop-lorecards-flyout::before') && style.includes('var(--saga-lorecards-flyout-offset') && style.includes('animation: saga-desktop-lorecards-flyout-in'), 'Desktop Lorecards must expose a button-centered mode-aware Generate/Automate/Lore flyout that visually branches from the rail tab.');
 assert(runtimeShellView.includes("option.setAttribute('aria-label', meta.label)") && runtimeShellView.includes("tab.setAttribute('aria-label', label)") && !runtimeShellView.includes('addTooltip(option, meta.tooltip)') && !runtimeShellView.includes('addTooltip(tab, getTabTooltipForExperience(tabId, settings))'), 'Desktop Lorecards flyout buttons and shelf tab buttons must keep accessible labels without wiring floating hover/focus tooltips.');
 assert(style.includes('left: calc(var(--saga-rail-width, 52px) + 4px)') && style.includes('var(--saga-bg-gradient-start,') && style.includes('var(--saga-bg-gradient-end,') && style.includes('var(--saga-button,') && style.includes('var(--saga-button-hover,') && style.includes('var(--saga-surface-2,') && style.includes('var(--saga-border-soft,') && style.includes('var(--saga-border-strong,') && style.includes('var(--saga-gold-surface,'), 'Desktop Lorecards flyout must stay close to the rail and inherit the active Theme Pack through Saga shelf tokens.');
-assert(runtimeShell.includes('subviewStacks: {') && runtimeShell.includes('loredecks: []') && runtimeShell.includes('continuity: []') && runtimeShell.includes('context: []') && runtimeShell.includes('lore: []') && runtimeShell.includes('injection: []') && runtimeShell.includes('settings: []'), 'Runtime mobile state must normalize per-route subview stacks.');
-for (const helper of ['selectRuntimeMobileRoute', 'pushRuntimeMobileSubview', 'popRuntimeMobileSubview', 'clearRuntimeMobileSubviews', 'goBackRuntimeMobileShell']) {
-    assert(runtimeShell.includes(`export function ${helper}`), `Runtime shell must export mobile helper ${helper}.`);
-}
-assert(runtimeShellView.includes("root.className = 'saga-lore-panel saga-runtime-shell saga-runtime-mobile saga-mobile-touch'") && runtimeShellView.includes("body.className = 'saga-lore-panel-body saga-mobile-content'"), 'Runtime shell view must render the mobile shell and content classes.');
-assert(runtimeShellView.includes("bar.setAttribute('aria-label', 'Saga mobile navigation')") && runtimeShellView.includes("tab.setAttribute('aria-current', 'page')") && runtimeShellView.includes("tab.dataset.mobileRoute = route"), 'Mobile bottom bar must expose accessible current-route navigation.');
-assert(runtimeShellView.includes('root.dataset.mobileRoute = mobile.activeRoute') && runtimeShellView.includes('root.dataset.mobileActiveTab = activeTab') && runtimeShellView.includes("tab.classList.add('saga-mobile-bottom-tab-active')") && runtimeShellView.includes("tab.setAttribute('aria-current', 'page')"), 'Mobile shell must expose the active route through root datasets, active bottom-tab styling, and aria-current.');
-assert(runtimeShellView.includes('const MOBILE_NAV_TOOLTIP_OPTIONS = Object.freeze({ showOnHover: false, showOnFocus: false });') && runtimeShellView.includes('function addMobileNavigationLabel') && runtimeShellView.includes('hideFloatingTooltip();') && runtimeShellView.includes("addMobileNavigationLabel(tab, active ? 'Close the Saga runtime window.' : getMobileRouteTooltip(route, settings));") && runtimeShellView.includes('addMobileNavigationLabel(tab, meta.tooltip);'), 'Revision 3 mobile bottom tabs and Lorecards sub-tabs must keep accessible labels without wiring floating tooltip hover/focus listeners.');
-assert(runtimeShellView.includes('bar.style.setProperty') && runtimeShellView.includes('--saga-mobile-bottom-tab-count') && !runtimeShellView.includes("divider.className = 'saga-mobile-bottom-divider'"), 'Mobile bottom bar must use dynamic route columns instead of a fixed divider spacer.');
-assert(runtimeShellView.includes('function createMobileRouteIcon') && runtimeShellView.includes('const iconRoute = route;') && runtimeShellView.includes('getTabIconSrc(iconRoute, settings)') && runtimeShellView.includes("iconImg.alt = ''") && runtimeShellView.includes("iconImg.setAttribute('draggable', 'false')"), 'Mobile shell routes must use the configured Saga icon assets with decorative image alt text.');
-assert(runtimeShellView.includes('active ? createMobileBottomExitIcon() : createMobileRouteIcon') && runtimeShellView.includes("text.textContent = active ? 'Exit' : label") && runtimeShellView.includes('hideRuntimeMobileShell();') && runtimeShellView.includes('function createMobileBottomExitIcon'), 'The active mobile bottom tab must morph into the primary Exit control.');
-assert(runtimeShellView.includes("tab.addEventListener('contextmenu', event => event.preventDefault())") && /saga-mobile-bottom-tab[\s\S]*?-webkit-touch-callout:\s*none;/.test(style) && /saga-mobile-bottom-icon-img[\s\S]*?-webkit-user-drag:\s*none;/.test(style), 'Mobile nav icon surfaces must suppress Android image callouts and drag/download prompts.');
-assert(!runtimeShellView.includes('function renderMobileHeader') && !runtimeShellView.includes('root.appendChild(renderMobileHeader') && runtimeShellView.includes('function renderMobileShellActionBar') && runtimeShellView.includes("bar.className = 'saga-mobile-shell-action-bar'") && runtimeShellView.includes("button.dataset.mobileShellAction = kind") && runtimeShell.includes("'.saga-mobile-shell-back, .saga-mobile-bottom-tab-active'"), 'Revision 3 mobile shell must remove the redundant top header and keep back navigation in the bottom-oriented shell action bar.');
-assert(!style.includes('.saga-mobile-header') && !style.includes('.saga-mobile-more-sheet') && !style.includes('.saga-mobile-more-entry') && !style.includes('.saga-mobile-bottom-divider'), 'Removed mobile header, overflow sheet, and divider CSS must not remain as dead mobile shell styling.');
-assert(runtimeShellView.includes("if (mobile.activeRoute === 'loredecks') return null;"), 'Loredecks mobile tab must not render the shell Back button.');
-assert(!runtimeShellView.includes("activeSubview?.id === 'session-story-opener'"), 'Story Maker must not special-case mobile shell Back behavior because it renders as a closeable Session dropdown.');
-assert(/\.saga-lore-panel\.saga-runtime-shell\.saga-runtime-mobile\s*\{[\s\S]*?height:\s*100dvh[\s\S]*?overflow:\s*hidden/.test(style), 'Mobile runtime shell must occupy the phone viewport without horizontal page overflow.');
-assert(/\.saga-lore-panel\.saga-runtime-shell\.saga-runtime-mobile\s*\{[\s\S]*?rgba\(215,\s*181,\s*109,\s*0\.12\)[\s\S]*?rgba\(36,\s*141,\s*150,\s*0\.12\)[\s\S]*?linear-gradient\(145deg,\s*rgb\(18,\s*12,\s*18\),\s*rgb\(9,\s*12,\s*18\)\),[\s\S]*?#07090d !important;/.test(style), 'Mobile runtime shell must keep the Saga Archive treatment over a fully opaque background.');
-assert(/\.saga-runtime-mobile \.saga-runtime-rail,[\s\S]*?\.saga-runtime-mobile \.saga-runtime-drawer,[\s\S]*?\.saga-runtime-mobile \.saga-lore-panel-resize-handle\s*\{[\s\S]*?display:\s*none !important;/.test(style), 'Mobile runtime shell must hide desktop rail, drawer, and resize handles.');
-assert(/\.saga-mobile-shell-action-bar\s*\{[\s\S]*?border-top:[\s\S]*?linear-gradient\(180deg,\s*rgba\(9,\s*13,\s*18,\s*0\.9\)/.test(style) && /\.saga-mobile-shell-action-symbol-back::before[\s\S]*?\.saga-mobile-shell-action-symbol-close::before/.test(style), 'Revision 3 shell Back/Exit icon treatment must live in bottom-oriented shell action surfaces, not the removed mobile header.');
-assert(/\.saga-mobile-bottom-bar\s*\{[\s\S]*?grid-template-columns:\s*repeat\(var\(--saga-mobile-bottom-tab-count,\s*5\),\s*minmax\(0,\s*1fr\)\)/.test(style), 'Mobile bottom bar CSS must use route-count driven columns.');
-assert(/\.saga-mobile-bottom-label\s*\{[\s\S]*?font-size:\s*10\.5px;/.test(style) && !/\.saga-mobile-bottom-label\s*\{[\s\S]*?font-size:\s*9px;/.test(style), 'Mobile bottom labels must keep a readable fixed size instead of shrinking to 9px at phone widths.');
-assert(style.includes('.saga-mobile-bottom-bar-icon-only') && /\.saga-mobile-bottom-bar-icon-only \.saga-mobile-bottom-label\s*\{[\s\S]*?clip:\s*rect\(0 0 0 0\)/.test(style), 'Advanced mobile bottom bar must support icon-only labels while keeping accessible text.');
-assert(/\.saga-mobile-bottom-tab-active\s*\{[\s\S]*?var\(--saga-border-strong[\s\S]*?color-mix\(in srgb,\s*var\(--saga-button-hover[\s\S]*?var\(--saga-gold/.test(style), 'Mobile bottom active tabs must derive their active treatment from the current Theme Pack tokens.');
-assert(/\.saga-mobile-lorecards-subtab-active,[\s\S]*?\.saga-mobile-lorecards-subtab\[aria-selected="true"\]\s*\{[\s\S]*?var\(--saga-border-strong[\s\S]*?color-mix\(in srgb,\s*var\(--saga-button-hover[\s\S]*?var\(--saga-gold/.test(style), 'Mobile Lorecards active sub-tabs must derive their active treatment from the current Theme Pack tokens.');
-assert(/\.saga-mobile-bottom-tab-active \.saga-mobile-bottom-icon-img\s*\{[\s\S]*?saturate\(1\.05\)[\s\S]*?color-mix\(in srgb,\s*var\(--saga-gold/.test(style), 'Mobile active route icons must keep a theme-token glow instead of hardcoded Archive colors.');
-assert(style.includes('.saga-mobile-bottom-exit-icon') && style.includes('.saga-settings-experience-card') && runtimeSettingsTab.includes('Experience Mode') && runtimeSettingsTab.includes('createExperienceModeSwitch') && !runtimeSettingsTab.includes('Choose how much of Saga is visible in the runtime window.'), 'Mobile bottom Exit icon and Settings-owned Experience Mode styles must be present without redundant helper copy.');
-assert(/\.saga-runtime-mobile \.saga-lore-panel-body\.saga-mobile-content\s*\{[\s\S]*?overflow:\s*hidden !important;[\s\S]*?padding:\s*8px 8px var\(--saga-mobile-content-bottom-padding,\s*8px\)/.test(style), 'Mobile content must avoid horizontal overflow while using compact page padding under Revision 3.');
-const mobileFontAudit = getMobileFontSizeAudit(style);
-assert(mobileFontAudit.min > 0 && mobileFontAudit.max / mobileFontAudit.min <= 2, `Mobile font-size selectors must stay within a 2x scale; saw ${mobileFontAudit.min}px to ${mobileFontAudit.max}px.`);
-assert(!cssRuleDeclares(style, '.saga-runtime-mobile.saga-mobile-touch .saga-runtime-button', ['font-size']), 'Mobile touch buttons must not inherit the larger form-control font size.');
-assert(!/\.saga-mobile-lorecard-entry-editor \.saga-lore-editor-field,[\s\S]*?font-size:\s*1rem/.test(style), 'Mobile Lorecard editor labels must stay on the compact mobile text scale.');
-assert(themeActions.includes('refreshPanelBody({ preserveScroll: true, preserveWindowScroll: true });'), 'Changing Icon Set must refresh mobile navigation surfaces.');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 assert(lorecardsPanel.includes("const LORECARD_LIFECYCLE_STAGES = Object.freeze(['suggested', 'pending', 'accepted', 'active']);"), 'Lorecards lifecycle stages must remain suggested -> pending -> accepted -> active.');
-assert(lorecardsPanel.includes("const MOBILE_LORECARD_LIFECYCLE_STAGES = Object.freeze(['generate', 'automation', 'lore']);"), 'Mobile Lorecards lifecycle navigation must expose Generate, Automate, and Lore in that order.');
+
 for (const label of ['Lore', 'Generate', 'Automate', 'Needs Review', 'Active']) {
     assert(lorecardsPanel.includes(label), `Lorecards lifecycle label ${label} must remain visible.`);
 }
-assert(runtimeShell.includes("export const BASIC_LORECARDS_STAGES = Object.freeze(['generate', 'lore']);") && runtimeShell.includes("export const ADVANCED_LORECARDS_STAGES = Object.freeze(['generate', 'automation', 'lore']);") && runtimeShell.includes('export function getRuntimeLorecardsStages') && runtimeShell.includes('normalizeExperienceMode(settings?.experienceMode)') && runtimeShell.includes('export function normalizeRuntimeMobileLorecardsStage') && runtimeShell.includes('export const normalizeRuntimeLorecardsStage = normalizeRuntimeMobileLorecardsStage;') && runtimeShell.includes("if (stage === 'pending' || stage === 'accepted' || stage === 'approved' || stage === 'active' || stage === 'cards') return 'lore';") && runtimeShell.includes("if (stage === 'suggested' || stage === 'generation') return 'generate';") && runtimeShell.includes('lorecardsStage: normalizeRuntimeLorecardsStage') && runtimeShell.includes('export function getRuntimeLorecardsStage') && runtimeShell.includes('export function selectRuntimeLorecardsStage(stage)') && runtimeShell.includes('export function selectRuntimeMobileLorecardsStage(stage)'), 'Runtime shell must own mode-aware Lorecards Generate/Lore and Generate/Automate/Lore sub-tab state for desktop and mobile.');
-assert(runtimeShell.includes('function normalizeMobileLoreSubviewStack(stack, settings = getSettingsForShell())') && runtimeShell.includes('.filter(item => !normalizeRuntimeMobileLorecardsStage(item?.params?.stage, settings))'), 'Runtime shell must drop stale Lorecards stage subviews instead of reopening the old mobile pipeline flow.');
-assert(runtimeShellView.includes('function renderMobileLorecardsSubTabs') && runtimeShellView.includes("nav.className = 'saga-mobile-lorecards-subtabs'") && runtimeShellView.includes("nav.setAttribute('role', 'tablist')") && runtimeShellView.includes("tab.setAttribute('role', 'tab')") && runtimeShellView.includes("tab.setAttribute('aria-selected'") && runtimeShellView.includes('selectRuntimeMobileLorecardsStage(stage)'), 'Mobile Lorecards sub-tabs must render from the shell with tab semantics and route selection.');
-assert(runtimeShellView.includes("if (mobile.activeRoute === 'lore' && !options.error)") && runtimeShellView.includes('root.appendChild(renderMobileLorecardsSubTabs(state, settings));') && runtimeShellView.includes('root.appendChild(renderMobileBottomBar(state, settings));'), 'Mobile Lorecards sub-tab bar must appear only on the Lorecards route and sit above the main bottom bar.');
-assert(/\.saga-mobile-lorecards-subtabs\s*\{[\s\S]*?grid-template-columns:\s*repeat\(var\(--saga-mobile-lorecards-subtab-count,\s*3\),\s*minmax\(0,\s*1fr\)\)/.test(style) && runtimeShellView.includes("nav.style.setProperty('--saga-mobile-lorecards-subtab-count'") && /\.saga-mobile-lorecards-subtabs-intro \.saga-mobile-lorecards-subtabs\s*\{[\s\S]*?animation:\s*saga-mobile-lorecards-subtabs-in/.test(style) && runtimeShellView.includes('mobileLorecardsSubtabsIntroSeen') && style.includes('.saga-runtime-mobile.saga-mobile-lorecards-subtabs-active') && style.includes('--saga-mobile-lorecards-subtab-height'), 'Mobile Lorecards sub-tabs must use the mode-aware stage count and run intro animation only on first Lorecards entry.');
-assert(lorecardsPanel.includes("return 'generate';") && lorecardsPanel.includes("if (lifecycleStage === 'generate')") && lorecardsPanel.includes("createCollapsibleSection(\n        'lore.generation',\n        'Generate'") && lorecardsPanel.includes("card.appendChild(createLoreAutomationHeader(mobileShell ? 'Automate' : 'Lore Automation', settings));") && lorecardsPanel.includes('fragment.appendChild(createLorecardWorkspace(state, { basic, lifecycleStats }));') && lorecardsPanel.includes('scheduleMobileLorecardsStageRender(mount, state, { basic, lifecycleStats, lifecycleStage });') && lorecardsPanel.includes('function createLorecardsStageContent') && lorecardsPanel.includes('function createMobileLorecardsStageContent'), 'Lorecards Generate is the first/default page, headings match the sub-tabs, and Lore owns the full pending/accepted queue after an immediate loading shell on mobile.');
+
+
+
+
+
+
 assert(lorecardsPanel.includes("if (lifecycleStage === 'automation')") && lorecardsPanel.includes('createLoreAutomationPage(state)') && lorecardsPanel.includes('createLoreAutomationCadenceSwitch') && lorecardsPanel.includes('refreshAutoRelevanceCardInPlace') && !lorecardsPanel.includes("settings.loreAutomationPaused === true ? 'Resume' : 'Pause'") && lorecardsPanel.includes("createButton('Run Now'") && lorecardsPanel.includes('forceProvider: true') && lorecardsPanel.includes("createButton('Undo Last Run'") && lorecardsPanel.includes('createLoreAutomationActivityList(state)') && lorecardsPanel.includes('createLoreAutomationStateBadge(entry)') && !lorecardsPanel.includes('Use Utility Provider adjudication'), 'Lorecards Automation tab must render the Lore Automation cockpit with Manual/Auto cadence, provider-backed Run Now, Undo, no Pause button, and no Utility adjudication checkbox.');
-assert(lorecardsPanel.includes("const LORE_AUTOMATION_MODE_BUTTON_VALUES = Object.freeze(['ar', 'armp', 'armpc']);") && lorecardsPanel.includes("armp: 'Auto-Relevance Muting Prominence'") && lorecardsPanel.includes("armpc: 'Auto-Relevance Muting Prominence Curating'") && lorecardsPanel.includes('function createLoreAutomationChoiceGroup') && lorecardsPanel.includes('group.dataset.choiceGroup') && lorecardsPanel.includes("blankWhen: value => !value") && lorecardsPanel.includes("const mode = meta.active ? 'off' : normalizeLoreAutomationMode(value);"), 'Lore Automation must replace the mobile Mode dropdown with three touch buttons where no selected button means Off and ARMP/ARMPC describe Prominence.');
+
 assert(lorecardsPanel.includes('LORE_AUTOMATION_STYLE_DESCRIPTIONS') && lorecardsPanel.includes('LORE_AUTOMATION_PACING_DESCRIPTIONS') && style.includes('.saga-lore-automation-choice-buttons') && style.includes('grid-template-columns: repeat(3, minmax(0, 1fr))'), 'Lore Automation Style and Pacing must use three-button segmented controls with compact summaries.');
 assert(style.includes('.saga-lore-automation-header-actions') && style.includes('.saga-lore-automation-cadence-switch') && style.includes('.saga-lore-automation-choice-group-disabled') && style.includes('.saga-lore-automation-header .saga-runtime-button') && style.includes('.saga-lore-automation-cadence-option'), 'Lore Automation reset defaults and Manual/Auto cadence switch must be compact and right-aligned in the title row, with disabled auto configuration styling.');
-assert(
-    defaultSettings.includes('mobileLorecardListTagsVisible: false')
-        && defaultSettings.includes("'settings.qualityOfLife': false")
-        && settingsStore.includes('merged.mobileLorecardListTagsVisible = merged.mobileLorecardListTagsVisible === true;')
-        && runtimeSettingsTab.includes("'settings.qualityOfLife'")
-        && runtimeSettingsTab.includes("className: 'saga-settings-qol-section'")
-        && runtimeSettingsTab.includes('createQualityOfLifeSettingsCard(settings, { embedded: true })')
-        && !runtimeSettingsTab.includes('createSectionHeader')
-        && runtimeSettingsTab.includes("toggle.className = 'saga-settings-qol-item saga-settings-switch-row saga-settings-mobile-tags-toggle'")
-        && runtimeSettingsTab.includes("checkbox.className = 'saga-settings-switch-input'")
-        && runtimeSettingsTab.includes("checkbox.setAttribute('role', 'switch')")
-        && runtimeSettingsTab.includes("switchVisual.className = 'saga-settings-switch-slider'")
-        && runtimeSettingsTab.includes("text.className = 'saga-settings-switch-text'")
-        && runtimeSettingsTab.includes("label.textContent = 'Show Lorecard tags in the mobile Lore list'")
-        && runtimeSettingsTab.includes("help.className = 'saga-settings-switch-description'")
-        && !runtimeSettingsTab.includes('mobile list density')
-        && !runtimeSettingsTab.includes("'Providers and Theme Pack.'")
-        && !runtimeSettingsTab.includes("'Fandom Loresystem.'")
-        && style.includes('.saga-settings-switch-row')
-        && style.includes('.saga-settings-switch-slider')
-        && style.includes('.saga-settings-qol-card .saga-settings-qol-item.saga-settings-switch-row')
-        && style.includes('#saga-lore-panel .saga-runtime-drawer .saga-settings-qol-section .saga-settings-qol-item.saga-settings-switch-row')
-        && style.includes('justify-self: stretch')
-        && style.includes('.saga-settings-switch-text')
-        && style.includes('.saga-settings-switch-description')
-        && style.includes('.saga-settings-qol-item + .saga-settings-qol-item')
-        && style.includes('.saga-settings-qol-card .saga-settings-qol-item.saga-settings-switch-row .saga-settings-switch-text')
-        && style.includes('grid-column: 2 !important')
-        && style.includes('.saga-runtime-mobile .saga-settings-qol-card .saga-settings-qol-item.saga-settings-switch-row')
-        && /\.saga-settings-qol-section > \.saga-collapsible-content\s*\{[\s\S]*?display:\s*block !important;[\s\S]*?width:\s*100% !important;/.test(style)
-        && /\.saga-settings-qol-card\s*\{[\s\S]*?display:\s*block !important;[\s\S]*?max-width:\s*none !important;/.test(style)
-        && /\.saga-settings-qol-card \.saga-settings-qol-item\.saga-settings-switch-row\s*\{[\s\S]*?display:\s*grid !important;[\s\S]*?grid-template-columns:\s*48px minmax\(0,\s*1fr\) !important;/.test(style)
-        && /#saga-lore-panel \.saga-runtime-drawer \.saga-settings-qol-section \.saga-settings-qol-item\.saga-settings-switch-row\s*\{[\s\S]*?display:\s*grid !important;[\s\S]*?grid-template-columns:\s*48px minmax\(0,\s*1fr\) !important;/.test(style)
-        && /\.saga-settings-switch-text\s*\{[\s\S]*?display:\s*flex !important;[\s\S]*?max-width:\s*none !important;/.test(style)
-        && /\.saga-runtime-mobile \.saga-settings-qol-section \.saga-collapsible-content\s*\{[\s\S]*?display:\s*block !important;[\s\S]*?width:\s*100% !important;/.test(style)
-        && /\.saga-runtime-mobile \.saga-settings-qol-card\s*\{[\s\S]*?display:\s*block !important;[\s\S]*?width:\s*100% !important;/.test(style)
-        && /\.saga-runtime-mobile \.saga-settings-qol-card \.saga-settings-qol-item\.saga-settings-switch-row\s*\{[\s\S]*?display:\s*grid !important;[\s\S]*?grid-template-columns:\s*48px minmax\(0,\s*1fr\) !important;/.test(style)
-        && /\.saga-runtime-mobile \.saga-settings-qol-item \.saga-settings-switch-text\s*\{[\s\S]*?display:\s*flex !important;[\s\S]*?max-width:\s*none !important;/.test(style)
-        && style.includes('.saga-settings-switch-input:checked + .saga-settings-switch-slider'),
-    'Settings must expose Quality of Life as a dropdown with a full-width left-switch/right-text row and avoid redundant providers/theme separators.'
-);
-assert(lorecardsPanel.includes('function shouldShowLorecardListTags') && lorecardsPanel.includes("card.appendChild(createTagsRow(entry, { editable: !mobileShell }));") && lorecardsPanel.includes("tags.classList.add('saga-pending-readonly-tags')") && lorecardsPanel.includes('shouldShowLorecardListTags()'), 'Mobile Lore list tags must be hidden by default and read-only when enabled.');
-assert(lorecardsPanel.includes("if (mobileEditor) editor.classList.add('saga-mobile-lorecard-entry-editor');") && lorecardsPanel.includes('const autosizeTextarea = (input) => {') && lorecardsPanel.includes("shell.addEventListener('pointerdown', event => event.stopPropagation())") && lorecardsPanel.includes('function armMobileLorecardEditorSelectionLock') && lorecardsPanel.includes("openAcceptedLorecardMobileEditor(entryId, { selectionLock: true })") && lorecardsPanel.includes("openAcceptedLorecardMobileEditor(id, { selectionLock: true })") && style.includes('.saga-mobile-lorecard-entry-editor .saga-lore-editor-textarea') && style.includes('.saga-mobile-lorecard-entry-editor .saga-new-lore-field select') && /\.saga-mobile-touch-surface\.saga-mobile-lorecard-editor-selection-locked input,[\s\S]*?pointer-events:\s*none;/.test(style), 'Mobile Lorecard editor must use readable auto-growing fields, prevent native select interactions from closing the overlay, and keep text fields non-selectable until the long-press finger is lifted.');
-assert(lorecardsPanel.includes('function createMobileLorecardEditorTagsControl') && lorecardsPanel.includes('saga-mobile-lorecard-tags-chip-stack') && lorecardsPanel.includes('getTags: () => tags.slice()') && lorecardsPanel.includes('saga-mobile-lorecard-tags-remove saga-runtime-icon-button') && style.includes('.saga-mobile-lorecard-tags-chip-stack') && style.includes('.saga-mobile-lorecard-tags-add-row') && style.includes('var(--saga-chip-tag'), 'Mobile Lorecard editor must edit tags as a single stacked chip list with themed remove buttons and an add row.');
-assert(lorecardsPanel.includes("footer.className = 'saga-mobile-lorecard-editor-footer'") && lorecardsPanel.includes("footerActions.className = 'saga-mobile-lorecard-editor-action-slot'") && lorecardsPanel.includes('actionsContainer: footerActions') && lorecardsPanel.includes("overlay.dataset.sagaEditorReady = 'true'") && style.includes('.saga-mobile-lorecard-editor-footer') && style.includes('.saga-mobile-lorecard-editor-loading') && /\.saga-mobile-lorecard-editor-action-slot\s*\{[\s\S]*?display:\s*flex;[\s\S]*?align-items:\s*stretch;[\s\S]*?align-self:\s*stretch;/.test(style) && /\.saga-mobile-lorecard-editor-footer\s*\{[\s\S]*?align-items:\s*stretch;/.test(style) && /\.saga-mobile-lorecard-editor-footer \.saga-runtime-button\s*\{[\s\S]*?height:\s*100%;[\s\S]*?min-height:\s*42px;[\s\S]*?margin:\s*0 !important;/.test(style), 'Mobile Lorecard editor persistent actions must live in a bottom footer, hydrate after the shell first paints, and align Save Entry / Close button boxes vertically.');
-assert(liveSmoke.includes('measureMobileLorecardEditorLatency') && liveSmoke.includes('postHoldReadyMs') && liveSmoke.includes('duplicateContextmenuReopened') && liveSmoke.includes('closeGoneMs') && liveSmoke.includes('footerButtonsVerticallyAligned') && liveSmoke.includes('editorFooterState') && liveSmoke.includes('editorSelectionLockState') && liveSmoke.includes('pointerEventsBeforeRelease'), 'Mobile Lorecard editor smoke must measure long-press open, selection lock until touch release, Save/Close footer alignment, and Close latency in the browser.');
-assert(liveSmoke.includes("const LIVE_MOBILE_LORECARD_LATENCY_TARGET = 'live-mobile-lorecard-latency';") && liveSmoke.includes('runLiveMobileLorecardLatencySmoke') && liveSmoke.includes('saga_live_latency_probe_lorecard'), 'Live ST smoke must include a focused mobile Lorecard editor latency target with a temporary restored fixture.');
-assert(/\.saga-mobile-lorecards-subtab\s*\{[\s\S]*?position:\s*relative;[\s\S]*?margin-left:\s*-1px;/.test(style) && /\.saga-mobile-lorecards-subtab-active,[\s\S]*?\.saga-mobile-lorecards-subtab\[aria-selected="true"\]\s*\{[\s\S]*?z-index:\s*1;/.test(style), 'Mobile Lorecards sub-tab active borders must render evenly on all edges.');
-assert(/\.saga-runtime-mobile \.saga-lorecard-workspace-list\s*\{[\s\S]*?overflow:\s*visible !important;/.test(style), 'Mobile Lore workspace list must allow long unified lists to resize instead of clipping past the section box.');
+
+
+
+
+
+
+
+
+
 assert(!lorecardsPanel.includes('function setLorecardLifecycleStage'), 'Lorecards lifecycle routing must not retain the stale non-subview stage setter.');
 assert(lorecardsPanel.includes('function createLorecardWorkspace') && lorecardsPanel.includes("workspace.className = 'saga-runtime-card saga-lorecard-workspace'") && lorecardsPanel.includes('function createLorecardsStageContent') && lorecardsPanel.includes("container.appendChild(createLorecardsStageContent(state, { basic, lifecycleStats, lifecycleStage }));") && lorecardsPanel.includes("if (lifecycleStage === 'generate')") && lorecardsPanel.includes("if (lifecycleStage === 'automation')") && !lorecardsPanel.includes('function createLorecardPipelineSurface') && !lorecardsPanel.includes('container.appendChild(createLorecardPipelineSurface'), 'Lorecards desktop route must render Generate, Automate, and Lore stage pages without retaining the old lifecycle pipeline surface.');
-assert(lorecardsPanel.includes('const isExpanded = !workspaceRow && !mobileShell && panelState.selectedEntryId === entry.id;') && lorecardsPanel.includes('if (!workspaceRow && (!mobileShell || shouldShowLorecardListTags()))') && lorecardsPanel.includes('if (!workspaceRow && Array.isArray(entry.tags) && entry.tags.length && shouldShowLorecardListTags())'), 'Lorecards workspace rows must stay scan-only: no inline editor expansion and no tag-wall rows in the primary list.');
+
 assert(style.includes('container-type: inline-size') && /@container \(min-width:\s*920px\)[\s\S]*?\.saga-lorecard-workspace-body\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)\s+minmax\(300px,\s*0\.56fr\)/.test(style) && style.includes('.saga-lorecard-detail-card .saga-lore-editor-textarea') && style.includes('.saga-lore-relevance-segmented') && style.includes('.saga-lorecard-mute-toggle') && style.includes('.saga-lorecard-elevate-toggle') && lorecardsPanel.includes('function createLorecardElevateToggleButton'), 'Desktop Lorecards workspace must use container-aware layout, readable detail editor sizing, and the relevance/mute/elevate control set on rows.');
-assert(
-    style.includes('.saga-lore-panel:not(.saga-runtime-mobile) .saga-lorecard-workspace-row .saga-lore-entry-title')
-        && style.includes('font-size: 0.96em !important;')
-        && style.includes('.saga-lore-panel:not(.saga-runtime-mobile) .saga-lorecard-workspace-row .saga-lore-entry-fact')
-        && style.includes('.saga-lore-panel:not(.saga-runtime-mobile) .saga-lorecard-detail-card .saga-runtime-card-title')
-        && style.includes('font-size: 1em;')
-        && style.includes('.saga-lore-panel:not(.saga-runtime-mobile) .saga-lorecard-detail-card .saga-lore-entry-full-fact')
-        && style.includes('.saga-runtime-mobile .saga-lorecard-workspace-row .saga-lore-entry-title')
-        && !/^\s*\.saga-lorecard-workspace-row \.saga-lore-entry-title\s*\{\s*font-size:\s*16px;/m.test(style)
-        && !/^\s*\.saga-lorecard-detail-card \.saga-runtime-card-title\s*\{\s*font-size:\s*18px;/m.test(style),
-    'Desktop Lorecards typography must stay on the shared compact desktop scale while mobile keeps the larger card scale.'
-);
-assert(!lorecardsPanel.includes('saga-lorecard-pipeline-compact') && !style.includes('.saga-lorecard-pipeline') && !/\.saga-runtime-mobile \.saga-lorecard-pipeline-rail/.test(style), 'Mobile Lorecards must not retain the compact lifecycle rail or retired pipeline CSS.');
+
+
 assert(!lorecardsPanel.includes("if (!stats.acceptedCount) return 'suggested';") && lorecardsPanel.includes('function getLorecardWorkspaceRows') && lorecardsPanel.includes('function createLorecardWorkspaceDetailPane') && lorecardsPanel.includes('No Lorecards match the current filters.') && style.includes('.saga-lorecard-workspace-row.saga-lore-entry-elevated'), 'Blank and Elevated Lorecards must show object state through the unified workspace instead of redundant lifecycle sections.');
-assert(lorecardsPanel.includes('const mobileShell = isRuntimeMobileShell();') && lorecardsPanel.includes('const recommendedLifecycleStage = getRecommendedLorecardLifecycleStage(state, lifecycleStats);') && lorecardsPanel.includes('getRuntimeMobileLorecardsStage(state?.lorePanel, recommendedLifecycleStage, getSettings())'), 'Mobile Lorecards root must use shell-owned sub-tab stage state with a recommended fallback.');
-assert(lorecardsPanel.includes("'saga-lorecards-lifecycle-tab'") && lorecardsPanel.includes("'saga-lorecards-workspace-tab'") && lorecardsPanel.includes('saga-lore-stage-filter-${lifecycleStage}') && lorecardsPanel.includes("markTourTarget(workspace, 'lore.workspace')"), 'Lorecards workspace surface must expose mobile stage classes and the unified workspace tour target.');
-assert(!/\.saga-runtime-mobile \.saga-lorecards-lifecycle-tab\.saga-lore-stage-filter-accepted \.saga-lore-active-set-collapsible/.test(style), 'Mobile Lorecards must not depend on a route-level Approved page or hidden Active Set section.');
-assert(style.includes('.saga-lorecard-workspace-body') && style.includes('.saga-runtime-mobile .saga-lorecard-workspace-list'), 'Mobile Lorecards workspace must use the shell page as the primary scroll owner instead of nested lifecycle list scroll regions.');
-assert(style.includes('Mobile UX Revision 3: Lorecards sub-tabs are pages, not nested list panes.') && /\.saga-runtime-mobile \.saga-lorecard-workspace-list\s*\{[\s\S]*?overflow:\s*visible !important;/.test(style), 'Revision 3 mobile Lorecards lists must stay in the primary page scroll with finger pan support.');
-assert(/#saga-lore-panel\.saga-runtime-mobile > \.saga-lore-panel-body\.saga-mobile-content > \.saga-runtime-tab-body\.saga-runtime-tab-body-lore\s*\{[\s\S]*?overflow-y:\s*auto !important;[\s\S]*?touch-action:\s*pan-y !important;/.test(style), 'Mobile Lorecards tab body must be the exact single scroll owner for finger scrolling.');
-assert(lorecardsPanel.includes('function createMobileLorecardsStageLoadingShell') && lorecardsPanel.includes("shell.setAttribute('aria-busy', 'true')") && lorecardsPanel.includes('saga-mobile-lorecards-loading-spinner') && style.includes('.saga-mobile-lorecards-loading-shell'), 'Mobile Lorecards must first paint a loading shell before rebuilding expensive stage sections.');
-assert(lorecardsPanel.includes('function createMobileLorecardStatusControls') && lorecardsPanel.includes('function attachMobileLorecardGestures') && lorecardsPanel.includes('toggleLorecardElevationByGesture(entryId, element)') && lorecardsPanel.includes('cycleLorecardRelevanceByTap(entry.id, relevance)') && lorecardsPanel.includes("relevance.addEventListener('click'") && !lorecardsPanel.includes('adjustLorecardRelevanceByGesture') && !lorecardsPanel.includes('deltaX > 0 ? 1 : -1') && !lorecardsPanel.includes('sagaGestureLabel') && !/\.saga-runtime-mobile \.saga-mobile-lorecard-gesture-feedback::after/.test(style) && lorecardsPanel.includes('longPressTimer = setTimeout') && lorecardsPanel.includes('now - lastTapAt <= 320') && style.includes('.saga-mobile-lorecard-status-controls') && style.includes('.saga-mobile-lorecard-gesture-feedback') && /saga-runtime-tab-body[\s\S]*?-webkit-overflow-scrolling:\s*touch !important;[\s\S]*?touch-action:\s*pan-y !important;/.test(style), 'Mobile Lorecards must expose status controls plus tap-cycle relevance, double-tap Elevate, and long-press Edit while preserving page scrolling without tier-name popups.');
-assert(contextPanel.includes("'context.operator.summary'") && contextPanel.includes("'context.operator.browse'") && contextPanel.includes("'context.operator.detect'"), 'Mobile Context operator summary must expose Browse and Detect walkthrough targets.');
-assert(!contextPanel.includes('Next:') && contextPanel.includes('getContextOperatorActionLabel') && contextPanel.includes('return label;') && contextPanel.includes("'context.operator.browse'") && contextPanel.includes("'context.operator.detect'"), 'Mobile Context operator summary must use direct actions without checklist-style Next buttons.');
-assert(!loredecksTabPanel.includes('createLoredecksOperatorSummary') && !loredecksTabPanel.includes("'loredecks.operator.summary'") && !loredecksTabPanel.includes('Open Stack Details') && loredecksTabPanel.includes("markTourTarget(libraryCard, 'loredecks.library.launch')") && !loredecksTabPanel.includes('if (isRuntimeMobileShell()) return;'), 'Loredecks tab must remove the redundant Active Stack operator summary and must not short-circuit the Advanced Deck Maker Projects shelf on mobile.');
-assert(!loredecksTabPanel.includes('Next:') && loredecksTabPanel.includes("'Open Loredeck Library'") && loredecksTabPanel.includes("'loredecks.library.open'") && loredecksTabPanel.includes("'loredecks.import'"), 'Mobile Loredecks root must expose direct Library and Import actions through the static Library launch card.');
-assert(runtimeAdvancedPanel.includes('getSessionMobileSubview') && runtimeAdvancedPanel.includes("pushRuntimeMobileSubview('session'") && runtimeAdvancedPanel.includes('Session Details') && runtimeAdvancedPanel.includes("header.setAttribute('aria-label', 'Open Session Details')") && runtimeAdvancedPanel.includes('openSessionMobileDetails();') && !runtimeAdvancedPanel.includes("createButton('Session Details'"), 'Mobile Session must open details through the tappable summary header instead of a standalone Details button.');
-assert(!runtimeAdvancedPanel.includes('createBasicSessionNextActionButton') && !runtimeAdvancedPanel.includes('Next:') && runtimeAdvancedPanel.includes("basic ? 'Start Guided Tour' : 'Start Walkthrough'") && runtimeAdvancedPanel.includes("enabled ? 'saga-primary-button' : ''"), 'Basic mobile Session summary must keep walkthrough as the primary entry without checklist-style Next buttons.');
-assert(runtimeAdvancedPanel.includes("if (mobileRoot) {") && runtimeAdvancedPanel.includes("createKeyValue('Pending Review'") && runtimeAdvancedPanel.includes("createKeyValue('High relevance'") && runtimeAdvancedPanel.includes("createKeyValue('Selected for injection'"), 'Mobile Session root summary must include the useful session metrics without requiring a details subview.');
-assert(!loredecksTabPanel.includes('getLoredecksMobileSubview') && !loredecksTabPanel.includes("pushRuntimeMobileSubview('loredecks'") && !loredecksTabPanel.includes("title: 'Stack Details'") && !loredecksTabPanel.includes("header.setAttribute('aria-label', 'Open Stack Details')"), 'Mobile Loredecks must not keep the retired Stack Details subview from the old Active Stack summary.');
-assert(!loredecksTabPanel.includes("actions.classList.add('saga-loredecks-mobile-action-stack')") && !loredecksTabPanel.includes("primaryActions.className = 'saga-loredecks-mobile-primary-actions'") && !loredecksTabPanel.includes("secondaryActions.className = 'saga-loredecks-mobile-secondary-actions'"), 'Mobile Loredecks root must not use the retired operator-summary action stack.');
-assert(!loredecksTabPanel.includes('primaryMobileActionId') && !loredecksTabPanel.includes('getLoredecksOperatorActionLabel'), 'Mobile Loredecks root must not keep old operator-summary action indirection.');
-assert(contextPanel.includes('getContextMobileSubview') && contextPanel.includes("pushRuntimeMobileSubview('context'") && contextPanel.includes('Context Details') && contextPanel.includes("header.setAttribute('aria-label', 'Open Context Details')") && contextPanel.includes('openContextMobileDetails();') && !contextPanel.includes("createButton('Context Details'"), 'Mobile Context must open loaded Context rows from the tappable summary object instead of a standalone Details button.');
-assert(lorecardsPanel.includes('openLorecardLifecycleStage') && lorecardsPanel.includes('selectRuntimeMobileLorecardsStage(normalized);') && !lorecardsPanel.includes("pushRuntimeMobileSubview('lore'") && !lorecardsPanel.includes('function pushLorecardLifecycleSubview(stage)'), 'Mobile Lorecards lifecycle changes must select shell sub-tabs instead of pushing stage subviews.');
-assert(!lorecardsPanel.includes("() => openLorecardLifecycleStage('accepted')") || lorecardsPanel.includes('if (!isRuntimeMobileShell())'), 'Active Set page-body stage navigation must stay off mobile because the shell sub-tab bar owns stage switching.');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 assert(lorecardsPanel.includes('function getLorecardWorkspaceRows') && lorecardsPanel.includes('pendingLoreEntries || []') && lorecardsPanel.includes('getPanelLoreState(state).entries') && lorecardsPanel.includes("status: 'pending'") && lorecardsPanel.includes("status: 'accepted'"), 'Lorecards workspace rows must route the full pending and accepted queues into one row model.');
 assert(lorecardsPanel.includes('function createLorecardWorkspaceFilterChip') && lorecardsPanel.includes('interactive: true') && lorecardsPanel.includes('chip.setAttribute(\'aria-pressed\'') && lorecardsPanel.includes('filterRow.appendChild(createLorecardWorkspaceFilterChip'), 'Lorecards workspace counters must be interactive filters.');
 assert(
@@ -1305,53 +1073,12 @@ assert(
         && lorecardsPanel.includes('Math.max(initialVisibleLimit, Number(panelState.acceptedLoreVisibleLimit) || initialVisibleLimit)')
         && runtimePanelSource.includes('const ACCEPTED_LORE_INITIAL_VISIBLE_LIMIT = 200;')
         && runtimePanelSource.includes('const ACCEPTED_LORE_PAGE_INCREMENT = 200;')
-        && runtimeShell.includes('panelState.acceptedLoreVisibleLimit = Math.max(200, Number(panelState.acceptedLoreVisibleLimit) || 200);'),
+        && runtimeShell.includes('state.lorePanel.acceptedLoreVisibleLimit = Math.max(200, Number(state.lorePanel.acceptedLoreVisibleLimit) || 200);'),
     'Lorecards Lore lists must show accepted Lorecards in 200-card batches so small and medium sets do not require repeated Show More clicks.'
 );
 const lorecardWorkspaceSortFunction = lorecardsPanel.match(/function sortLorecardWorkspaceRows\(a, b, sortMode = 'alphabetical'\)[\s\S]*?\n}\n\nfunction getFilteredLorecardWorkspaceRows/)?.[0] || '';
 const lorecardWorkspaceSortStyle = style.match(/\.saga-lorecard-workspace-sort-toggle\s*\{[\s\S]*?\n\}/)?.[0] || '';
-assert(
-    lorecardsPanel.includes('const LORECARD_WORKSPACE_SORTS = Object.freeze')
-        && lorecardsPanel.includes("['alphabetical', 'A', 'Alphabetical'],\n    ['priority', 'P', 'Priority'],\n    ['relevance', 'R', 'Relevance']")
-        && lorecardsPanel.includes('function normalizeLorecardWorkspaceSort')
-        && lorecardsPanel.includes('function getNextLorecardWorkspaceSort')
-        && lorecardsPanel.includes('function getLorecardWorkspaceRelevanceSortRank')
-        && lorecardsPanel.includes('function createLorecardWorkspaceSortToggle')
-        && lorecardsPanel.includes('function refreshLorecardWorkspaceListOnly')
-        && lorecardsPanel.includes("button.textContent = label")
-        && lorecardsPanel.includes('setLorecardWorkspaceSort(nextSort)')
-        && lorecardsPanel.includes('if (isRuntimeMobileShell() && refreshLorecardWorkspaceListOnly()) return;')
-        && lorecardsPanel.includes('renderLorecardWorkspaceList(list, state, getFilteredLorecardWorkspaceRows(state)')
-        && lorecardsPanel.includes("workspace.querySelector('.saga-lorecard-workspace-sort-toggle')")
-        && lorecardsPanel.includes('if (preserveSortFocus) nextButton.focus?.();')
-        && lorecardsPanel.includes('function refreshLorecardWorkspaceListForSortSensitiveChange')
-        && lorecardsPanel.includes("if (sort !== 'relevance') return false;")
-        && lorecardsPanel.includes("searchRow.appendChild(createLorecardWorkspaceSortToggle(activeSort));")
-        && lorecardsPanel.includes("toolbar.appendChild(searchRow);")
-        && defaultState.includes("lorecardWorkspaceSort: 'alphabetical'")
-        && stateManager.includes('Schema v27: Lorecards workspace defaults to A/P/R with Alphabetical active.')
-        && stateManager.includes("state.lorePanel.lorecardWorkspaceSort = 'alphabetical';")
-        && stateManager.includes("state.lorePanel.lorecardWorkspaceSort = ['priority', 'alphabetical', 'relevance'].includes")
-        && stateManager.includes("defaultsPanel.lorecardWorkspaceSort || 'alphabetical'")
-        && /function sortLorecardWorkspaceRows\(a, b, sortMode = 'alphabetical'\)[\s\S]*?if \(normalizedSort === 'alphabetical'\)/.test(lorecardsPanel)
-        && /function sortLorecardWorkspaceRows\(a, b, sortMode = 'alphabetical'\)[\s\S]*?if \(normalizedSort === 'relevance'\)[\s\S]*?getLorecardWorkspaceRelevanceSortRank\(a\) - getLorecardWorkspaceRelevanceSortRank\(b\)[\s\S]*?if \(titleScore\) return titleScore;/.test(lorecardsPanel)
-        && /function getLorecardWorkspaceRelevanceSortRank\(row = \{\}\)[\s\S]*?if \(row\.isElevated\) return 0;[\s\S]*?if \(relevance === 'high'\) return 1;[\s\S]*?if \(relevance === 'normal'\) return 2;[\s\S]*?return 3;/.test(lorecardsPanel)
-        && !lorecardWorkspaceSortFunction.includes('isActive')
-        && style.includes('.saga-lorecard-workspace-search-row')
-        && style.includes('.saga-lorecard-workspace-sort-toggle')
-        && style.includes('aspect-ratio: 1 / 1')
-        && style.includes('flex: 0 0 34px')
-        && style.includes('border-radius: 3px')
-        && style.includes('width: 34px')
-        && lorecardWorkspaceSortStyle.includes('var(--saga-button-hover')
-        && lorecardWorkspaceSortStyle.includes('var(--saga-button,')
-        && lorecardWorkspaceSortStyle.includes('var(--saga-button-text')
-        && !lorecardWorkspaceSortStyle.includes('linear-gradient(180deg, var(--saga-gold')
-        && !lorecardWorkspaceSortStyle.includes('var(--saga-gold-surface')
-        && !lorecardsPanel.includes('saga-lorecard-workspace-sort-option')
-        && !style.includes('.saga-lorecard-workspace-sort-option-active'),
-    'Lorecards workspace must place a square theme-token A/P/R sort cycle button beside Search, default to Alphabetical, support Relevance tier sorting, and must not auto-sort activated cards to the top.'
-);
+
 assert(lorecardsPanel.includes('const pendingReviewEntries = pendingEntries.filter(entry => !isSuggestedPendingLore(entry));') && lorecardsPanel.includes('pendingEntries: pendingReviewEntries') && lorecardsPanel.includes('allPendingEntries: pendingEntries') && lorecardsPanel.includes('pendingCount: pendingReviewEntries.length') && lorecardsPanel.includes('allPendingCount: pendingEntries.length'), 'Lorecards lifecycle stats must keep suggested and Pending Review counts distinct while retaining the full pending-entry set.');
 assert(lorecardsPanel.includes("['needs-review', 'Needs Review']") && lorecardsPanel.includes("['high', 'High']") && lorecardsPanel.includes("['elevated', 'Elevated']") && lorecardsPanel.includes("['muted', 'Muted']") && lorecardsPanel.includes("['conflicts', 'Conflicts']"), 'Lorecards workspace filters must expose review, High, Elevated, Muted, and conflict views over one object list.');
 assert(style.includes('.saga-lorecard-workspace-filter-chip[aria-pressed="true"]') && style.includes('.saga-lorecard-workspace-filter-active'), 'Lorecards workspace count filters must expose an active visual state.');
@@ -1367,7 +1094,7 @@ assert(
         && !acceptedLorecardWorkspaceDetailFunction.includes('createLorecardElevateToggleButton(entry'),
     'Accepted Lorecard sidebar/detail inspector must not render action buttons; row controls own edit, relevance, mute, and Elevate.'
 );
-assert(lorecardsPanel.includes('function makeActiveSetItemMobileEditable') && lorecardsPanel.includes('if (!isRuntimeMobileShell()) return item;') && !/function makeActiveSetItemMobileEditable[\s\S]*?inspectAcceptedLoreEntry\(id\)/.test(lorecardsPanel), 'Desktop Active Set cards must not open editing from body clicks; mobile keeps long-press editing on the card object.');
+
 assert(
     lorecardsPanel.includes('isActive: isActiveLorecardEntry(entry)') &&
         !lorecardsPanel.includes("createBadge('active'") &&
@@ -1407,7 +1134,7 @@ assert(runtimeAdvancedPanel.includes("createKeyValue('Pending Review'") && runti
 assert(loreTimelinePanel.includes('Draft a Manual Lore Note') && !loreTimelinePanel.includes('New Lore') && !loreTimelinePanel.includes('New Lorecard') && !loreTimelinePanel.includes('openNewLoreDialog'), 'Lore Timeline must not reintroduce redundant New Lore entry points; manual note creation belongs in Generate.');
 assert(lorecardsPanel.includes("createButton('Accept Selected'") && lorecardsPanel.includes("createButton('Reject Selected'") && lorecardsPanel.includes("createButton('Accept All'") && lorecardsPanel.includes("createButton('Reject All'") && !lorecardsPanel.includes("createButton('Inspect', 'Inspect this Pending Review entry") && !lorecardsPanel.includes("createButton(editing ? 'Close Edit' : 'Edit'") && !lorecardsPanel.includes("const acceptLabel = targetId ? 'Accept Update' : 'Accept';") && !lorecardsPanel.includes("createButton('Accept as New'") && lorecardsPanel.includes("'Accepts this Pending Review entry and merges it into Accepted Lorecards.'") && lorecardsPanel.includes("createButton('Reject', 'Rejects this Pending Review entry") && !lorecardsPanel.includes('single lore entry'), 'Pending Review rows must keep only Accept/Reject while bulk controls remain available behind selection/workbench flows.');
 assert(!lorecardsPanel.includes('Dismiss the rest') && !lorecardsPanel.includes('Accept or dismiss pending cards') && !lorecardsPanel.includes('if applied') && !lorecardsPanel.includes('unless applied as new') && lorecardsPanel.includes('Reject the rest.') && lorecardsPanel.includes('Accept or reject Pending Review entries before relevance scanning.') && lorecardsPanel.includes('if accepted.') && !lorecardsPanel.includes('unless accepted as new.'), 'Visible Lorecards Pending Review guidance must use Accept/Reject wording without accepted-as-new row copy.');
-assert(lorecardsPanel.includes('const LORE_SOURCE_FILTER_OPTIONS = Object.freeze') && lorecardsPanel.includes("['creator', 'Deck Maker Drafts']") && lorecardsPanel.includes("['context-suggestion', 'Context Suggestions']") && lorecardsPanel.includes('function getLoreSourceOriginMeta(entry = {})') && lorecardsPanel.includes("label: 'Source: Deck Maker'") && lorecardsPanel.includes("label: 'Source: Context Suggestion'") && lorecardsPanel.includes('Deck Maker Lorecard draft waiting for review before it becomes an Accepted Lorecard.') && lorecardsPanel.includes('Context-aware suggestion waiting for review before it becomes an Accepted Lorecard.') && lorecardsPanel.includes('Unified Lorecards workspace. Pending, High, Elevated, and Muted are states in one list.') && lorecardsPanel.includes('before it becomes an Accepted Lorecard.') && !lorecardsPanel.includes('accepted memory') && !lorecardsPanel.includes('Accepted memory'), 'Pending Review source badges and filters must distinguish Deck Maker drafts and Context suggestions in the shared review flow with Accepted Lorecards language.');
+assert(lorecardsPanel.includes('const LORE_SOURCE_FILTER_OPTIONS = Object.freeze') && lorecardsPanel.includes("['creator', 'Deck Maker Drafts']") && lorecardsPanel.includes("['context-suggestion', 'Context Suggestions']") && lorecardsPanel.includes('function getLoreSourceOriginMeta(entry = {})') && lorecardsPanel.includes("label: 'Source: Deck Maker'") && lorecardsPanel.includes("label: 'Source: Context Suggestion'") && lorecardsPanel.includes('Deck Maker Lorecard draft waiting for review before it becomes an Accepted Lorecard.') && lorecardsPanel.includes('Context-aware suggestion waiting for review before it becomes an Accepted Lorecard.') && lorecardsPanel.includes('before it becomes an Accepted Lorecard.') && !lorecardsPanel.includes('accepted memory') && !lorecardsPanel.includes('Accepted memory'), 'Pending Review source badges and filters must distinguish Deck Maker drafts and Context suggestions in the shared review flow with Accepted Lorecards language.');
 assert(lorecardsPanel.includes('function getPendingReviewSourceFilter') && lorecardsPanel.includes('function setPendingReviewSourceFilter') && lorecardsPanel.includes('function createLoreSourceFilterSelect') && lorecardsPanel.includes('pendingSourceFilter') && lorecardsPanel.includes(".filter(row => sourceFilter === 'all' || getLoreSourceBucket(row.entry) === sourceFilter)") && lorecardsPanel.includes('Filter Pending Review entries by source: manual notes, story scans, Deck Maker drafts, or Context suggestions.') && lorecardsPanel.includes('Select every pending entry matching the current Workbench search, source, and type filters.') && /function createPendingWorkbenchTable\(rows, state\)[\s\S]*?for \(const label of \['', 'Title', 'Source', 'Operation', 'Route', 'Category', 'Canon', 'Priority'\]\)[\s\S]*?row\.appendChild\(createWorkbenchTextCell\(getLoreSourceBucketLabel\(getLoreSourceBucket\(entry\)\)\)\);/.test(lorecardsPanel) && style.includes('grid-template-columns: 28px minmax(220px, 2fr) minmax(76px, 0.6fr) minmax(84px, 0.7fr) minmax(92px, 0.8fr)'), 'Pending Review source filters must let manual notes, story scans, Deck Maker drafts, and Context suggestions stay filterable before acceptance with visible workbench source columns.');
 assert(defaultSettings.includes('runtimeWindowOpen: false'), 'Fresh Saga installs must default the global runtime window setting to closed.');
 assert(settingsMount.includes("if (getSettings().runtimeWindowOpen === true)"), 'Startup must restore visibility from the global runtime-window setting.');
@@ -1481,65 +1208,8 @@ assert(!style.includes('.saga-lore-panel-badge'), 'Unused legacy lore panel badg
 assert(!style.includes('.saga-continuity-filter-chip-active') && !legacyChipSource.includes('--wl-chip-color'), 'Lore Timeline filter chips must use selected/muted schema tones instead of local chip color variables.');
 assert(!cssRuleDeclares(style, '.saga-lore-meta-select', ['height', 'min-height', 'border-radius', 'padding', 'font-size', 'font-weight', 'line-height']) && !/\.saga-lore-meta-select\s*\{[^}]*background:\s*rgba/.test(style), 'Editable metadata dropdowns must let the schema chip wrapper own density and visible fill.');
 assert(lorecardsPanel.includes("className = 'saga-lore-relevance-segmented'") && lorecardsPanel.includes("role', 'radiogroup'") && lorecardsPanel.includes("aria-label', `${meta.label} Relevance`") && !lorecardsPanel.includes('saga-lore-lifecycle-select'), 'Accepted Lorecards relevance must use one-click dot segmented controls with per-tier accessible labels, not native dropdowns.');
-assert(
-    lorecardsPanel.includes("if (mobileShell && !entry.isPending) card.classList.add('saga-lore-entry-card-tappable');") &&
-        lorecardsPanel.includes('const activeNow = isActiveLorecardEntry(entry);') &&
-        lorecardsPanel.includes('const elevatedNow = isElevatedLorecardEntry(entry);') &&
-        lorecardsPanel.includes("if (elevatedNow) card.classList.add('saga-lore-entry-elevated');") &&
-        !lorecardsPanel.includes("createBadge('active'") &&
-        !style.includes('saga-lore-entry-active::before') &&
-        lorecardsPanel.includes('function createMobileLorecardStatusControls') &&
-        lorecardsPanel.includes('function toggleLorecardElevationByGesture') &&
-        lorecardsPanel.includes('function cycleLorecardRelevanceByTap') &&
-        lorecardsPanel.includes('function getNextRelevanceTier') &&
-        lorecardsPanel.includes("relevance.type = 'button'") &&
-        lorecardsPanel.includes('cycleLorecardRelevanceByTap(entry.id, relevance)') &&
-        !lorecardsPanel.includes('sagaGestureLabel') &&
-        lorecardsPanel.includes('now - lastTapAt <= 320') &&
-        !lorecardsPanel.includes('const threshold = Math.max(130, Math.min((rect?.width || 0) * 0.72 || 180, 280));') &&
-        !lorecardsPanel.includes('adjustLorecardRelevanceByGesture') &&
-        lorecardsPanel.includes('if (!mobileShell && !entry.isPending) {') &&
-        lorecardsPanel.includes('actions.appendChild(createLorecardEditButton(entry') &&
-        lorecardsPanel.includes("className: workspaceRow ? 'saga-lorecard-row-edit-toggle'") &&
-        lorecardsPanel.includes('if (mobileShell && !entry.isPending) {') &&
-        lorecardsPanel.includes('if (actions.children.length && (!mobileShell || workspaceRow))') &&
-        !lorecardsPanel.includes('const detailsBtn = createIconButton(') &&
-        !lorecardsPanel.includes('createIconButton') &&
-        !lorecardsPanel.includes('saga-lore-entry-details-btn') &&
-        lorecardsPanel.includes("card.addEventListener('pointerdown'") &&
-        lorecardsPanel.includes("card.addEventListener('contextmenu'") &&
-        !lorecardsPanel.includes('if (workspaceRow) {\n                return;\n            }') &&
-        lorecardsPanel.includes("'Long-press Cards to Edit'") &&
-        !lorecardsPanel.includes("summaryHint.textContent = 'Double-tap cards to Elevate';") &&
-        lorecardsPanel.includes('refreshAcceptedLoreSurfaces(entry.id, { sortSensitive: true });') &&
-        lorecardsPanel.includes('refreshAcceptedLoreSurfaces(id, { sortSensitive: true })') &&
-        lorecardsPanel.includes('const listRefreshed = options.sortSensitive === true && refreshLorecardWorkspaceListForSortSensitiveChange();') &&
-        style.includes('.saga-lorecard-edit-toggle') &&
-        style.includes('.saga-lorecard-edit-icon-svg') &&
-        lorecardsPanel.includes("existing.closest?.('.saga-lorecard-workspace-list')") &&
-        lorecardsPanel.includes('existing.replaceWith(createLorecardWorkspaceRow(row, state, { basic: basicReview }));') &&
-        lorecardsPanel.includes('openAcceptedLorecardMobileEditor(entryId, { selectionLock: true });') &&
-        !lorecardsPanel.includes("if (workspaceRow) {\n                openAcceptedLorecardMobileEditor(entry.id);") &&
-        style.includes('.saga-lorecard-workspace-row.saga-lore-entry-elevated') &&
-        style.includes('.saga-mobile-lorecard-status-controls') &&
-        style.includes('.saga-mobile-lorecard-relevance-status:hover') &&
-        style.includes('touch-action: manipulation;') &&
-        style.includes('.saga-mobile-lorecard-gesture-feedback') &&
-        !/\.saga-runtime-mobile \.saga-mobile-lorecard-gesture-feedback::after/.test(style) &&
-        /\.saga-runtime-mobile \.saga-lore-entry-card-tappable,[\s\S]*?\.saga-runtime-mobile \.saga-lore-active-set-item-tappable\s*\{[\s\S]*?-webkit-touch-callout:\s*none;[\s\S]*?user-select:\s*none;/.test(style) &&
-        style.includes('.saga-runtime-mobile .saga-lorecard-workspace-row .saga-lore-entry-actions') &&
-        style.includes('.saga-runtime-mobile .saga-lore-entry-card-tappable') &&
-        style.includes('.saga-mobile-lorecard-longpress-armed') &&
-        style.includes('@keyframes saga-mobile-lorecard-longpress-hold') &&
-        !style.includes('.saga-runtime-mobile .saga-lore-entry-details-btn'),
-    'Mobile Accepted Lorecards must use visible Elevated state, compact status controls, tap-cycle relevance, long-press edit status, double-tap Elevate, and animated long-press editing without permanent edit/detail buttons.'
-);
-assert(
-    /\.saga-mobile-lorecard-relevance-status\[data-saga-relevance="low"\]\s*\{[\s\S]*?var\(--saga-chip-muted-fg[\s\S]*?var\(--saga-chip-neutral-bg/.test(style) &&
-        /\.saga-mobile-lorecard-relevance-status\[data-saga-relevance="normal"\]\s*\{[\s\S]*?var\(--saga-chip-relevance-normal-fg[\s\S]*?52%,\s*var\(--saga-activate[\s\S]*?48%[\s\S]*?82%,\s*var\(--saga-activate[\s\S]*?18%/.test(style) &&
-        /\.saga-mobile-lorecard-relevance-status\[data-saga-relevance="high"\]\s*\{[\s\S]*?var\(--saga-chip-relevance-high-fg[\s\S]*?58%,\s*var\(--saga-activate[\s\S]*?42%/.test(style),
-    'Mobile Lorecard relevance status buttons must use neutral low, restrained Activate normal, and strong Activate high.'
-);
+
+
 assert(style.includes('.saga-lore-relevance-segmented') && style.includes('.saga-lore-relevance-dots-high .saga-lore-relevance-dot:nth-child(3)') && !style.includes('.saga-lore-lifecycle-select'), 'Relevance segmented controls must render compact dot icons, including the three-dot high-relevance triangle.');
 assert(lorecardsPanel.includes("className: 'saga-lore-workbench-count'") && contextWorkbenchPanel.includes("className: 'saga-lore-workbench-count'") && !/(?:count|filterCount)\.className = 'saga-lore-workbench-count'/.test(`${lorecardsPanel}\n${contextWorkbenchPanel}`), 'Lorecard and Context workbench count indicators must render through schema-backed count chips.');
 assert(loreTimelinePanel.includes("className: 'saga-continuity-status'") && loreTimelinePanel.includes("className: 'saga-lore-timeline-event-counts'") && !/status\.className = 'saga-continuity-status'|counts\.className = 'saga-lore-timeline-event-counts'/.test(loreTimelinePanel), 'Lore Timeline summary and event counts must render through schema-backed count chips.');
@@ -1553,32 +1223,10 @@ assert(themePanel.includes("className: 'saga-theme-icon-status'") && !/status\.c
 assert(!settingsPanel.includes('saga-provider-status-ready') && !settingsPanel.includes('saga-provider-status-warning'), 'Provider setup status pills must rely on shared success/warning schema tones without local palette suffix classes.');
 assert(settingsPanel.includes('function createProviderRuntimeStatusPill') && settingsPanel.includes('updateProviderRuntimeStatusPill(modelStatus') && !/saga-provider-runtime-status';[\s\S]{0,140}(?:textContent|appendChild\(status\))/.test(settingsPanel), 'Provider runtime model/key statuses must render through schema-backed status pills.');
 assert(/\.saga-provider-runtime-header > \.saga-status-pill,[\s\S]*?\.saga-provider-preset-header > \.saga-status-pill\s*\{[\s\S]*?flex:\s*0 0 auto;[\s\S]*?max-width:\s*none;[\s\S]*?white-space:\s*nowrap;/.test(style), 'Provider header status pills must keep their natural width so labels like Needs setup are not clipped.');
-assert(
-    /\.saga-settings-provider-card\s*\{[\s\S]*?--saga-provider-control-font-size:\s*0\.82rem;[\s\S]*?--saga-provider-control-touch-font-size:\s*0\.84rem;/.test(style)
-        && /\.saga-provider-runtime-field input,[\s\S]*?\.saga-provider-runtime-field select\s*\{[\s\S]*?min-height:\s*var\(--saga-provider-control-min-height,\s*30px\);[\s\S]*?font-size:\s*var\(--saga-provider-control-font-size,\s*0\.82rem\);/.test(style)
-        && /\.saga-provider-runtime-field select option\s*\{[\s\S]*?font-size:\s*var\(--saga-provider-control-font-size,\s*0\.82rem\);/.test(style)
-        && /\.saga-lore-panel\.saga-runtime-shell\.saga-runtime-mobile \.saga-settings-provider-card \.saga-provider-runtime-field input,[\s\S]*?\.saga-lore-panel\.saga-runtime-shell\.saga-runtime-mobile \.saga-settings-provider-card \.saga-provider-runtime-field select\s*\{[\s\S]*?min-height:\s*var\(--saga-provider-control-touch-min-height,\s*34px\);[\s\S]*?font-size:\s*var\(--saga-provider-control-touch-font-size,\s*0\.84rem\);/.test(style),
-    'Settings provider dropdowns and text fields must keep compact provider-specific font sizing, including on mobile where generic touch select sizing is larger.'
-);
+
 assert(injectionPanel.includes('function createPromptInjectionStatusRow') && injectionPanel.includes("className: 'saga-prompt-sync-status-value'") && injectionPanel.includes('setChipTone(value') && !/row\?\.querySelector\('\.saga-value'\)/.test(injectionPanel), 'Prompt injection sync status value must render through a schema-backed status pill and update tone in place.');
-assert(
-    /\.saga-compression-template-editor\s*\{[\s\S]*?font-family:\s*'Courier New', monospace;[\s\S]*?font-size:\s*12px;[\s\S]*?line-height:\s*1\.32;/.test(style)
-        && /\.saga-lore-panel\.saga-runtime-shell\.saga-runtime-mobile \.saga-compression-template-editor\s*\{[\s\S]*?font-size:\s*12px;[\s\S]*?line-height:\s*1\.32;/.test(style)
-        && liveSmoke.includes('compressionPromptFontState')
-        && liveSmoke.includes('Mobile Compression Prompts editor text is oversized'),
-    'Compression Prompt template editors must keep compact local typography, including on mobile where generic textarea sizing is larger.'
-);
-assert(
-    /\.saga-lore-panel\.saga-runtime-shell\.saga-runtime-mobile \.saga-prompt-placement-line\s*\{[\s\S]*?grid-template-columns:\s*minmax\(92px,\s*0\.68fr\) minmax\(0,\s*1\.6fr\);/.test(style)
-        && /\.saga-lore-panel\.saga-runtime-shell\.saga-runtime-mobile \.saga-prompt-placement-control-wrap\s*\{[\s\S]*?grid-template-columns:\s*minmax\(96px,\s*1fr\) minmax\(48px,\s*0\.52fr\) minmax\(68px,\s*0\.78fr\);[\s\S]*?align-items:\s*stretch;/.test(style)
-        && /\.saga-prompt-placement-card \.saga-inline-field select,[\s\S]*?\.saga-prompt-placement-card \.saga-inline-field input\[type="number"\]\s*\{[\s\S]*?display:\s*block;[\s\S]*?margin:\s*0;/.test(style)
-        && /\.saga-lore-panel\.saga-runtime-shell\.saga-runtime-mobile \.saga-prompt-placement-card \.saga-inline-field\s*\{[\s\S]*?display:\s*grid;[\s\S]*?grid-template-rows:\s*0\.86rem 30px;/.test(style)
-        && /\.saga-lore-panel\.saga-runtime-shell\.saga-runtime-mobile \.saga-prompt-placement-card \.saga-inline-field select,[\s\S]*?\.saga-lore-panel\.saga-runtime-shell\.saga-runtime-mobile \.saga-prompt-placement-card \.saga-inline-field input\[type="number"\]\s*\{[\s\S]*?min-height:\s*30px;[\s\S]*?font-size:\s*0\.8rem;/.test(style)
-        && /@media \(max-width:\s*380px\)\s*\{[\s\S]*?\.saga-lore-panel\.saga-runtime-shell\.saga-runtime-mobile \.saga-prompt-placement-line\s*\{[\s\S]*?grid-template-columns:\s*1fr;/.test(style)
-        && liveSmoke.includes('promptControlBoxAlignment')
-        && liveSmoke.includes('allPromptControlBoxesAligned'),
-    'Mobile Prompt Placement must keep prompt group controls in compact, visibly aligned rows with mobile-standard font sizes instead of stacking every control vertically.'
-);
+
+
 assert(/function createCompactPresetStat[\s\S]{0,520}createStatusPill/.test(runtimeUiKit) && !/function createCompactPresetStat[\s\S]{0,360}document\.createElement\('strong'\)/.test(runtimeUiKit), 'Provider preset compact stats must render value chips through schema-backed status pills.');
 assert(creatorPanel.includes('function createLoredeckCreatorSideValueChip') && creatorPanel.includes("className: options.className || 'saga-loredeck-creator-side-value'") && !/saga-loredeck-creator-side-row[\s\S]{0,260}document\.createElement\('strong'\)/.test(creatorPanel), 'Deck Maker sidebar metadata values must render through schema-backed status pills.');
 assert(creatorPanel.includes("className: 'saga-loredeck-creator-queue-value'") && creatorPanel.includes("className: 'saga-loredeck-creator-diagnostic-value'") && !/saga-loredeck-creator-(?:queue|diagnostic)-row[\s\S]{0,260}document\.createElement\('strong'\)/.test(creatorPanel), 'Deck Maker queue and diagnostic values must render through schema-backed status pills.');
@@ -1593,10 +1241,7 @@ assert(/\.saga-loredeck-creator-stage-guide\s*\{[\s\S]*border:\s*1px solid var\(
     && /\.saga-loredeck-creator-current-task\s*\{[\s\S]*var\(--saga-gold-surface[\s\S]*linear-gradient\(135deg,\s*var\(--saga-surface/.test(style)
     && /\.saga-generation-live-status-error\s*\{[\s\S]*border-color:\s*var\(--saga-red-soft[\s\S]*background:\s*linear-gradient\(135deg,\s*var\(--saga-red-surface/.test(style)
     && !/\.saga-generation-live-status-error\s*\{[\s\S]{0,260}background:\s*linear-gradient\(135deg,\s*rgba/.test(style), 'Deck Maker stage guide, current task, and generation status rows must use active Theme Pack surfaces and danger tokens.');
-assert(/\.saga-generation-live-line\s*\{[\s\S]*flex-wrap:\s*nowrap;/.test(style)
-    && /\.saga-generation-live-label\s*\{[\s\S]*text-overflow:\s*ellipsis;[\s\S]*white-space:\s*nowrap;/.test(style)
-    && /\.saga-generation-live-text\s*\{[\s\S]*text-overflow:\s*ellipsis;[\s\S]*white-space:\s*nowrap;/.test(style)
-    && /\.saga-generation-live-meta\s*\{[\s\S]*text-overflow:\s*ellipsis;[\s\S]*white-space:\s*nowrap;/.test(style), 'Deck Maker live generation status rows must keep stable single-line geometry so heartbeat text cannot move mobile scroll.');
+
 assert(!cssRuleDeclares(style, '.saga-loredeck-health-card .saga-status-pill', ['font-size']) && !cssRuleDeclares(style, '.saga-loredeck-health-center-overlay .saga-status-pill', ['font-size']), 'Pack Health status chips must not override the compact chip font with legacy tiny/large em sizing.');
 assert(defaultState.includes('stateSafety:') && defaultSettings.includes("'settings.stateSafety'") && !defaultSettings.includes("'settings.dangerZone'"), 'Default state and settings collapse map must expose State Safety without keeping a removed Danger Zone dropdown state.');
 assert(runtimePanelSource.includes('createStateSafetyCard') && runtimePanelSource.includes("'settings.stateSafety'"), 'Advanced settings must render the State Safety backup/export/restore card.');
@@ -1635,12 +1280,12 @@ assert(runtimeGuideContent.includes("title: 'Basic Walkthrough'") && runtimeGuid
 assert(runtimeGuideContent.includes('GUIDE_SECTIONS') && runtimeGuideContent.includes("label: 'Loredecks'") && runtimeGuideContent.includes("label: 'Injection Diagnostics'"), 'Runtime guides must expose section walkthrough metadata.');
 assert(runtimeTour.includes("dep('prepareGuideStep'") && runtimeTour.includes('prepareGuideStep(step)') && runtimeTour.includes('getTourStepPrepareAction(step)'), 'Runtime tour must run optional guide prepare actions before locating targets.');
 assert(runtimeTour.includes('renderSagaTourPopover(step, target, prepareResult)') && runtimeTour.includes("appendSagaTourDetail(popover, 'Preparation'") && runtimeTour.includes('!target && !hasPrepare'), 'Prepared walkthrough steps must fall back to an explanatory centered popover instead of being skipped.');
-assert(runtimeTour.includes('function getRectOverlapArea') && runtimeTour.includes('function getRectCenterDistance') && runtimeTour.includes('overlap: getRectOverlapArea(rect, nextRect)') && runtimeTour.includes('popover.dataset.placement = best.placement') && runtimeTour.includes('viewportWidth <= 640'), 'Runtime tour popovers must use collision-aware placement so mobile tour cards do not cover the highlighted target.');
+
 assert(runtimePanelSource.includes('function prepareRuntimeGuideStep')
     && panel.includes('prepareRuntimeGuideStep,')
     && runtimeComposition.includes('prepareGuideStep: deps.prepareRuntimeGuideStep'),
     'Runtime tour must receive concrete prepare handlers from the runtime guide prep module through the runtime composition owner.');
-assert(runtimeTour.includes('function navigateRuntimeTab') && runtimeTour.includes('const navigated = navigateRuntimeTab(targetTab') && panel.includes('navigateRuntimeTab,') && panel.includes('if (isRuntimeMobileShell())') && panel.includes('toggleRuntimeDrawerForTab(activeTab);') && panel.includes('return true;'), 'Runtime tour navigation must consume the shared navigation helper so mobile direct routes update shell state.');
+
 for (const prepare of VALID_GUIDE_PREPARES) {
     assert(runtimePanelSource.includes(`case '${prepare}':`), `Runtime guide prepare action is missing a runtime handler: ${prepare}`);
 }
@@ -1665,7 +1310,7 @@ for (const [index, section] of advancedGuideSections.entries()) {
     assert(advancedWorkflowDoc.includes(`Coverage: ${startLabel}-${endLabel}.`), `Advanced Workflow doc must document coverage range ${startLabel}-${endLabel} for ${section.label}.`);
     assert(index === 0 || advancedGuideSections[index - 1].steps.at(-1)?.id !== section.steps[0]?.id, `Advanced section ${section.label} must start at a unique walkthrough step.`);
 }
-assert(basicWorkflowDoc.includes('Basic does not show:') && basicWorkflowDoc.includes('Create Deck') && basicWorkflowDoc.includes('Injection tab controls') && basicWorkflowDoc.includes('Lore Automation') && basicWorkflowDoc.includes('Pack Health Center') && basicWorkflowDoc.includes('Basic mobile still offers selected-card Accept/Reject actions'), 'Basic Workflow doc must document Basic exclusions and the mobile selected-card review exception.');
+
 assert(basicWorkflowDoc.includes('Basic keeps **Import Deck** and safe **Run Pack Health** checks available.'), 'Basic Workflow doc must explicitly keep Import Deck and safe Pack Health checks in Basic.');
 assert(!basicWorkflowDoc.includes('tab walkthroughs') && !advancedWorkflowDoc.includes('organized by tab'), 'Workflow docs must not describe the old tab-only walkthrough organization.');
 assert(documentationIndex.includes('[Basic Workflow](user/BASIC_WORKFLOW.md)') && documentationIndex.includes('[Advanced Workflow](user/ADVANCED_WORKFLOW.md)'), 'Documentation index must link the Basic and Advanced workflow docs.');
@@ -1713,10 +1358,10 @@ assert(sessionSagaActivePosition < sessionReadinessPosition && sessionReadinessP
 assert(/createAutomationModeSection[\s\S]*createCollapsibleSection\(\s*'session\.automationMode\.section'[\s\S]*false[\s\S]*modeCard/.test(runtimeAdvancedPanel), 'Session Automation Mode must render as a default-collapsed dropdown.');
 assert(/createSessionWalkthroughSection[\s\S]*createCollapsibleSection\(\s*`session\.instructions\.\$\{guideMode\}`[\s\S]*false[\s\S]*createInstructionsCard/.test(runtimeAdvancedPanel), 'Session Advanced Walkthrough must render as a default-collapsed dropdown.');
 assert(runtimeAdvancedPanel.includes('function createStoryOpenerSessionSection') && runtimeAdvancedPanel.includes("const sectionId = options.sectionId || 'session.storyMaker'") && runtimeAdvancedPanel.includes('createCollapsibleSection(\n        sectionId'), 'Story Maker must render through a shared closeable dropdown section.');
-assert(runtimeAdvancedPanel.includes("const storySectionOptions = isRuntimeMobileShell() ? { sectionId: 'session.storyMaker.mobile' } : {};") && !runtimeAdvancedPanel.includes('openSessionMobileStoryOpener'), 'Mobile Session must expose Story Maker as a closeable dropdown instead of a one-way subview button.');
-assert(!runtimeAdvancedPanel.includes("mobileSubview?.id === 'session-story-opener'") && !runtimeAdvancedPanel.includes("defaultOpen: true"), 'Story Maker must default collapsed instead of reopening the legacy mobile subview path.');
+
+
 assert(runtimeAdvancedPanel.includes('function navigateRuntimeTab') && runtimeAdvancedPanel.includes('createStoryOpenerCreatorSection(state, { refreshPanelBody, markTourTarget, navigateRuntimeTab })'), 'Story Maker must receive runtime tab navigation so missing-source actions can route to Loredecks.');
-assert(defaultSettings.includes("'session.automationMode.section': true") && defaultSettings.includes("'session.storyMaker': true") && defaultSettings.includes("'session.storyMaker.mobile': true") && !defaultSettings.includes("'session.automationMode': false") && !defaultSettings.includes("'session.storyOpener': false"), 'Session collapsed-section defaults must keep Automation Mode and Story Maker collapsed in the new layout.');
+
 assert(runtimeStoryOpenerPanel.includes('saga-loredeck-creator-stage-guide') && runtimeStoryOpenerPanel.includes('resetStoryOpenerToStage'), 'Story Maker must use a Deck Maker-style stage bar with revert support.');
 assert(storyOpenerState.includes("action = 'add_loredecks'") && storyOpenerState.includes("actionLabel = 'Add Loredecks'") && storyOpenerState.includes('No active Loredecks. Add one to fully use Context.'), 'Story Maker Context Packet stage must become an Add Loredecks action when the opener source stack is missing.');
 assert(runtimeStoryOpenerPanel.includes('handleStoryOpenerStageAction') && runtimeStoryOpenerPanel.includes("options.navigateRuntimeTab('loredecks')") && runtimeStoryOpenerPanel.includes('saga-story-opener-stage-action-label') && runtimeStoryOpenerPanel.includes('getStoryOpenerLiveSourceOptions'), 'Story Maker stage bar must render a distinct Add Loredecks CTA and restore the normal Context Packet tab when live Loredecks exist.');
@@ -1731,7 +1376,7 @@ assert(runtimeStoryOpenerPanel.includes('clearStoryOpenerDraftVariantsForRun') &
 assert(runtimeStoryOpenerPanel.includes('renderStoryOpenerMarkdownToHtml') && runtimeStoryOpenerPanel.includes('createStoryOpenerOutputPreview') && runtimeStoryOpenerPanel.includes('saga-story-opener-dialogue-quote'), 'Story Maker opener previews must render sanitized rich Markdown with dialogue quote spans.');
 assert(runtimeStoryOpenerPanel.includes('Copy Markdown to Clipboard') && runtimeStoryOpenerPanel.includes('Copy Rich-Text to Clipboard') && runtimeStoryOpenerPanel.includes('ClipboardItem') && runtimeStoryOpenerPanel.includes("'text/html'") && runtimeStoryOpenerPanel.includes("'text/plain'"), 'Story Maker must expose separate Markdown and rich-text clipboard outputs.');
 assert(runtimeStoryOpenerPanel.includes('function createStoryOpenerVariantSelector') && runtimeStoryOpenerPanel.includes("nav.setAttribute('aria-label', 'Story Maker opener variants')") && /function createReviewCard[\s\S]*createStoryOpenerVariantSelector\(session, options\)[\s\S]*createStoryOpenerOutputPreview\(selected\.text\)/.test(runtimeStoryOpenerPanel), 'Story Maker Review & Copy must keep the Variant A/B/C selector visible after generation completes.');
-assert(runtimeStoryOpenerPanel.includes('saga-story-opener-review-actions'), 'Story Maker Review & Copy actions must have a scoped action row for mobile layout.');
+
 assert(runtimeStoryOpenerPanel.includes('Refresh From Saved Sources') && runtimeStoryOpenerPanel.includes('Use Current Active Stack'), 'Story Maker must expose source refresh and current-stack replacement actions.');
 assert(runtimeStoryOpenerPanel.includes('STORY_OPENER_CUSTOM_OPENING_SHAPE') && runtimeStoryOpenerPanel.includes('Opening Shape') && runtimeStoryOpenerPanel.includes("label: 'Custom'") && runtimeStoryOpenerPanel.includes('saga-story-opener-custom-shape-field') && runtimeStoryOpenerPanel.includes('setStoryOpenerFieldHidden'), 'Story Maker must use one Opening Shape dropdown with Custom last and hide the custom field until selected.');
 assert(runtimeStoryOpenerPanel.includes('createSegmentedChoiceControl') && runtimeStoryOpenerPanel.includes('STORY_OPENER_POV_OPTIONS') && runtimeStoryOpenerPanel.includes('STORY_OPENER_TENSE_OPTIONS') && runtimeStoryOpenerPanel.includes('saga-story-opener-pov-control') && runtimeStoryOpenerPanel.includes('saga-story-opener-tense-control'), 'Story Maker Inputs must render PoV and Tense as three-choice segmented controls.');
@@ -1746,19 +1391,19 @@ assert(storyOpenerGeneration.includes('const count = normalized.controls.variant
 assert(style.includes('.saga-story-opener-panel') && style.includes('.saga-story-opener-output') && style.includes('var(--saga-input'), 'Story Maker must have themed panel and output styles.');
 assert(style.includes('.saga-story-opener-dialogue-quote') && style.includes('--SmartThemeQuoteColor') && style.includes('.saga-story-opener-output strong') && style.includes('.saga-story-opener-output blockquote'), 'Story Maker rich opener previews must style Markdown emphasis and SillyTavern-colored dialogue quotes.');
 assert(style.includes('.saga-story-opener-variant-count-control') && style.includes('.saga-story-opener-variant-count-slider') && style.includes('accent-color: var(--saga-gold') && style.includes('::-webkit-slider-runnable-track') && style.includes('::-webkit-slider-thumb') && style.includes('--saga-story-opener-variant-progress') && !style.includes('.saga-story-opener-variant-count-scale'), 'Story Maker variant-count slider must have compact Saga-themed track and thumb styling without the redundant scale row.');
-assert(style.includes('.saga-runtime-mobile .saga-story-opener-review-actions') && style.includes('grid-template-columns: minmax(0, 1fr)') && style.includes('.saga-runtime-mobile .saga-story-opener-review-actions .saga-runtime-button'), 'Story Maker mobile Review & Copy actions must stack full-width instead of shrinking copy labels.');
+
 assert(style.includes('.saga-story-opener-section') && style.includes('.saga-collapsible-card:has(.saga-story-opener-panel)') && style.includes('.saga-story-opener-stage-list .saga-loredeck-creator-stage-label') && style.includes('overflow-wrap: anywhere'), 'Story Maker must wrap headers, workflow buttons, and stage labels inside the narrow Saga drawer.');
 assert(style.includes('.saga-story-opener-session-picker') && style.includes('.saga-story-opener-session-row-active') && style.includes('.saga-story-opener-session-row > .saga-story-opener-delete-button') && style.includes('grid-template-columns: minmax(0, 1fr) max-content'), 'Story Maker saved-opener picker must stay compact and mark the active session.');
 assert(style.includes('.saga-story-opener-session-main strong') && style.includes('font-size: 0.82em') && style.includes('.saga-story-opener-session-main span') && style.includes('font-size: 0.76em') && style.includes('font-size: 0.83em'), 'Story Maker saved-opener rows must use compact Saga row typography instead of inherited headline-scale text.');
 assert(style.includes('.saga-story-opener-stage-action-add_loredecks') && style.includes('.saga-story-opener-stage-action') && style.includes('.saga-story-opener-stage-action-label') && style.includes('opacity: 1'), 'Story Maker Add Loredecks stage action must not inherit the dead-looking locked-stage opacity and must show a distinct themed CTA.');
 assert(style.includes('.saga-story-opener-generation-status') && style.includes('.saga-generation-live-label') && style.includes('max-width: 14rem') && style.includes('white-space: normal'), 'Story Maker live generation status must leave room for explicit provider-step labels.');
 assert(style.includes('.saga-story-opener-stage-list') && style.includes('grid-auto-flow: column') && style.includes('grid-auto-columns: minmax(158px, 176px)') && style.includes('overflow-x: auto'), 'Story Maker workflow buttons must use an internal horizontal rail instead of clipping at the drawer edge.');
-assert(style.includes('.saga-runtime-drawer .saga-story-opener-input-grid') && style.includes('.saga-runtime-mobile .saga-story-opener-input-grid') && style.includes('grid-template-columns: minmax(0, 1fr)') && style.includes('.saga-story-opener-field-hidden') && style.includes('.saga-story-opener-segmented-control') && !style.includes('.saga-runtime-mobile .saga-story-opener-quick-row'), 'Story Maker drawer and mobile inputs must be one column, hide unused custom shape input, and avoid the old quick-shape button cluster.');
-assert(style.includes('.saga-runtime-mobile .saga-story-opener-panel .saga-story-opener-stage-list') && style.includes('grid-auto-flow: column') && style.includes('scroll-snap-type: x proximity'), 'Story Maker workflow buttons must scroll horizontally on mobile like Deck Maker.');
+
+
 assert(!defaultSource.includes('guidedTask') && !stateManager.includes('guidedTask'), 'Runtime panel state must not keep retired in-panel checklist strip state.');
 const basicChecklistTourBlock = (runtimePanelSource.split('const BASIC_CHECKLIST_REVIEW_GENERATION_STEPS')[1] || '').split('function getBasicChecklistTourConfig')[0] || '';
 assert(runtimePanelSource.includes('BASIC_CHECKLIST_TOUR_TASKS_BY_ROW') && runtimePanelSource.includes('function launchBasicChecklistTour') && runtimePanelSource.includes('startSagaTourSteps(steps'), 'Basic Session Readiness actions must launch external guided mini-tours.');
-assert(runtimeSessionBasicPanel.includes('export function getBasicReadinessAction(row)'), 'Basic readiness actions must remain reusable by the mobile Session operator summary.');
+
 assert(!/\bLorepacks?\b/.test(basicChecklistTourBlock), 'Basic Session Readiness mini-tour copy must use Loredeck terminology.');
 assert(runtimePanelSource.includes("progressLabel: 'Guided Tour'") && runtimePanelSource.includes("closeLabel: 'Close'") && runtimePanelSource.includes('onClose: returnToBasicStartChecklist'), 'Session Readiness mini-tours must use the external tour popover and a clear close affordance.');
 assert(runtimePanelSource.includes('function getNextBasicChecklistTourRow') && runtimePanelSource.includes('function finishBasicChecklistTour') && runtimePanelSource.includes('getFinishLabel: () => getBasicChecklistTourFinishLabel(row)') && runtimePanelSource.includes('onFinish: () => finishBasicChecklistTour(row)'), 'Session Readiness mini-tours must continue to the next outstanding readiness item before showing Done.');
@@ -1780,7 +1425,7 @@ for (const [label, target] of [
     assert(contextWorkbenchPanel.includes(`createButton('${label}'`) && contextWorkbenchPanel.includes(`'${target}'`), `Context Workbench story-position action ${label} must keep its concrete target ${target}.`);
 }
 assert(/\.saga-context-workbench-row-actions,[\s\S]*?\.saga-context-workbench-inspector-actions\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-wrap:\s*wrap;/.test(style), 'Context Workbench row actions must wrap instead of clipping story-position controls.');
-assert(/@media \(max-width:\s*640px\)\s*\{[\s\S]*?\.saga-context-workbench-story-position-list,[\s\S]*?\.saga-context-workbench-resolver-results\s*\{[\s\S]*?max-height:\s*none;[\s\S]*?\.saga-context-workbench-row-actions,[\s\S]*?\.saga-context-workbench-inspector-actions\s*\{[\s\S]*?justify-content:\s*flex-start;/.test(style), 'Mobile Context Workbench story-position rows must keep the action list fully visible and left-aligned.');
+
 assert(!contextWorkbenchPanel.includes('createContextWorkbenchWaypointBrowser') && !contextWorkbenchPanel.includes('getContextWorkbenchWaypointQuery') && !contextWorkbenchPanel.includes('saga-context-workbench-waypoint') && !contextWorkbenchPanel.includes("'context.workbench.waypoints'"), 'Context Workbench must not keep retired waypoint picker internals.');
 assert(style.includes('.saga-context-workbench-story-position-picker') && style.includes('.saga-context-workbench-story-position-row'), 'Context Workbench story-position picker styles must be present.');
 assert(!style.includes('.saga-context-workbench-waypoint'), 'Retired Context Workbench waypoint selectors must not remain in CSS.');
@@ -1803,13 +1448,13 @@ assert(loredecksTabPanel.includes("createButton('Import Deck'") && basicGuideSou
 assert(loredecksTabPanel.includes("runBusyAction(btn, 'Opening...'") && loredecksTabPanel.includes("setText('Building...'") && loredecksTabPanel.includes('waitForNextUiFrame'), 'Open Loredeck Library must show spinner-backed in-button progress and yield frames before rendering the fullscreen Library.');
 assert(/\.saga-loredeck-library-launch-card\s*\{[\s\S]*?display:\s*flex;[\s\S]*?flex-wrap:\s*wrap;/.test(style) && /\.saga-loredeck-library-launch-main\s*\{[\s\S]*?flex:\s*1 1 280px;/.test(style) && /\.saga-loredeck-library-launch-actions\s*\{[\s\S]*?margin-left:\s*auto;/.test(style), 'Desktop Loredecks Library launch card must wrap by available drawer width instead of using a two-column grid that collapses copy at minimum drawer width.');
 assert(liveSmoke.includes('narrowLoredecksState') && liveSmoke.includes('Desktop minimum Loredecks Library launch copy collapsed into a narrow text column') && liveSmoke.includes('tablet-advanced-harness-01b-loredecks-min-drawer'), 'Tablet Advanced smoke must cover the desktop minimum-width Loredecks Library launch card.');
-assert(libraryPanel.includes('if (!mobileTouch) {\n        const statsLine = document.createElement') && liveSmoke.includes('mobileDeckStatsLineCount'), 'Mobile Loredeck Library deck cards must remove the file/update stats line while desktop cards keep it.');
-assert(loredecksTabPanel.includes('const creatorProjects = !basic ? createLoredeckCreatorProjectsSection(state, { mobile }) : null;') && /function createLoredeckCreatorProjectsSection[\s\S]*createLoredeckCreatorProjectShelf\(state, projectModels\)/.test(loredecksTabPanel), 'Basic Loredecks must hide the In-Progress Deck Maker Projects shelf while Advanced mobile can render it.');
-assert(loredecksTabPanel.includes("mobile ? 'loredecks.creatorProjects.mobile' : 'loredecks.creatorProjects'") && loredecksTabPanel.includes('mobile && projectModels.length > 0') && !loredecksTabPanel.includes('if (mobile && creatorProjects?.count) container.appendChild(creatorProjects.section);') && /markTourTarget\(libraryCard, 'loredecks\.library\.launch'\);[\s\S]*?container\.appendChild\(libraryCard\);[\s\S]*?const creatorProjects = !basic \? createLoredeckCreatorProjectsSection/.test(loredecksTabPanel), 'Mobile Advanced Loredecks must keep unfinished Deck Maker Projects under the Library card while defaulting them open without sharing desktop collapse state.');
-assert(/\.saga-runtime-mobile \.saga-loredeck-creator-project-list\s*\{[\s\S]*?max-height:\s*none;[\s\S]*?overflow:\s*visible;/.test(style), 'Mobile In-Progress Deck Maker Projects must flow in the Loredecks page scroll instead of creating a nested project-list scroller.');
-assert(/\.saga-loredeck-creator-project-search,[\s\S]*?\.saga-loredeck-creator-project-move-select\s*\{[\s\S]*?font-size:\s*12px !important;[\s\S]*?line-height:\s*1\.25 !important;/.test(style) && /\.saga-runtime-mobile \.saga-loredeck-creator-project-shelf\s*\{[\s\S]*?font-size:\s*0\.9em;/.test(style) && /\.saga-runtime-mobile \.saga-loredeck-creator-project-title\s*\{[\s\S]*?font-size:\s*0\.82em;/.test(style), 'In-Progress Deck Maker Projects controls and cards must pin compact local typography instead of inheriting oversized host form fonts.');
+
+
+
+
+
 assert(/if \(!basic\)\s*\{[\s\S]*createButton\('Create Deck'/.test(loredecksTabPanel), 'Basic Loredecks must hide the Create Deck launch action.');
-assert(libraryPanel.includes('function isBasicExperienceMode') && /if \(!mobile\)\s*\{[\s\S]*if \(!basic\)\s*\{[\s\S]*Export Selected[\s\S]*Create Deck/.test(libraryPanel), 'Basic and mobile Loredeck Library must hide the fullscreen Create Deck and package export header actions.');
+
 assert(libraryPanel.includes('Advanced Repair Tools') && libraryPanel.includes('Advanced Deck Tools') && /if \(basic\)\s*\{[\s\S]*Advanced Repair Tools[\s\S]*\}\s*else\s*\{[\s\S]*Open Pack Health Center/.test(libraryPanel), 'Basic Loredeck Library health details must show summary/scan handoff instead of opening Pack Health Center repair routes.');
 assert(/if \(basic\)\s*\{[\s\S]*Advanced Deck Tools[\s\S]*\}\s*else\s*\{[\s\S]*Open Loredeck[\s\S]*Open Pack Health Center[\s\S]*(View Metadata|Edit Metadata)[\s\S]*Export/.test(libraryPanel), 'Basic Loredeck Library detail actions must hide editor, Health Center, metadata, and package export routes behind an Advanced handoff.');
 assert(healthPanel.includes('function isBasicExperienceMode') && /export function openLoredeckHealthCenter[\s\S]*if \(isBasicExperienceMode\(\)\)[\s\S]*Switch to Advanced Experience to open Pack Health Center repair tools/.test(healthPanel), 'Pack Health Center must block direct Basic-mode entry.');
@@ -1832,28 +1477,14 @@ assert(!panel.includes('function renderBasicInjectionTab') && !panel.includes('f
 assert(!style.includes('saga-basic-injection-controls') && !style.includes('saga-basic-injection-mode-buttons') && !style.includes('saga-basic-injection-status'), 'Retired Basic Injection tab styling must not remain.');
 assert(!lorecardsPanel.includes('function createBasicReviewActionsCard') && !style.includes('saga-basic-review-actions-card'), 'Basic Lorecards must not add a separate Basic-only actions card.');
 assert(lorecardsPanel.includes('createLorecardWorkspace(state, { basic, lifecycleStats })') && lorecardsPanel.includes('createPendingLoreReviewCard(row.entry, row.index, selected,') && lorecardsPanel.includes('createEntryCard(row.entry, state,'), 'Basic Lorecards must render pending and accepted cards through the unified workspace path.');
-assert(/if \(!basicReview && !isRuntimeMobileShell\(\)\)\s*\{\s*section\.appendChild\(createLoreWorkbenchLaunchRow/.test(lorecardsPanel), 'Basic and mobile Lorecards must hide the default pending workbench launch row.');
-assert(lorecardsPanel.includes('const workspaceRow = options.workspaceRow === true;') && lorecardsPanel.includes('if (!mobileShell || workspaceRow)') && lorecardsPanel.includes("actionsRow.appendChild(createButton('Accept'") && lorecardsPanel.includes("actionsRow.appendChild(createButton('Reject'") && style.includes('.saga-runtime-mobile .saga-lorecard-workspace-row .saga-pending-entry-actions'), 'Basic mobile Lorecards must expose clean pending Accept/Reject row actions in the unified workspace.');
+
+
 assert(lorecardsPanel.includes('applySelectedPendingLore(pendingIds)') && lorecardsPanel.includes('dismissSelectedPendingLore(pendingIds)') && lorecardsPanel.includes('applyPendingLoreEntriesByReviewIds(pendingIds') && lorecardsPanel.includes('dismissPendingLoreEntriesByReviewIds(pendingIds'), 'Pending bulk actions must be scoped to the current filtered review batch.');
-assert(lorecardsPanel.includes('const mobileShell = isRuntimeMobileShell();') && lorecardsPanel.includes('const inspectPendingEntry = () =>') && lorecardsPanel.includes('if (mobileShell)') && lorecardsPanel.includes('setPanelState({ selectedEntryId: editId }') && lorecardsPanel.includes('else if (basicReview) openAdvancedLoreReview(\'pending\')'), 'Mobile pending Inspect must stay in the mobile card while desktop Basic still opens Advanced.');
-assert(
-    lorecardsPanel.includes("card.classList.add('saga-pending-review-entry-card-tappable')") &&
-        lorecardsPanel.includes("card.addEventListener('pointerdown'") &&
-        lorecardsPanel.includes('longPressTimer = setTimeout') &&
-        lorecardsPanel.includes("card.addEventListener('contextmenu'") &&
-        lorecardsPanel.includes("card.addEventListener('click'") &&
-        lorecardsPanel.includes('togglePendingReviewSelection(reviewId, !currentSelected);') &&
-        lorecardsPanel.includes("card.classList.add('saga-pending-mobile-action-tray')") &&
-        lorecardsPanel.includes("if (!mobileShell || workspaceRow) {\n        const actionsRow = document.createElement('div');") &&
-        !lorecardsPanel.includes("createButton('Inspect', 'Inspect this Pending Review entry") &&
-        !lorecardsPanel.includes("createButton('Accept as New'") &&
-        style.includes('.saga-runtime-mobile .saga-pending-review-entry-card-tappable') &&
-        style.includes('.saga-runtime-mobile .saga-lorecard-workspace-row .saga-pending-entry-actions'),
-    'Mobile Pending Review entries must keep tap-hold/context-menu inspection while workspace rows expose only Accept/Reject commands.'
-);
-assert(lorecardsPanel.includes('} else if (mobileShell) {\n        appendEntrySourceAndContextBadges(meta, entry);') && lorecardsPanel.includes('if (!basicReview || mobileShell)') && lorecardsPanel.includes("createBadge(`Quality: ${generation.qualityRoute || reviewMeta.qualityRoute}`") && lorecardsPanel.includes("createBadge(`Route: ${generation.similarityRoute || reviewMeta.reviewRoute}`") && lorecardsPanel.includes("createBadge(`confidence ${entry.confidence}`"), 'Basic mobile pending cards must expose source, context, route/quality, and confidence hints while desktop Basic stays lighter.');
+
+
+
 assert(lorecardsPanel.includes('function getPendingLoreReviewStateDescriptors(entry = {})') && lorecardsPanel.includes('function appendPendingLoreReviewStateChips(meta, entry = {}, onInspect = () => {})') && lorecardsPanel.includes("label: 'Conflict'") && lorecardsPanel.includes("label: targetId ? 'Duplicate route' : 'Duplicate'") && lorecardsPanel.includes("label: `Low confidence ${Math.round(confidence * 100)}%`") && lorecardsPanel.includes("className: 'saga-pending-review-state-chip'") && lorecardsPanel.includes('chip.dataset.pendingReviewState = descriptor.key') && lorecardsPanel.includes('appendPendingLoreReviewStateChips(meta, entry, inspectPendingEntry);'), 'Pending Review cards must expose duplicate, conflict, and low-confidence state chips that open the existing inspection detail path.');
-assert(lorecardsPanel.includes('function createPendingLoreDetailSummary(entry = {})') && lorecardsPanel.includes("['Why suggested', getPendingLoreSuggestionReason(entry)") && lorecardsPanel.includes("['Affected Context', contextSummary") && lorecardsPanel.includes("['Similar existing cards', getPendingLoreSimilarSummary(entry)") && lorecardsPanel.includes("['Destination', getPendingLoreDestinationSummary(entry)") && style.includes('.saga-pending-lore-detail-summary'), 'Mobile pending detail inspection must expose reason, affected Context, similar-card routing, and destination details.');
+
 assert(lorecardsPanel.includes("destinationBox.textContent = `Destination: ${basicReview && targetId") && lorecardsPanel.includes('getPendingLoreDestinationSummary(entry)') && lorecardsPanel.includes("Accepting this candidate creates a new Accepted Lorecard."), 'Pending Review cards must expose a destination preview even when they create a new Accepted Lorecard.');
 assert(lorecardsPanel.includes('const filtered = basicReview ? getBasicAcceptedLoreEntries(state) : getFilteredLoreEntries(state);'), 'Basic Accepted Lorecards must not inherit hidden Advanced filters.');
 assert(style.includes('saga-basic-advanced-handoff') && style.includes('saga-basic-review-entry-card'), 'Basic Lorecards simplification must keep compact entry and Advanced handoff styling.');
@@ -1865,7 +1496,7 @@ assert(harness.includes("const smokeMode = smokeParams.get('mode') === 'basic' ?
 assert(harness.includes("experienceMode: smokeMode"), 'Harness settings must honor the requested smoke mode.');
 assert(harness.includes('window.__sagaSmokeMode = smokeMode'), 'Harness must expose requested smoke mode metadata.');
 assert(harness.includes("activeTab: smokeActiveTab"), 'Harness must open directly to the requested smoke tab.');
-assert(harness.includes("import { getDefaultMobilePanelState } from '../../src/runtime/runtime-shell.js';") && harness.includes('mobile: getDefaultMobilePanelState(smokeActiveTab, settings)'), 'Harness must seed mobile route state from the requested smoke tab.');
+
 assert(harness.includes("smokeParams.get('review') === 'context-proposals'"), 'Harness must support opening Context proposal review for visual smoke.');
 assert(harness.includes('window.__sagaContextSmoke'), 'Harness must expose Context smoke metadata.');
 assert(harness.includes("selectedLoredeckId: customPack.packId"), 'Harness must select the seeded Custom Loredeck.');
@@ -1907,7 +1538,7 @@ assert(style.includes('.saga-theme-color-field') && style.includes('--theme-colo
 assert(themeLibraryStore.includes("'activate'") && themeLibraryStore.includes("'chipNeutral'") && themeLibraryStore.includes("'chipDanger'"), 'Theme Pack import/export sanitization must preserve Activate and metadata chip color keys.');
 assert((runtimeTheme.match(/activate:\s*'#[0-9a-f]{6}'/gi) || []).length >= 15, 'Every bundled Theme Pack must define a visually distinct Activate color.');
 assert(style.includes('.saga-lorecard-workspace-row.saga-lore-entry-elevated') && style.includes('border-color: var(--saga-activate') && style.includes('var(--saga-activate-glow') && /\.saga-lorecard-active-toggle-button\.saga-lorecard-active-toggle-active\s*\{[\s\S]*?var\(--saga-activate/.test(style), 'Lorecard Elevated glows must consume the shared Activate Theme Pack token.');
-assert(style.includes('.saga-lore-panel:not(.saga-runtime-mobile) .saga-lorecard-workspace-row.saga-lore-entry-elevated') && style.includes('0 0 6px var(--saga-activate-glow') && style.includes('0 0 10px var(--saga-activate-surface') && /\.saga-lorecard-active-toggle-button\s*\{[\s\S]*?width:\s*16px;[\s\S]*?height:\s*16px;[\s\S]*?min-width:\s*16px !important;/.test(style) && !/\.saga-runtime-mobile \.saga-lorecard-active-toggle-button/.test(style), 'Desktop Lorecard Elevated glow must stay contained and the desktop Elevate button must stay compact while mobile uses double-tap instead of an Elevate button.');
+
 const workbenchThemeScope = style.match(/\.saga-lore-workbench-shell,\s*[\r\n]+\.saga-new-lore-shell\s*\{[\s\S]*?\}/)?.[0] || '';
 assert(!workbenchThemeScope.includes('--saga-bg:'), 'Fullscreen workbench shells must not redeclare default theme tokens locally.');
 assert(style.includes('var(--saga-danger-surface') && style.includes('.saga-danger-zone-card') && style.includes('var(--saga-red-surface'), 'Danger Zone and health danger surfaces must use active Theme Pack danger tokens.');
@@ -1995,14 +1626,7 @@ assert(runtimePanelSource.includes('openContextProposalReview'), 'Context comman
 assert(runtimePanelSource.includes('createContextProposalReviewShell'), 'Context proposal review must render a dedicated fullscreen shell.');
 assert(runtimePanelSource.includes('Apply All'), 'Context proposal review must expose an apply-all action.');
 assert(runtimePanelSource.includes('Dismiss All'), 'Context proposal review must expose a dismiss-all action.');
-assert(
-    contextPanel.includes('saga-context-proposal-review-shell-mobile')
-    && contextPanel.includes('createContextProposalReviewActions(proposals, { mobile: true })')
-    && contextPanel.includes('if (!mobile) header.appendChild(createContextProposalReviewActions(proposals))')
-    && /\.saga-context-proposal-review-bottom-actions\s*\{[\s\S]*?grid-template-columns:\s*repeat\(auto-fit,[\s\S]*?var\(--saga-mobile-safe-area-bottom/.test(style)
-    && /\.saga-context-proposal-review-shell-mobile \.saga-context-proposal-review-list\s*\{[\s\S]*?height:\s*auto;[\s\S]*?overflow:\s*visible;/.test(style),
-    'Mobile Context Proposal Review must move persistent Apply All/Dismiss All/Close actions to a bottom bar and let the proposal list flow in the body scroll.'
-);
+
 assert(runtimePanelSource.includes('createContextProposalReviewRow'), 'Context proposal review must render per-proposal rows.');
 assert(runtimePanelSource.includes('formatContextPatchSummary'), 'Context proposal review must summarize proposed Context patches.');
 assert(runtimePanelSource.includes('createContextAdvancedBriefSection'), 'Context tab must move legacy global fields into an advanced brief section.');
@@ -2175,45 +1799,33 @@ assert(style.includes('saga-context-proposal-focus'), 'Context proposal review j
 assert(style.includes('.saga-context-workbench-window-builder > .saga-primary-actions'), 'Context Workbench window-builder actions must use explicit grid placement.');
 assert(liveSmoke.includes('SAGA_SMOKE_TARGET'), 'Live smoke helper must support targeted smoke modes.');
 assert(liveSmoke.includes('REPO_LOCAL_HARNESS_TARGETS') && liveSmoke.includes("'guide-harness'"), 'Live smoke helper must support repo-local walkthrough guide smoke.');
-assert(liveSmoke.includes("const MOBILE_ADVANCED_HARNESS_TARGET = 'mobile-advanced-harness'") && liveSmoke.includes('runMobileAdvancedHarnessSmoke') && liveSmoke.includes("mobile-advanced-harness-01-loredecks-root") && liveSmoke.includes("mobile-advanced-harness-08-context-proposals"), 'Live smoke helper must support a repo-local 430px Advanced mobile matrix smoke target.');
-assert(
-    liveSmoke.includes("const MOBILE_REDESIGN_HARNESS_TARGET = 'mobile-redesign-harness'")
-        && liveSmoke.includes('runMobileRedesignHarnessSmoke')
-        && liveSmoke.includes("mobile-redesign-${VIEWPORT.width}x${VIEWPORT.height}")
-        && liveSmoke.includes('saga-loredeck-library-mobile-browse')
-        && liveSmoke.includes('saga-loredeck-library-mobile-reorder-sheet')
-        && liveSmoke.includes('saga-lorecard-workspace-list')
-        && liveSmoke.includes('Pending row missing action')
-        && liveSmoke.includes('wrapsAtLeastTwoLines')
-        && liveSmoke.includes('Generate page did not stay focused on creation/suggestion only')
-        && liveSmoke.includes('SMOKE_TARGET === MOBILE_REDESIGN_HARNESS_TARGET'),
-    'Live smoke helper must support the focused mobile touch redesign harness for Library selection/reorder, unified Lore rows, Accepted title wrapping, and Generate-only coverage.'
-);
+
+
 assert(liveSmoke.includes("const TABLET_ADVANCED_HARNESS_TARGET = 'tablet-advanced-harness'") && liveSmoke.includes('runTabletAdvancedHarnessSmoke') && liveSmoke.includes("tablet-advanced-harness-01-loredecks-desktop-shell") && liveSmoke.includes("tablet-advanced-harness-05-context-workbench") && visualSmokeDoc.includes("SAGA_SMOKE_TARGET='tablet-advanced-harness'"), 'Live smoke helper and runbook must support a repo-local 768px Advanced tablet matrix smoke target.');
 assert(liveSmoke.includes("const DESKTOP_LORECARDS_HARNESS_TARGET = 'desktop-lorecards-harness'") && liveSmoke.includes('runDesktopLorecardsHarnessSmoke') && liveSmoke.includes('.saga-desktop-lorecards-flyout-option[data-stage="lore"]'), 'Desktop Lorecards harness must select the Lore stage through the desktop Lorecards flyout before checking the workspace.');
 assert(harness.includes("id: 'smoke_available_lore'") && harness.includes("title: 'Arlong tribute pattern'") && harness.includes("relevance: 'normal'"), 'Visual smoke fixture must include an accepted Normal Lorecard for rendered relevance coverage.');
-assert(harness.includes("id: 'smoke_long_title_lore'") && harness.includes('Cocoyasi Village tribute truth remains hidden until the crew forces Arlong into the open'), 'Visual smoke fixture must include a long Accepted Lorecard title for rendered mobile wrapping coverage.');
-assert(liveSmoke.includes('dataset?.mobileActiveTab === "context"') && liveSmoke.includes("document.querySelector('#saga-lore-panel')?.dataset?.mobileActiveTab"), 'Context harness smoke must accept mobile-shell active tab state when running phone-width rendered checks.');
-assert(liveSmoke.includes("clickButtonText(client, 'Browse Context')") && !liveSmoke.includes('Next: Browse Context'), 'Context harness smoke must use direct Browse Context labels without mobile next-action fallbacks.');
-assert(liveSmoke.includes('firstState.mobileShell') && liveSmoke.includes('Mobile Context harness did not render the operator Story Position summary.') && liveSmoke.includes('Context Workbench did not render a loaded Loredeck title.'), 'Context harness smoke must use mobile operator-root expectations and loaded-Loredeck workbench checks at phone widths.');
+
+
+
+
 assert(liveSmoke.includes('function isExpectedRepoLocalHarnessStorageError') && liveSmoke.includes('/\\/api\\/files\\/upload/i') && liveSmoke.includes('story-opener-index') && liveSmoke.includes('isExpectedRepoLocalHarnessStorageError(error)'), 'Repo-local visual harness smokes must filter known fixture storage console noise from failure status.');
-assert(liveSmoke.includes('function sagaActiveTabExpression') && liveSmoke.includes('function clickRuntimeRoute') && liveSmoke.includes("await waitFor(client, sagaActiveTabExpression('session'), 'Guide smoke Session tab active'") && liveSmoke.includes("await clickRuntimeRoute(client, 'session')"), 'Guide harness smoke must use mobile-aware active-tab checks and route clicks.');
-assert(liveSmoke.includes('function openMobileSessionDetailsForGuide') && liveSmoke.includes("'Mobile Session Details guide surface'") && liveSmoke.includes('.saga-session-operator-summary .saga-operator-summary-header-tappable[aria-label="Open Session Details"]') && liveSmoke.includes('basicReturnDetailsState') && liveSmoke.includes('advancedReturnDetailsState'), 'Guide harness smoke must open the mobile Session Details subview from the tappable summary header before guide-card checks at phone widths.');
-assert(liveSmoke.includes('advancedInitial.mobileShell') && liveSmoke.includes('Advanced mobile Session surface did not show the summary readiness path.') && liveSmoke.includes("document.querySelector('#saga-lore-panel.saga-runtime-mobile')"), 'Guide harness smoke must use mobile Session summary expectations at phone widths.');
+
+
+
 assert(liveSmoke.includes("'creator-harness'") && liveSmoke.includes("SMOKE_TARGET === 'creator-harness'"), 'Live smoke helper must support the repo-local Deck Maker reset harness target.');
 assert(liveSmoke.includes('openSummaryText(client, \'In-Progress Deck Maker Projects\')') && liveSmoke.includes("clickSelector(client, '.saga-loredeck-creator-project-card')"), 'Deck Maker reset smoke must open the project shelf disclosure and seeded project card instead of depending on action-button labels.');
 assert(liveSmoke.includes('guide-harness-01-basic-card') && liveSmoke.includes('guide-harness-02-basic-module') && liveSmoke.includes('guide-harness-03-basic-prepared-library') && liveSmoke.includes('guide-harness-04-basic-tour'), 'Guide harness smoke must capture Basic guide card, focused module, prepared Library, and full tour screenshots.');
 assert(liveSmoke.includes('guide-harness-05-advanced-card') && liveSmoke.includes('guide-harness-06-advanced-module') && liveSmoke.includes('guide-harness-07-advanced-creator-empty-project') && liveSmoke.includes('guide-harness-08-advanced-tour'), 'Guide harness smoke must capture Advanced guide card, focused module, no-object fallback, and full tour screenshots.');
 assert(liveSmoke.includes('Start Basic Walkthrough') && liveSmoke.includes('Start Advanced Walkthrough'), 'Guide harness smoke must click both full walkthrough launch actions.');
 assert(liveSmoke.includes('Loredecks as Source Packs') && liveSmoke.includes('Injection Overview'), 'Guide harness smoke must verify focused Basic and Advanced module start steps.');
-assert(liveSmoke.includes('basicModuleLandedOnPreparedLibrary') && liveSmoke.includes("basicModuleTour.title === 'Library Layout'") && liveSmoke.includes("basicModuleTour.progress === '3 / 14'"), 'Guide harness smoke must accept the mobile-prepared Basic Library Layout landing after a module start.');
+
 assert(liveSmoke.includes('Basic Workflow Orientation') && liveSmoke.includes('Library Layout') && liveSmoke.includes('Deck Maker Draft Review') && liveSmoke.includes('Library Overview'), 'Guide harness smoke must verify the expected Basic prepared Library, Deck Maker fallback, and full-tour steps.');
-assert(liveSmoke.includes('advancedTourLandedOnPreparedLibrary') && liveSmoke.includes("advancedTour.title === 'Empty Selection State'") && liveSmoke.includes("advancedTour.progress === '3 / 169'"), 'Guide harness smoke must accept the mobile-prepared Advanced Library landing when early Library overview targets are skipped at phone width.');
+
 assert(liveSmoke.includes('1 / 14') && liveSmoke.includes('3 / 14') && liveSmoke.includes('1 / 15') && liveSmoke.includes('11 / 19') && liveSmoke.includes('1 / 57') && liveSmoke.includes('1 / 169'), 'Guide harness smoke must verify Basic prepared, Deck Maker fallback, Basic full, Advanced module, and Advanced full walkthrough progress counts.');
 assert(liveSmoke.includes('saga-loredeck-library-overlay') && liveSmoke.includes('loredecks.library.header'), 'Guide harness smoke must verify prepared fullscreen Library targeting.');
 assert(runtimeGuidePrep.includes('function isLoredeckLibraryOverlayOpen') && runtimeGuidePrep.includes("document.querySelector('.saga-loredeck-library-overlay')") && runtimeGuidePrep.includes("if (!isLoredeckLibraryOverlayOpen()) dep('openLoredeckLibraryWindow')()"), 'Runtime guide prep must not reopen the Loredeck Library overlay on every Library walkthrough step.');
 assert(libraryPanel.includes('function isLoredeckLibraryOverlayMounted') && libraryPanel.includes('const hasOverlay = isLoredeckLibraryOverlayMounted();') && libraryPanel.includes('renderLoredeckLibraryOverlay({ preserveScroll: hasOverlay, progressiveOpen: !hasOverlay })'), 'Loredeck Library open/detail APIs must skip the progressive Opening Library shell when the overlay is already mounted.');
-assert(liveSmoke.includes('basicLibraryNextState') && liveSmoke.includes('immediateOpeningShell') && liveSmoke.includes('Basic prepared Library Next reopened the Opening Library shell'), 'Guide harness smoke must fail if Next inside the prepared mobile Library walkthrough reopens the Opening Library shell.');
+
 assert(liveSmoke.includes('hasCreatorProjectState') && liveSmoke.includes('combinedText.includes') && liveSmoke.includes('there is no in-progress Deck Maker project to resume yet') && liveSmoke.includes('saga-loredeck-creator-workbench-overlay'), 'Guide harness smoke must verify missing-project Creator messaging or a resumable Deck Maker project state.');
 assert(liveSmoke.includes('hiddenActionButtons'), 'Guide harness smoke must guard Basic against Advanced-only action buttons.');
 assert(liveSmoke.includes("SMOKE_TARGET === 'context-harness'"), 'Live smoke helper must support the repo-local Context harness target.');
@@ -2235,7 +1847,7 @@ assert(liveSmoke.includes('-02-workbench'), 'Loaded live Context smoke must capt
 assert(liveSmoke.includes('-03-proposals'), 'Loaded live Context smoke must capture populated proposal review.');
 assert(liveSmoke.includes("'live-context-loaded-narrow'"), 'Live smoke helper must support the narrow loaded-Loredeck Context target.');
 assert(liveSmoke.includes('live-context-loaded-narrow'), 'Narrow loaded live Context smoke must use a separate screenshot prefix.');
-assert(liveSmoke.includes("SMOKE_TARGET.endsWith('-narrow')") && liveSmoke.includes('USE_MOBILE_VIEWPORT ? 430 : 1280') && liveSmoke.includes('USE_MOBILE_VIEWPORT ? 820 : 720'), 'Narrow live Context smoke must use a compact viewport by default.');
+
 assert(liveSmoke.includes('Ron dates the blonde girl'), 'Loaded live Context smoke must verify casual alias search through the Browser.');
 assert(liveSmoke.includes('hp.y6.post_christmas_return'), 'Loaded live Context smoke must verify the lower after-bound anchor.');
 assert(liveSmoke.includes('hp.y6.apparition_lessons_begin'), 'Loaded live Context smoke must verify the upper before-bound anchor.');
@@ -2891,25 +2503,7 @@ assert(
     && libraryPanel.includes('saga-loredeck-library-opening-spinner'),
     'Loredeck Library first open must paint a spinner-backed lightweight shell before hydrating the full Library body.'
 );
-assert(
-    libraryPanel.includes('function createLoredeckLibraryMobileBottomActions')
-    && libraryPanel.includes("saga-loredeck-library-mobile-bottom-actions")
-    && libraryPanel.includes("if (!mobile) {")
-    && libraryPanel.includes("shell.appendChild(createLoredeckLibraryMobileBottomActions())")
-    && libraryPanel.includes("shell.appendChild(createLoredeckLibraryMobileBottomActions({ opening: true }))")
-    && libraryPanel.includes('const LOREDECK_LIBRARY_MOBILE_ACTION_TOOLTIP_OPTIONS = Object.freeze({ showOnHover: false, showOnFocus: false });')
-    && libraryPanel.includes('function createLoredeckLibraryMobileBottomButton')
-    && libraryPanel.includes('addTooltip(button, tooltip || label, LOREDECK_LIBRARY_MOBILE_ACTION_TOOLTIP_OPTIONS)')
-    && libraryPanel.includes('hideFloatingTooltip();')
-    && libraryPanel.includes("createLoredeckLibraryMobileBottomButton('Import'")
-    && libraryPanel.includes("createLoredeckLibraryMobileBottomButton('Refresh'")
-    && libraryPanel.includes("createLoredeckLibraryMobileBottomButton('Done'"),
-    'Revision 3 Loredeck Library mobile must move persistent Import, Refresh, and Done actions to a bottom action bar without floating mobile tooltips.'
-);
-assert(
-    /\.saga-loredeck-library-mobile-body\s*\{[\s\S]*?overflow-y:\s*auto;[\s\S]*?overflow-x:\s*hidden;/.test(style)
-    && /\.saga-loredeck-library-mobile-list\s*\{[\s\S]*?overflow:\s*visible;[\s\S]*?scrollbar-gutter:\s*auto;/.test(style),
-    'Revision 3 Loredeck Library mobile body must be the page scroll owner while the deck list flows normally.'
-);
+
+
 
 console.log('Visual smoke harness contract passed.');

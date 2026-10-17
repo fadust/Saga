@@ -49,7 +49,6 @@ try {
       getSettings: () => ({ experienceMode: 'advanced' }),
       selectLoredeckForDetails: id => { state.lorePanel.selectedLoredeckId = id; },
       getLoredeckDefinition: id => library.find(pack => pack.packId === id),
-      isRuntimeMobileShell: () => false,
     });
     panel.openLoredeckLibraryWindow();
     window.libraryFixture = { panel, state, library, registry };
@@ -143,24 +142,7 @@ try {
   assert.equal(cancelled.busy, false);
   console.log('Closing the Library cancels pending batches.');
 
-  await page.setViewportSize({ width: 430, height: 820 });
-  await page.evaluate(() => {
-    const { panel, registry, library } = window.libraryFixture;
-    registry.folders = [{ id: 'test-folder', title: 'Test Folder', collapsed: false }];
-    registry.deckPlacements = library.map(pack => ({ deckId: pack.packId, folderId: 'test-folder' }));
-    panel.configureLoredeckLibraryPanel({ isRuntimeMobileShell: () => true });
-    panel.openLoredeckLibraryWindow();
-  });
-  await page.waitForSelector('.saga-loredeck-library-inline-folder-row[data-folder-id="test-folder"]');
-  await page.locator('.saga-loredeck-library-inline-folder-row[data-folder-id="test-folder"] .saga-loredeck-library-folder-disclosure').click();
-  await page.waitForFunction(() => document.querySelectorAll('.saga-loredeck-library-deck-card').length === 0);
-  await page.locator('.saga-loredeck-library-inline-folder-row[data-folder-id="test-folder"] .saga-loredeck-library-folder-disclosure').click();
-  await page.waitForSelector('.saga-loredeck-library-deck-card', { state: 'attached' });
-  assert.equal(await page.locator('.saga-loredeck-library-hierarchy-list').evaluate(list => list.classList.contains('saga-loredeck-library-mobile-list')), true,
-    'Expanding a large folder on mobile must keep touch browse cards.');
-  assert.equal(await page.locator('.saga-loredeck-library-deck-card').first().evaluate(card => card.classList.contains('saga-loredeck-library-deck-mobile-touch')), true);
-  assert.deepEqual(errors, []);
-  console.log('Large folder expansion preserves mobile touch browsing.');
+
 
   await page.evaluate(() => {
     const { panel, registry, library } = window.libraryFixture;
@@ -192,7 +174,6 @@ try {
     registry.packs = { 'filtered-deck': library[0] };
     registry.folders = [{ id: 'filter-folder', title: 'Filter Folder' }];
     registry.deckPlacements = [{ deckId: 'filtered-deck', folderId: 'filter-folder' }];
-    panel.configureLoredeckLibraryPanel({ isRuntimeMobileShell: () => false });
     panel.renderLoredeckLibraryOverlay();
     document.querySelector('.saga-loredeck-library-inline-folder-row[data-folder-id="filter-folder"]').click();
   });

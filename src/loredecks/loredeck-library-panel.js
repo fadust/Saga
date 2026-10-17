@@ -99,7 +99,7 @@ function getState() { return loredeckLibraryRenderSnapshot?.state || dep('getSta
 function saveState(...args) { return dep('saveState', () => {})(...args); }
 function getSettings() { return loredeckLibraryRenderSnapshot?.settings || dep('getSettings', () => ({}))(); }
 function isBasicExperienceMode() { return dep('isBasicExperience', settings => String(settings?.experienceMode || '').toLowerCase() === 'basic')(getSettings()) === true; }
-function isRuntimeMobileShell() { return dep('isRuntimeMobileShell', () => false)() === true; }
+
 function saveSettings(...args) { return dep('saveSettings', () => {})(...args); }
 function getDefaultState() { return dep('getDefaultState', () => ({}))(); }
 function getCanonLoreDatabaseSync() { return dep('getCanonLoreDatabaseSync', () => null)(); }
@@ -200,7 +200,6 @@ function renderContextWorkbench(options) { return dep('renderContextWorkbench', 
 function buildLoredeckHealthPackSummary(pack, cached, health) { return dep('buildLoredeckHealthPackSummary', () => ({ packId: pack?.packId || '', title: pack?.title || '' }))(pack, cached, health); }
 function markTourTarget(element, target) { return dep('markTourTarget', value => value)(element, target); }
 
-
 const LOREDECK_LIBRARY_DETAILS_MIN_HEIGHT = 190;
 const LOREDECK_LIBRARY_DETAILS_DEFAULT_HEIGHT = LOREDECK_LIBRARY_DETAILS_MIN_HEIGHT;
 const LOREDECK_LIBRARY_DETAILS_MAX_HEIGHT = 560;
@@ -232,9 +231,7 @@ let loredeckLibraryDeckDragState = null;
 let loredeckLibraryFolderDragState = null;
 let loredeckLibrarySelectedFolderId = 'all';
 let loredeckLibrarySelectedFolderDetailsId = '';
-let loredeckLibraryMobileDetailPackId = '';
-let loredeckLibraryMobileDetailFolderId = '';
-let loredeckLibraryMobileReorderOpen = false;
+
 let loredeckLibrarySelectionRefreshFrame = 0;
 let loredeckLibraryHierarchyRefreshFrame = 0;
 let loredeckLibraryOverlayRefreshFrame = 0;
@@ -257,10 +254,7 @@ export function openLoredeckLibraryDetails(packId = '') {
     const id = String(packId || '').trim();
     if (!id) return false;
     selectLoredeckForDetails(id, { refresh: false });
-    if (isRuntimeMobileShell()) {
-        loredeckLibraryMobileDetailPackId = id;
-        loredeckLibraryMobileDetailFolderId = '';
-    }
+
     loredeckLibraryOpen = true;
     const hasOverlay = isLoredeckLibraryOverlayMounted();
     renderLoredeckLibraryOverlay({ preserveScroll: hasOverlay, progressiveOpen: !hasOverlay });
@@ -282,9 +276,7 @@ export function closeLoredeckLibraryWindow() {
     }
     loredeckLibraryOverlayRefreshFrame = 0;
     loredeckLibraryHierarchyRenderCache = null;
-    loredeckLibraryMobileDetailPackId = '';
-    loredeckLibraryMobileDetailFolderId = '';
-    loredeckLibraryMobileReorderOpen = false;
+
     const overlay = document.querySelector('.saga-loredeck-library-overlay');
     cancelLoredeckLibraryRowRender(overlay?.querySelector('.saga-loredeck-library-hierarchy-list'));
     overlay?.remove();
@@ -379,7 +371,7 @@ function restoreLoredeckLibraryScrollState(snapshot = null) {
 }
 
 function renderLoredeckLibraryOpeningShell() {
-    const mobile = isRuntimeMobileShell();
+    const mobile = false;
     const overlay = document.createElement('div');
     overlay.className = 'saga-lore-workbench-overlay saga-loredeck-library-overlay saga-loredeck-library-overlay-opening';
     wireOverlayBackdropClose(overlay, closeLoredeckLibraryWindow);
@@ -387,7 +379,7 @@ function renderLoredeckLibraryOpeningShell() {
 
     const shell = document.createElement('div');
     shell.className = 'saga-lore-workbench-shell saga-loredeck-library-shell';
-    if (mobile) shell.classList.add('saga-loredeck-library-shell-mobile');
+
     overlay.appendChild(shell);
 
     const header = document.createElement('div');
@@ -398,7 +390,7 @@ function renderLoredeckLibraryOpeningShell() {
     const titleText = document.createElement('div');
     const title = document.createElement('div');
     title.className = 'saga-lore-workbench-title';
-    title.textContent = mobile ? 'Library' : 'Loredeck Library';
+    title.textContent = 'Loredeck Library';
     titleText.appendChild(title);
     const subtitle = document.createElement('div');
     subtitle.className = 'saga-lore-workbench-subtitle';
@@ -407,7 +399,7 @@ function renderLoredeckLibraryOpeningShell() {
     titleWrap.appendChild(titleText);
     header.appendChild(titleWrap);
 
-    if (!mobile) {
+    {
         const actions = createLoredeckActionRow({ className: 'saga-primary-actions saga-loredeck-library-header-actions' });
         const doneButton = createButton('Done', 'Close the Loredeck Library.', closeLoredeckLibraryWindow, 'saga-primary-button');
         markTourTarget(doneButton, 'loredecks.library.done');
@@ -432,7 +424,7 @@ function renderLoredeckLibraryOpeningShell() {
     openingStatus.appendChild(openingText);
     body.appendChild(openingStatus);
     shell.appendChild(body);
-    if (mobile) shell.appendChild(createLoredeckLibraryMobileBottomActions({ opening: true }));
+
 }
 
 function scheduleLoredeckLibraryProgressiveHydration(options = {}) {
@@ -490,7 +482,7 @@ function renderLoredeckLibraryOverlayBody(options = {}) {
     const canonDb = getCanonLoreDatabaseSync();
     const health = canonDb?.health || null;
     const basic = isBasicExperienceMode();
-    const mobile = isRuntimeMobileShell();
+    const mobile = false;
     const selectedPack = getLoredeckLibrarySelectedPack(state, library);
     const activeViewId = getLoredeckLibraryActiveViewId();
     const scopedLibrary = getLoredeckLibraryFolderScopedPacks(library, libraryIndex, activeViewId, stack);
@@ -499,17 +491,12 @@ function renderLoredeckLibraryOverlayBody(options = {}) {
     normalizeLoredeckLibraryBulkSelection(library, selectedFolderDetails ? '' : (selectedPack?.packId || ''));
     const selectedPackIds = getLoredeckLibraryBulkSelectedIds(library);
     const selectedPacks = selectedPackIds.map(id => library.find(pack => pack.packId === id)).filter(Boolean);
-    const mobileActiveDeckItems = mobile ? getLoredeckLibraryMobileActiveDeckItems(stack) : [];
-    if (mobile && loredeckLibraryMobileReorderOpen && mobileActiveDeckItems.length < 2) loredeckLibraryMobileReorderOpen = false;
-    const mobileReorderOpen = mobile && loredeckLibraryMobileReorderOpen && mobileActiveDeckItems.length > 1;
-    const mobileDetailPack = mobile && loredeckLibraryMobileDetailPackId
-        ? library.find(pack => pack.packId === loredeckLibraryMobileDetailPackId) || null
-        : null;
-    if (mobile && loredeckLibraryMobileDetailPackId && !mobileDetailPack) loredeckLibraryMobileDetailPackId = '';
-    const mobileDetailFolder = mobile && loredeckLibraryMobileDetailFolderId
-        ? getLoredeckLibraryFolderDetailsById(loredeckLibraryMobileDetailFolderId, libraryIndex)
-        : null;
-    if (mobile && loredeckLibraryMobileDetailFolderId && !mobileDetailFolder) loredeckLibraryMobileDetailFolderId = '';
+    const mobileActiveDeckItems = [];
+
+    const mobileReorderOpen = false;
+    const mobileDetailPack = null;
+
+    const mobileDetailFolder = null;
 
     if (!canonDb) {
         loadCanonLoreDatabase()
@@ -524,7 +511,7 @@ function renderLoredeckLibraryOverlayBody(options = {}) {
 
     const shell = document.createElement('div');
     shell.className = 'saga-lore-workbench-shell saga-loredeck-library-shell';
-    if (mobile) shell.classList.add('saga-loredeck-library-shell-mobile');
+
     overlay.appendChild(shell);
 
     const header = document.createElement('div');
@@ -535,13 +522,13 @@ function renderLoredeckLibraryOverlayBody(options = {}) {
     const titleText = document.createElement('div');
     const title = document.createElement('div');
     title.className = 'saga-lore-workbench-title';
-    title.textContent = mobile ? 'Library' : 'Loredeck Library';
+    title.textContent = 'Loredeck Library';
     const titleLine = document.createElement('div');
     titleLine.className = 'saga-loredeck-library-title-line';
     titleLine.appendChild(title);
-    if (!mobile) titleLine.appendChild(createLoredeckLibraryHeaderMeta(stack, library, canonDb, health));
+    titleLine.appendChild(createLoredeckLibraryHeaderMeta(stack, library, canonDb, health));
     titleText.appendChild(titleLine);
-    if (!mobile) {
+    {
         const subtitle = document.createElement('div');
         subtitle.className = 'saga-lore-workbench-subtitle';
         subtitle.textContent = 'Build the active lore stack for this session.';
@@ -550,7 +537,7 @@ function renderLoredeckLibraryOverlayBody(options = {}) {
     titleWrap.appendChild(titleText);
     header.appendChild(titleWrap);
 
-    if (!mobile) {
+    {
         const actions = createLoredeckActionRow({ className: 'saga-primary-actions saga-loredeck-library-header-actions' });
         const importButton = createButton('Import Deck', 'Import a Saga Loredeck zip package into the Library.', () => {
             installLoredeckBundleFromFile();
@@ -588,17 +575,13 @@ function renderLoredeckLibraryOverlayBody(options = {}) {
 
     try {
         const body = document.createElement('div');
-        body.className = mobile
-            ? 'saga-loredeck-library-body saga-loredeck-library-mobile-body'
-            : 'saga-loredeck-library-body';
+        body.className = 'saga-loredeck-library-body';
         loredeckLibraryDetailsHeight = getLoredeckLibraryDetailsHeight(state);
         const detailsCollapsed = getLoredeckLibraryDetailsCollapsed(state);
         body.classList.toggle('saga-loredeck-library-details-collapsed', detailsCollapsed);
         body.style.setProperty('--saga-loredeck-library-details-height', `${loredeckLibraryDetailsHeight}px`);
 
-        if (mobile) {
-            body.appendChild(createLoredeckLibraryMobileBrowsePane(filteredPacks, stack, canonDb, health, libraryIndex, library, scopedLibrary, activeViewId, registry));
-        } else {
+        {
             const columns = document.createElement('div');
             columns.className = 'saga-loredeck-library-columns';
             columns.appendChild(createLoredeckLibraryPane(filteredPacks, stack, canonDb, health, libraryIndex, library, scopedLibrary, activeViewId, registry));
@@ -609,14 +592,7 @@ function renderLoredeckLibraryOverlayBody(options = {}) {
             body.appendChild(createLoredeckLibraryDetailsPanel(selectedPack, stack, canonDb, health, selectedFolderDetails, libraryIndex, library));
         }
         shell.appendChild(body);
-        if (mobile) shell.appendChild(createLoredeckLibraryMobileBottomActions());
-        if (mobileReorderOpen) {
-            shell.appendChild(createLoredeckLibraryMobileReorderSheet(stack, library));
-        } else if (mobileDetailPack) {
-            shell.appendChild(createLoredeckLibraryMobileDetailSheet(mobileDetailPack, stack, canonDb, health, libraryIndex, library));
-        } else if (mobileDetailFolder) {
-            shell.appendChild(createLoredeckLibraryMobileFolderDetailSheet(mobileDetailFolder, stack, canonDb, health, libraryIndex, library));
-        }
+
         restoreLoredeckLibraryScrollState(scrollState);
     } catch (error) {
         console.error('[Saga] Loredeck Library body render failed:', error);
@@ -645,7 +621,7 @@ export function scheduleLoredeckLibraryOverlayRefresh(options = {}) {
 export function refreshLoredeckLibraryAfterStackMutation() {
     if (!loredeckLibraryOpen) return;
     refreshLoredeckLibrarySelectionSurfaces({ stackChanged: true });
-    if (!isRuntimeMobileShell()) scheduleLoredeckLibraryHierarchyRefresh();
+    scheduleLoredeckLibraryHierarchyRefresh();
 }
 
 function getLoredeckLibraryOverlayContext() {
@@ -694,30 +670,21 @@ function refreshLoredeckLibrarySelectionSurfacesBody(options = {}) {
     const selectedId = String(context.state?.lorePanel?.selectedLoredeckId || '').trim();
     const selectedIds = new Set(context.selectedPackIds || []);
     const stackByPack = new Map((context.stack || []).map(item => [String(item.packId || '').trim(), item]));
-    const mobileOrderMap = getLoredeckLibraryMobileOrderMap(context.stack);
 
     for (const card of overlay.querySelectorAll('.saga-loredeck-library-deck-card[data-pack-id]')) {
         const packId = String(card.dataset.packId || '').trim();
         const mobileTouch = card.classList.contains('saga-loredeck-library-deck-mobile-touch');
         const bulkSelected = selectedIds.has(packId);
         const activeItem = stackByPack.get(packId);
-        const order = mobileOrderMap.get(packId) || 0;
-        card.classList.toggle('saga-loredeck-library-deck-selected', !mobileTouch && selectedId === packId);
-        card.classList.toggle('saga-loredeck-library-deck-bulk-selected', !mobileTouch && bulkSelected);
-        card.classList.toggle('saga-loredeck-library-deck-active', mobileTouch ? order > 0 : activeItem?.enabled === true);
-        card.setAttribute('aria-pressed', mobileTouch ? (order > 0 ? 'true' : 'false') : (bulkSelected ? 'true' : 'false'));
-        card.toggleAttribute('aria-current', !mobileTouch && selectedId === packId);
-        card.dataset.mobileOrder = order ? String(order) : '';
-        const badge = card.querySelector('.saga-loredeck-library-mobile-order-badge');
-        if (badge) {
-            badge.hidden = order <= 0;
-            badge.textContent = order ? String(order) : '';
-            badge.setAttribute('aria-label', order ? `Selected order ${order}` : 'Not selected');
-        }
+        card.classList.toggle('saga-loredeck-library-deck-selected', selectedId === packId);
+        card.classList.toggle('saga-loredeck-library-deck-bulk-selected', bulkSelected);
+        card.classList.toggle('saga-loredeck-library-deck-active', activeItem?.enabled === true);
+        card.setAttribute('aria-pressed', bulkSelected ? 'true' : 'false');
+        card.toggleAttribute('aria-current', selectedId === packId);
+
     }
 
     const mobileStrip = overlay.querySelector('.saga-loredeck-library-mobile-selected-strip');
-    if (options.stackChanged) mobileStrip?.replaceWith(createLoredeckLibraryMobileSelectedStrip(context.stack, context.library));
 
     for (const card of overlay.querySelectorAll('.saga-loredeck-library-stack-card[data-pack-id]')) {
         const packId = String(card.dataset.packId || '').trim();
@@ -856,27 +823,16 @@ function refreshLoredeckLibrarySelectionHighlights() {
     if (!overlay) return;
     const selectedId = String(getState()?.lorePanel?.selectedLoredeckId || '').trim();
     const selectedIds = new Set(loredeckLibraryBulkSelectedIds || []);
-    const mobileOrderMap = getLoredeckLibraryMobileOrderMap(getLoredeckStack(getState()));
 
     for (const card of overlay.querySelectorAll('.saga-loredeck-library-deck-card[data-pack-id]')) {
         const packId = String(card.dataset.packId || '').trim();
         const mobileTouch = card.classList.contains('saga-loredeck-library-deck-mobile-touch');
         const bulkSelected = selectedIds.has(packId);
-        const order = mobileOrderMap.get(packId) || 0;
-        card.classList.toggle('saga-loredeck-library-deck-selected', !mobileTouch && selectedId === packId);
-        card.classList.toggle('saga-loredeck-library-deck-bulk-selected', !mobileTouch && bulkSelected);
-        card.setAttribute('aria-pressed', mobileTouch ? (order > 0 ? 'true' : 'false') : (bulkSelected ? 'true' : 'false'));
-        card.toggleAttribute('aria-current', !mobileTouch && selectedId === packId);
-        if (mobileTouch) {
-            card.classList.toggle('saga-loredeck-library-deck-active', order > 0);
-            card.dataset.mobileOrder = order ? String(order) : '';
-            const badge = card.querySelector('.saga-loredeck-library-mobile-order-badge');
-            if (badge) {
-                badge.hidden = order <= 0;
-                badge.textContent = order ? String(order) : '';
-                badge.setAttribute('aria-label', order ? `Selected order ${order}` : 'Not selected');
-            }
-        }
+        card.classList.toggle('saga-loredeck-library-deck-selected', selectedId === packId);
+        card.classList.toggle('saga-loredeck-library-deck-bulk-selected', bulkSelected);
+        card.setAttribute('aria-pressed', bulkSelected ? 'true' : 'false');
+        card.toggleAttribute('aria-current', selectedId === packId);
+
     }
 
     for (const card of overlay.querySelectorAll('.saga-loredeck-library-stack-card[data-pack-id]')) {
@@ -1627,382 +1583,6 @@ function createLoredeckLibraryPane(packs = [], stack = [], canonDb = null, healt
     return pane;
 }
 
-function getLoredeckLibraryMobileActiveDeckItems(stack = []) {
-    return (Array.isArray(stack) ? stack : [])
-        .filter(item => getLoredeckStackItemType(item) !== 'folder' && item.enabled !== false && String(item.packId || item.deckId || '').trim())
-        .map(item => ({ ...item, packId: String(item.packId || item.deckId || '').trim() }));
-}
-
-function getLoredeckLibraryMobileOrderMap(stack = []) {
-    const map = new Map();
-    getLoredeckLibraryMobileActiveDeckItems(stack).forEach((item, index) => {
-        if (!map.has(item.packId)) map.set(item.packId, index + 1);
-    });
-    return map;
-}
-
-function createLoredeckLibraryMobileBrowsePane(packs = [], stack = [], canonDb = null, health = null, libraryIndex = {}, library = getLoredeckLibrary(getState()), scopedLibrary = packs, activeViewId = 'all', registry = getLoredeckLibraryRegistry(getState())) {
-    const pane = document.createElement('div');
-    pane.className = 'saga-loredeck-library-mobile-browse';
-    markTourTarget(pane, 'loredecks.library.mobileBrowse');
-
-    const controls = document.createElement('div');
-    controls.className = 'saga-loredeck-library-controls saga-loredeck-library-mobile-controls';
-    markTourTarget(controls, 'loredecks.library.filters');
-    controls.appendChild(createLoredeckSearchInput({
-        className: 'text_pole saga-loredeck-library-search',
-        placeholder: 'Search decks...',
-        value: loredeckLibraryQuery || '',
-        tooltip: 'Search deck title, description, fandom, era, tags, manifest path, and deck ID. Press Enter or leave the field to apply.',
-        onEnter: value => {
-            loredeckLibraryQuery = value;
-            scheduleLoredeckLibraryVisibleSurfaceRefresh({ refreshHighlights: false });
-        },
-        onChange: value => {
-            loredeckLibraryQuery = value;
-            scheduleLoredeckLibraryVisibleSurfaceRefresh({ refreshHighlights: false });
-        },
-    }));
-    controls.appendChild(createLoredeckSelectControl({
-        className: 'text_pole saga-loredeck-library-view',
-        value: activeViewId,
-        fallbackValue: 'all',
-        tooltip: 'Filter the Library without changing active Loredeck order.',
-        options: LOREDECK_LIBRARY_SPECIAL_VIEWS.map(item => [item.id, item.title, item.tooltip]),
-        onChange: value => {
-            loredeckLibrarySelectedFolderId = value || 'all';
-            loredeckLibrarySelectedFolderDetailsId = '';
-            setLoredeckLibraryBulkSelection([], '');
-            scheduleLoredeckLibraryVisibleSurfaceRefresh({ refreshHighlights: false });
-        },
-    }));
-    pane.appendChild(controls);
-
-    pane.appendChild(createLoredeckLibraryMobileSelectedStrip(stack, library));
-    pane.appendChild(createLoredeckLibraryHierarchyList(packs, stack, canonDb, health, libraryIndex, library, scopedLibrary, registry, { mobileTouch: true }));
-    return pane;
-}
-
-const LOREDECK_LIBRARY_MOBILE_ACTION_TOOLTIP_OPTIONS = Object.freeze({ showOnHover: false, showOnFocus: false });
-
-function createLoredeckLibraryMobileBottomButton(label, tooltip, handler, className = '') {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `saga-runtime-button ${className}`.trim();
-    button.textContent = label;
-    addTooltip(button, tooltip || label, LOREDECK_LIBRARY_MOBILE_ACTION_TOOLTIP_OPTIONS);
-    button.addEventListener('click', async (event) => {
-        event.stopPropagation();
-        hideFloatingTooltip();
-        await handler?.(button, event);
-    });
-    return button;
-}
-
-function createLoredeckLibraryMobileBottomActions(options = {}) {
-    const bar = createLoredeckActionRow({ className: 'saga-primary-actions saga-loredeck-library-mobile-bottom-actions' });
-    bar.setAttribute('aria-label', 'Loredeck Library actions');
-
-    if (!options.opening) {
-        const importButton = createLoredeckLibraryMobileBottomButton('Import', 'Import a Saga Loredeck zip package into the Library.', () => {
-            installLoredeckBundleFromFile();
-        }, 'saga-loredeck-library-mobile-bottom-action');
-        markTourTarget(importButton, 'loredecks.library.import');
-        bar.appendChild(importButton);
-
-        const refresh = createLoredeckLibraryMobileBottomButton('Refresh', 'Reload active Loredecks and recompute Pack Health.', async (btn) => {
-            await refreshLoredeckLibraryWindowData(btn);
-        }, 'saga-loredeck-library-mobile-bottom-action');
-        bar.appendChild(refresh);
-    }
-
-    const doneButton = createLoredeckLibraryMobileBottomButton('Done', 'Close the Loredeck Library.', closeLoredeckLibraryWindow, 'saga-primary-button saga-loredeck-library-mobile-bottom-action');
-    markTourTarget(doneButton, 'loredecks.library.done');
-    bar.appendChild(doneButton);
-    return bar;
-}
-
-function createLoredeckLibraryMobileSelectedStrip(stack = [], library = []) {
-    const activeItems = getLoredeckLibraryMobileActiveDeckItems(stack);
-    const activeIds = activeItems.map(item => item.packId);
-    const packById = new Map((library || []).map(pack => [String(pack?.packId || '').trim(), pack]).filter(([id]) => !!id));
-    const strip = document.createElement('div');
-    strip.className = 'saga-loredeck-library-mobile-selected-strip';
-    strip.dataset.mobileSelectedStrip = 'true';
-    markTourTarget(strip, 'loredecks.library.mobileSelectedStrip');
-
-    const summary = document.createElement('div');
-    summary.className = 'saga-loredeck-library-mobile-selected-summary';
-    summary.textContent = activeIds.length ? `${activeIds.length} active` : 'Tap Loredecks to activate them';
-    strip.appendChild(summary);
-
-    const chips = document.createElement('div');
-    chips.className = 'saga-loredeck-library-mobile-selected-chips';
-    activeItems.slice(0, 6).forEach((item, index) => {
-        const pack = packById.get(item.packId) || item;
-        const chip = document.createElement('span');
-        chip.className = 'saga-loredeck-library-mobile-selected-chip';
-        chip.textContent = `${index + 1} ${pack.title || item.packId}`;
-        chip.setAttribute('aria-label', `Selected order ${index + 1}: ${pack.title || item.packId}`);
-        chips.appendChild(chip);
-    });
-    if (activeItems.length > 6) {
-        const more = document.createElement('span');
-        more.className = 'saga-loredeck-library-mobile-selected-chip saga-loredeck-library-mobile-selected-chip-more';
-        more.textContent = `+${activeItems.length - 6}`;
-        chips.appendChild(more);
-    }
-    strip.appendChild(chips);
-
-    const actions = document.createElement('div');
-    actions.className = 'saga-loredeck-library-mobile-selected-actions';
-    const reorder = createButton('Reorder', 'Open selected Loredecks in explicit reorder mode.', () => {
-        openLoredeckLibraryMobileReorderSheet();
-    }, 'saga-loredeck-library-small-button saga-loredeck-library-mobile-reorder');
-    reorder.disabled = activeItems.length < 2;
-    actions.appendChild(reorder);
-    const clear = createButton('Clear', 'Remove every directly selected Loredeck from the active stack.', () => {
-        if (!activeIds.length) return;
-        loredeckLibraryMobileReorderOpen = false;
-        removeLoredecksFromStack(activeIds);
-    }, 'saga-loredeck-library-small-button saga-loredeck-library-mobile-clear');
-    clear.disabled = !activeIds.length;
-    actions.appendChild(clear);
-    strip.appendChild(actions);
-    return strip;
-}
-
-function getLoredeckLibraryMobileActiveStackRecords(stack = []) {
-    return (Array.isArray(stack) ? stack : [])
-        .map((item, index) => ({
-            item,
-            index,
-            packId: String(item?.packId || item?.deckId || '').trim(),
-            key: getLoredeckStackItemKey(item),
-        }))
-        .filter(record => record.packId && record.item?.enabled !== false && getLoredeckStackItemType(record.item) !== 'folder');
-}
-
-function openLoredeckLibraryMobileReorderSheet() {
-    if (getLoredeckLibraryMobileActiveStackRecords(getLoredeckStack(getState())).length < 2) return false;
-    loredeckLibraryMobileDetailPackId = '';
-    loredeckLibraryMobileDetailFolderId = '';
-    loredeckLibraryMobileReorderOpen = true;
-    renderLoredeckLibraryOverlay();
-    return true;
-}
-
-function closeLoredeckLibraryMobileReorderSheet() {
-    if (!loredeckLibraryMobileReorderOpen) return false;
-    loredeckLibraryMobileReorderOpen = false;
-    renderLoredeckLibraryOverlay();
-    return true;
-}
-
-function moveLoredeckLibraryMobileReorderItem(packId = '', direction = 0) {
-    const id = String(packId || '').trim();
-    const delta = Math.sign(Number(direction) || 0);
-    if (!id || !delta) return false;
-    const records = getLoredeckLibraryMobileActiveStackRecords(getLoredeckStack(getState()));
-    const current = records.findIndex(record => record.packId === id);
-    const target = current + delta;
-    if (current < 0 || target < 0 || target >= records.length) return false;
-    loredeckLibraryMobileReorderOpen = true;
-    return reorderLoredeckStackItem(records[current].key || createLoredeckStackDeckKey(id), records[target].index);
-}
-
-function createLoredeckLibraryMobileReorderSheet(stack = [], library = []) {
-    const activeRecords = getLoredeckLibraryMobileActiveStackRecords(stack);
-    const packById = new Map((library || []).map(pack => [String(pack?.packId || '').trim(), pack]).filter(([id]) => !!id));
-    const backdrop = document.createElement('div');
-    backdrop.className = 'saga-loredeck-library-mobile-reorder-backdrop';
-    backdrop.setAttribute('role', 'presentation');
-    backdrop.addEventListener('click', event => {
-        if (event.target === backdrop) closeLoredeckLibraryMobileReorderSheet();
-    });
-
-    const sheet = document.createElement('div');
-    sheet.className = 'saga-loredeck-library-mobile-reorder-sheet';
-    sheet.setAttribute('role', 'dialog');
-    sheet.setAttribute('aria-modal', 'true');
-    sheet.setAttribute('aria-label', 'Reorder active Loredecks');
-    sheet.addEventListener('click', event => event.stopPropagation());
-    markTourTarget(sheet, 'loredecks.library.mobileReorder');
-
-    const header = document.createElement('div');
-    header.className = 'saga-loredeck-library-mobile-reorder-header';
-    const title = document.createElement('div');
-    title.className = 'saga-loredeck-library-mobile-reorder-title';
-    title.textContent = 'Reorder Active Loredecks';
-    header.appendChild(title);
-    const done = createButton('Done', 'Close reorder mode and keep this active Loredeck order.', closeLoredeckLibraryMobileReorderSheet, 'saga-primary-button saga-loredeck-library-mobile-reorder-done');
-    header.appendChild(done);
-    sheet.appendChild(header);
-
-    const list = document.createElement('div');
-    list.className = 'saga-loredeck-library-mobile-reorder-list';
-    activeRecords.forEach((record, index) => {
-        const pack = packById.get(record.packId) || record.item;
-        const row = document.createElement('div');
-        row.className = 'saga-loredeck-library-mobile-reorder-row';
-        row.dataset.packId = record.packId;
-        row.dataset.stackIndex = String(record.index);
-
-        const order = document.createElement('span');
-        order.className = 'saga-loredeck-library-mobile-reorder-order';
-        order.textContent = String(index + 1);
-        order.setAttribute('aria-label', `Order ${index + 1}`);
-        row.appendChild(order);
-
-        const grip = document.createElement('span');
-        grip.className = 'saga-loredeck-library-stack-grip saga-loredeck-library-mobile-reorder-grip';
-        grip.style.setProperty('--saga-grip-dot-rows', '2');
-        grip.setAttribute('aria-hidden', 'true');
-        grip.innerHTML = '<span></span>';
-        row.appendChild(grip);
-
-        row.appendChild(createLoredeckDeckVisual(pack, 'saga-loredeck-library-mobile-reorder-visual'));
-
-        const main = document.createElement('div');
-        main.className = 'saga-loredeck-library-mobile-reorder-main';
-        const label = document.createElement('div');
-        label.className = 'saga-loredeck-library-mobile-reorder-label';
-        label.textContent = pack.title || record.packId;
-        main.appendChild(label);
-        const meta = document.createElement('div');
-        meta.className = 'saga-loredeck-library-mobile-reorder-meta';
-        meta.textContent = `${getLoredeckLibraryPackTypeLabel(pack)} | ${record.packId}`;
-        main.appendChild(meta);
-        row.appendChild(main);
-
-        const controls = document.createElement('div');
-        controls.className = 'saga-loredeck-library-mobile-reorder-controls';
-        const up = createButton('Up', `Move ${pack.title || record.packId} earlier in the active Loredeck order.`, () => {
-            moveLoredeckLibraryMobileReorderItem(record.packId, -1);
-        }, 'saga-loredeck-library-small-button');
-        up.disabled = index === 0;
-        controls.appendChild(up);
-        const down = createButton('Down', `Move ${pack.title || record.packId} later in the active Loredeck order.`, () => {
-            moveLoredeckLibraryMobileReorderItem(record.packId, 1);
-        }, 'saga-loredeck-library-small-button');
-        down.disabled = index === activeRecords.length - 1;
-        controls.appendChild(down);
-        row.appendChild(controls);
-        list.appendChild(row);
-    });
-    sheet.appendChild(list);
-    backdrop.appendChild(sheet);
-    return backdrop;
-}
-
-function openLoredeckLibraryMobileDetailSheet(packId = '') {
-    const id = String(packId || '').trim();
-    if (!id) return false;
-    loredeckLibraryMobileDetailPackId = id;
-    loredeckLibraryMobileDetailFolderId = '';
-    loredeckLibrarySelectedFolderDetailsId = '';
-    selectLoredeckForDetails(id, { refresh: false });
-    renderLoredeckLibraryOverlay();
-    return true;
-}
-
-function openLoredeckLibraryMobileFolderDetailSheet(folderId = '') {
-    const id = String(folderId || '').trim();
-    if (!id) return false;
-    loredeckLibraryMobileDetailPackId = '';
-    loredeckLibraryMobileDetailFolderId = id;
-    loredeckLibrarySelectedFolderDetailsId = id;
-    setLoredeckLibraryBulkSelection([], '');
-    clearLoredeckLibrarySelection({ clearFolderDetails: false });
-    renderLoredeckLibraryOverlay();
-    return true;
-}
-
-function closeLoredeckLibraryMobileDetailSheet() {
-    if (!loredeckLibraryMobileDetailPackId && !loredeckLibraryMobileDetailFolderId) return false;
-    loredeckLibraryMobileDetailPackId = '';
-    loredeckLibraryMobileDetailFolderId = '';
-    renderLoredeckLibraryOverlay();
-    return true;
-}
-
-function createLoredeckLibraryMobileDetailSheet(pack = null, stack = [], canonDb = null, health = null, libraryIndex = {}, library = []) {
-    const backdrop = document.createElement('div');
-    backdrop.className = 'saga-loredeck-library-mobile-detail-backdrop';
-    backdrop.setAttribute('role', 'presentation');
-    backdrop.addEventListener('click', event => {
-        if (event.target === backdrop) closeLoredeckLibraryMobileDetailSheet();
-    });
-
-    const sheet = document.createElement('div');
-    sheet.className = 'saga-loredeck-library-mobile-detail-sheet';
-    sheet.setAttribute('role', 'dialog');
-    sheet.setAttribute('aria-modal', 'true');
-    sheet.setAttribute('aria-label', `${pack?.title || pack?.packId || 'Loredeck'} details`);
-    sheet.addEventListener('click', event => event.stopPropagation());
-
-    const header = document.createElement('div');
-    header.className = 'saga-loredeck-library-mobile-detail-sheet-header';
-    const title = document.createElement('div');
-    title.className = 'saga-loredeck-library-mobile-detail-sheet-title';
-    title.textContent = pack?.title || pack?.packId || 'Loredeck Details';
-    header.appendChild(title);
-    const close = createButton('Close', 'Close Loredeck details.', closeLoredeckLibraryMobileDetailSheet, 'saga-loredeck-library-small-button');
-    close.classList.add('saga-loredeck-library-mobile-detail-close');
-    header.appendChild(close);
-    sheet.appendChild(header);
-
-    const details = createLoredeckLibraryDetailsPanel(pack, stack, canonDb, health, null, libraryIndex, library);
-    details.classList.add('saga-loredeck-library-mobile-detail-panel');
-    sheet.appendChild(details);
-    backdrop.appendChild(sheet);
-    return backdrop;
-}
-
-function createLoredeckLibraryMobileFolderDetailSheet(folder = null, stack = [], canonDb = null, health = null, libraryIndex = {}, library = []) {
-    const backdrop = document.createElement('div');
-    backdrop.className = 'saga-loredeck-library-mobile-detail-backdrop';
-    backdrop.setAttribute('role', 'presentation');
-    backdrop.addEventListener('click', event => {
-        if (event.target === backdrop) closeLoredeckLibraryMobileDetailSheet();
-    });
-
-    const sheet = document.createElement('div');
-    sheet.className = 'saga-loredeck-library-mobile-detail-sheet';
-    sheet.setAttribute('role', 'dialog');
-    sheet.setAttribute('aria-modal', 'true');
-    sheet.setAttribute('aria-label', `${folder?.title || folder?.id || 'Folder'} details`);
-    sheet.addEventListener('click', event => event.stopPropagation());
-
-    const header = document.createElement('div');
-    header.className = 'saga-loredeck-library-mobile-detail-sheet-header';
-    const title = document.createElement('div');
-    title.className = 'saga-loredeck-library-mobile-detail-sheet-title';
-    title.textContent = folder?.title || folder?.id || 'Folder Details';
-    header.appendChild(title);
-    const close = createButton('Close', 'Close folder details.', closeLoredeckLibraryMobileDetailSheet, 'saga-loredeck-library-small-button');
-    close.classList.add('saga-loredeck-library-mobile-detail-close');
-    header.appendChild(close);
-    sheet.appendChild(header);
-
-    const details = createLoredeckLibraryFolderDetailsPanel(folder, stack, canonDb, health, libraryIndex, library);
-    details.classList.add('saga-loredeck-library-mobile-detail-panel');
-    sheet.appendChild(details);
-    backdrop.appendChild(sheet);
-    return backdrop;
-}
-
-function toggleLoredeckLibraryMobileDeckActive(packId = '') {
-    const id = String(packId || '').trim();
-    if (!id) return false;
-    setLoredeckLibraryBulkSelection([], '');
-    const stack = getLoredeckStack(getState());
-    const key = createLoredeckStackDeckKey(id);
-    const existing = (stack || []).find(item => getLoredeckStackItemKey(item) === key);
-    if (existing && existing.enabled !== false) return removeLoredecksFromStack([id]);
-    return addLoredeckToStack(id);
-}
-
 function normalizeLoredeckLibrarySearchQuery() {
     return String(loredeckLibraryQuery || '').trim().toLowerCase();
 }
@@ -2281,8 +1861,8 @@ function createLoredeckLibraryHierarchyRenderContext(visiblePacks = [], stack = 
         library,
         scopedLibrary,
         registry,
-        mobileTouch: options.mobileTouch === true,
-        mobileOrderMap: options.mobileTouch === true ? getLoredeckLibraryMobileOrderMap(stack) : new Map(),
+        mobileTouch: false === true,
+        mobileOrderMap: false === true ? getLoredeckLibraryMobileOrderMap(stack) : new Map(),
         query,
         activeViewId,
         renderModel,
@@ -2298,8 +1878,8 @@ function createLoredeckLibraryHierarchyDeckCard(pack, depth = 0, renderContext =
     if (visibleIndex === null) visibleOrder.push(pack);
     const stack = getLoredeckStack(getState());
     const card = createLoredeckLibraryDeckCard(pack, stack, renderContext.canonDb, renderContext.health, visibleOrder, index, {
-        mobileTouch: renderContext.mobileTouch === true,
-        mobileOrder: renderContext.mobileTouch ? (getLoredeckLibraryMobileOrderMap(stack).get(pack.packId) || 0) : 0,
+        mobileTouch: false === true,
+        mobileOrder: 0,
     });
     const normalizedDepth = Math.max(0, Number(depth) || 0);
     card.classList.add('saga-loredeck-library-deck-card-nested');
@@ -2338,7 +1918,7 @@ function appendLoredeckLibraryFolderBranch(target, folder = {}, depth = 0, rende
         stats,
         searchState,
         libraryIndex: renderContext.libraryIndex,
-        mobileTouch: renderContext.mobileTouch === true,
+        mobileTouch: false === true,
         coverPacks: renderContext.renderModel?.getCoverPacks?.(folderId) || [],
         totalCoverableCount: folderAllPacks.filter(pack => getLoredeckAssetRef(pack, 'cover')).length,
     };
@@ -2360,7 +1940,7 @@ function appendLoredeckLibraryFolderContents(target, folder = {}, depth = 0, ren
 
 function createLoredeckLibraryHierarchyList(visiblePacks = [], stack = [], canonDb = null, health = null, libraryIndex = {}, library = [], scopedLibrary = library, registry = getLoredeckLibraryRegistry(getState()), options = {}) {
     const list = document.createElement('div');
-    list.className = `saga-loredeck-library-deck-list saga-loredeck-library-hierarchy-list${options.mobileTouch === true ? ' saga-loredeck-library-mobile-list' : ''}`;
+    list.className = `saga-loredeck-library-deck-list saga-loredeck-library-hierarchy-list${false === true ? ' saga-loredeck-library-mobile-list' : ''}`;
     markTourTarget(list, 'loredecks.library.list');
     const renderContext = createLoredeckLibraryHierarchyRenderContext(visiblePacks, stack, canonDb, health, libraryIndex, library, scopedLibrary, registry, options);
     loredeckLibraryHierarchyRenderCache = renderContext;
@@ -2646,11 +2226,11 @@ function createLoredeckLibraryInlineFolderRow(folder = {}, options = {}) {
     const stats = options.stats || {};
     const depth = Math.max(0, Number(options.depth) || 0);
     const searchState = String(options.searchState || '').trim();
-    const mobileTouch = options.mobileTouch === true;
+    const mobileTouch = false === true;
     const row = document.createElement('div');
     row.className = `saga-loredeck-library-inline-folder-row${loredeckLibrarySelectedFolderDetailsId === folderId ? ' saga-loredeck-library-folder-row-active' : ''}${options.special ? ' saga-loredeck-library-folder-row-special' : ''}`.trim();
     row.classList.add('saga-loredeck-library-folder-row-drop-enabled');
-    if (mobileTouch) row.classList.add('saga-loredeck-library-folder-mobile-touch');
+
     if (searchState === 'match') row.classList.add('saga-loredeck-library-search-match');
     else if (searchState === 'context') row.classList.add('saga-loredeck-library-search-context');
     row.style.setProperty('--saga-folder-depth', String(depth));
@@ -2674,59 +2254,16 @@ function createLoredeckLibraryInlineFolderRow(folder = {}, options = {}) {
     let mobileLongPressTimer = null;
     let mobileLongPressFired = false;
     const mobileInteractiveSelector = 'button, input, select, textarea, label, a';
-    if (mobileTouch) {
-        const clearLongPressTimer = () => {
-            if (mobileLongPressTimer) {
-                clearTimeout(mobileLongPressTimer);
-                mobileLongPressTimer = null;
-            }
-        };
-        row.addEventListener('pointerdown', e => {
-            if (e.target?.closest?.(mobileInteractiveSelector)) return;
-            mobileLongPressFired = false;
-            clearLongPressTimer();
-            mobileLongPressTimer = setTimeout(() => {
-                mobileLongPressFired = true;
-                openLoredeckLibraryMobileFolderDetailSheet(folderId);
-            }, 520);
-        });
-        row.addEventListener('pointerup', clearLongPressTimer);
-        row.addEventListener('pointerleave', clearLongPressTimer);
-        row.addEventListener('pointercancel', clearLongPressTimer);
-        row.addEventListener('contextmenu', e => {
-            if (e.target?.closest?.(mobileInteractiveSelector)) return;
-            e.preventDefault();
-            e.stopPropagation();
-            clearLongPressTimer();
-            openLoredeckLibraryMobileFolderDetailSheet(folderId);
-        });
-    }
+
     row.addEventListener('click', e => {
         e.stopPropagation();
-        if (mobileTouch) {
-            if (mobileLongPressFired) {
-                mobileLongPressFired = false;
-                return;
-            }
-            if (e.target?.closest?.(mobileInteractiveSelector)) return;
-            selectFolder();
-            toggleLoredeckLibraryFolderCollapsed(folderId, getCurrentCollapsed());
-            return;
-        }
+
         selectFolder();
     });
     row.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            if (mobileTouch) {
-                if (e.key === 'Enter') {
-                    openLoredeckLibraryMobileFolderDetailSheet(folderId);
-                    return;
-                }
-                selectFolder();
-                toggleLoredeckLibraryFolderCollapsed(folderId, getCurrentCollapsed());
-                return;
-            }
+
             selectFolder();
         } else if (e.key === 'ArrowRight' && getCurrentCollapsed()) {
             e.preventDefault();
@@ -2737,7 +2274,7 @@ function createLoredeckLibraryInlineFolderRow(folder = {}, options = {}) {
         }
     });
 
-    if (!mobileTouch) {
+    {
         const grip = document.createElement('span');
         grip.className = 'saga-loredeck-library-stack-grip saga-loredeck-library-folder-grip';
         grip.style.setProperty('--saga-grip-dot-rows', String(Math.max(3, 6 - depth)));
@@ -2775,7 +2312,7 @@ function createLoredeckLibraryInlineFolderRow(folder = {}, options = {}) {
         value: folder.title || folderId || 'Folder',
         fallback: folderId || 'Folder',
         className: 'saga-loredeck-library-folder-label',
-        editable: !mobileTouch && !options.special && !!folderId && folderId !== 'unfiled',
+        editable: !options.special && !!folderId && folderId !== 'unfiled',
         kind: 'folder',
         onCommit: title => {
             const renamed = renameLoredeckLibraryFolder(folderId, title);
@@ -3247,7 +2784,7 @@ function getLoredeckLibraryVisiblePacksFromHierarchyDom(anchor = null, fallbackP
 }
 
 function createLoredeckLibraryDeckCard(pack, stack = [], canonDb = null, health = null, visiblePacks = [], visibleIndex = 0, options = {}) {
-    const mobileTouch = options.mobileTouch === true;
+    const mobileTouch = false === true;
     const mobileOrder = Math.max(0, Number(options.mobileOrder) || 0);
     const selectedId = String(getState()?.lorePanel?.selectedLoredeckId || '').trim();
     const bulkSelected = loredeckLibraryBulkSelectedIds.has(pack.packId);
@@ -3257,64 +2794,29 @@ function createLoredeckLibraryDeckCard(pack, stack = [], canonDb = null, health 
     const stats = getLoredeckLibraryDeckStats(pack, canonDb, healthInfo);
     const card = document.createElement('div');
     card.className = 'saga-loredeck-library-deck-card';
-    if (mobileTouch) card.classList.add('saga-loredeck-library-deck-mobile-touch');
+
     card.tabIndex = 0;
     card.setAttribute('role', 'button');
     card.dataset.packId = pack.packId;
     card.dataset.libraryIndex = String(visibleIndex);
-    if (!mobileTouch && selectedId === pack.packId) card.classList.add('saga-loredeck-library-deck-selected');
-    if (!mobileTouch && bulkSelected) card.classList.add('saga-loredeck-library-deck-bulk-selected');
-    if (mobileTouch ? mobileOrder > 0 : activeItem?.enabled) card.classList.add('saga-loredeck-library-deck-active');
+    if (selectedId === pack.packId) card.classList.add('saga-loredeck-library-deck-selected');
+    if (bulkSelected) card.classList.add('saga-loredeck-library-deck-bulk-selected');
+    if (activeItem?.enabled) card.classList.add('saga-loredeck-library-deck-active');
     if (healthTone === 'error') card.classList.add('saga-loredeck-library-deck-error');
     else if (healthTone === 'warning') card.classList.add('saga-loredeck-library-deck-warning');
-    card.dataset.mobileOrder = mobileTouch && mobileOrder ? String(mobileOrder) : '';
-    card.setAttribute('aria-pressed', mobileTouch ? (mobileOrder ? 'true' : 'false') : (bulkSelected ? 'true' : 'false'));
-    if (!mobileTouch && selectedId === pack.packId) card.setAttribute('aria-current', 'true');
-    addTooltip(card, mobileTouch
-        ? `${pack.title || pack.packId}. Tap to ${mobileOrder ? 'remove from' : 'add to'} the active Loredeck order.`
-        : `${pack.title || pack.packId}. Click to select, Ctrl/Cmd-click to toggle, Shift-click to select a visible range, double-click to add to the active stack.`);
+
+    card.setAttribute('aria-pressed', bulkSelected ? 'true' : 'false');
+    if (selectedId === pack.packId) card.setAttribute('aria-current', 'true');
+    addTooltip(card, `${pack.title || pack.packId}. Click to select, Ctrl/Cmd-click to toggle, Shift-click to select a visible range, double-click to add to the active stack.`);
     markTourTarget(card, 'loredecks.library.deckCard');
     card.addEventListener('mousedown', suppressLoredeckLibraryRangeTextSelection);
     let mobileLongPressTimer = null;
     let mobileLongPressFired = false;
     const mobileInteractiveSelector = 'button, input, select, textarea, label, a';
-    if (mobileTouch) {
-        const clearLongPressTimer = () => {
-            if (mobileLongPressTimer) {
-                clearTimeout(mobileLongPressTimer);
-                mobileLongPressTimer = null;
-            }
-        };
-        card.addEventListener('pointerdown', e => {
-            if (e.target?.closest?.(mobileInteractiveSelector)) return;
-            mobileLongPressFired = false;
-            clearLongPressTimer();
-            mobileLongPressTimer = setTimeout(() => {
-                mobileLongPressFired = true;
-                openLoredeckLibraryMobileDetailSheet(pack.packId);
-            }, 520);
-        });
-        card.addEventListener('pointerup', clearLongPressTimer);
-        card.addEventListener('pointerleave', clearLongPressTimer);
-        card.addEventListener('pointercancel', clearLongPressTimer);
-        card.addEventListener('contextmenu', e => {
-            if (e.target?.closest?.(mobileInteractiveSelector)) return;
-            e.preventDefault();
-            e.stopPropagation();
-            clearLongPressTimer();
-            openLoredeckLibraryMobileDetailSheet(pack.packId);
-        });
-    }
+
     card.addEventListener('click', e => {
         e.stopPropagation();
-        if (mobileTouch) {
-            if (mobileLongPressFired) {
-                mobileLongPressFired = false;
-                return;
-            }
-            toggleLoredeckLibraryMobileDeckActive(pack.packId);
-            return;
-        }
+
         handleLoredeckLibraryDeckSelection(pack.packId, e, getLoredeckLibraryVisiblePacksFromHierarchyDom(card, visiblePacks));
         refreshLoredeckLibrarySelectionSurfaces();
     });
@@ -3322,24 +2824,17 @@ function createLoredeckLibraryDeckCard(pack, stack = [], canonDb = null, health 
         if (e.target?.closest?.('button, input, select, textarea')) return;
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            if (mobileTouch) {
-                if (e.key === 'Enter') {
-                    openLoredeckLibraryMobileDetailSheet(pack.packId);
-                    return;
-                }
-                toggleLoredeckLibraryMobileDeckActive(pack.packId);
-                return;
-            }
+
             handleLoredeckLibraryDeckSelection(pack.packId, e, getLoredeckLibraryVisiblePacksFromHierarchyDom(card, visiblePacks));
             refreshLoredeckLibrarySelectionSurfaces();
         }
     });
     card.addEventListener('dblclick', e => {
         e.stopPropagation();
-        if (!mobileTouch) addLoredeckToStack(pack.packId);
+        addLoredeckToStack(pack.packId);
     });
 
-    if (!mobileTouch) {
+    {
         const grip = document.createElement('span');
         grip.className = 'saga-loredeck-library-stack-grip saga-loredeck-library-deck-grip';
         grip.style.setProperty('--saga-grip-dot-rows', '2');
@@ -3356,14 +2851,6 @@ function createLoredeckLibraryDeckCard(pack, stack = [], canonDb = null, health 
     }
 
     card.appendChild(createLoredeckDeckVisual(pack, 'saga-loredeck-library-monogram'));
-    if (mobileTouch) {
-        const orderBadge = document.createElement('span');
-        orderBadge.className = 'saga-loredeck-library-mobile-order-badge';
-        orderBadge.hidden = mobileOrder <= 0;
-        orderBadge.textContent = mobileOrder ? String(mobileOrder) : '';
-        orderBadge.setAttribute('aria-label', mobileOrder ? `Selected order ${mobileOrder}` : 'Not selected');
-        card.appendChild(orderBadge);
-    }
 
     const main = document.createElement('div');
     main.className = 'saga-loredeck-library-deck-main';
@@ -3371,7 +2858,7 @@ function createLoredeckLibraryDeckCard(pack, stack = [], canonDb = null, health 
         value: pack.title || pack.packId,
         fallback: pack.packId,
         className: 'saga-loredeck-library-deck-title',
-        editable: !mobileTouch && isEditableLoredeckLibraryPack(pack),
+        editable: isEditableLoredeckLibraryPack(pack),
         kind: 'Loredeck',
         onCommit: title => {
             const renamed = renameLoredeckLibraryDeckTitle(pack.packId, title);
@@ -3389,13 +2876,11 @@ function createLoredeckLibraryDeckCard(pack, stack = [], canonDb = null, health 
     if (pack.fandom) chips.appendChild(createStatusPill(pack.fandom, 'Fandom or setting.', { tone: 'source', kind: 'metadata' }));
     if (pack.era) chips.appendChild(createStatusPill(pack.era, 'Era, arc, continuity slice, or scope.', { tone: 'info', kind: 'metadata' }));
     if (healthTone !== 'ok') chips.appendChild(createStatusPill(healthInfo.status.label, healthInfo.status.summary, { tone: healthTone === 'error' ? 'danger' : 'warning', kind: 'severity' }));
-    if (mobileTouch && mobileOrder) {
-        chips.appendChild(createStatusPill(`Order ${mobileOrder}`, `Selected order ${mobileOrder} in the active mobile Loredeck list.`, { tone: 'selected', kind: 'status' }));
-    } else if (activeItem) {
+    if (activeItem) {
         chips.appendChild(createStatusPill(activeItem.enabled ? 'In Stack' : 'Disabled', 'Current session stack state.', { tone: activeItem.enabled ? 'success' : 'muted', kind: 'status' }));
     }
     main.appendChild(chips);
-    if (!mobileTouch) {
+    {
         const statsLine = document.createElement('div');
         statsLine.className = 'saga-loredeck-library-card-stats';
         statsLine.textContent = `${stats.entryCount} Lorecards | ${stats.fileCount || 0} files | ${stats.updatedLabel}`;
@@ -4486,7 +3971,7 @@ function createLoredeckLibraryDetailsPanelBody(pack = null, stack = [], canonDb 
     if (selectedFolder) {
         return createLoredeckLibraryFolderDetailsPanel(selectedFolder, stack, canonDb, health, libraryIndex, library);
     }
-    const mobile = isRuntimeMobileShell();
+    const mobile = false;
     if (!['overview', 'health'].includes(loredeckLibraryDetailsTab)) {
         loredeckLibraryDetailsTab = 'overview';
     }
@@ -4552,7 +4037,7 @@ function createLoredeckLibraryDetailsPanelBody(pack = null, stack = [], canonDb 
 }
 
 function createLoredeckLibraryFolderDetailsPanel(folder = {}, stack = [], canonDb = null, health = null, libraryIndex = {}, library = []) {
-    const mobile = isRuntimeMobileShell();
+    const mobile = false;
     const folderId = String(folder.id || '').trim();
     const panel = document.createElement('div');
     panel.className = 'saga-loredeck-library-details saga-loredeck-library-folder-details';

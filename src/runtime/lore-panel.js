@@ -529,25 +529,7 @@ import {
     normalizeTab,
     normalizeTabForExperience,
 } from './runtime-navigation.js';
-import {
-    applyRuntimeShellGeometry,
-    disposeRuntimeShellInteractions,
-    clampRuntimeShellToViewport,
-    clampNumber,
-    getActiveNestedScrollElement,
-    getActiveTabScrollElement,
-    getConstrainedDrawerHeight,
-    getConstrainedDrawerWidth,
-    getRailWidth,
-    isRuntimeMobileShell,
-    normalizeRailMode,
-    normalizePanelLayoutState,
-    resetRuntimePanelLayout,
-    resolveDrawerDirection,
-    toggleRuntimeDrawerForTab,
-    toggleRuntimeRailMode,
-    updateDrawerScrollMetrics,
-} from './runtime-shell.js';
+import { applyRuntimeShellGeometry, disposeRuntimeShellInteractions, clampRuntimeShellToViewport, clampNumber, getActiveNestedScrollElement, getActiveTabScrollElement, getConstrainedDrawerHeight, getConstrainedDrawerWidth, getRailWidth, normalizeRailMode, normalizePanelLayoutState, resetRuntimePanelLayout, resolveDrawerDirection, toggleRuntimeDrawerForTab, toggleRuntimeRailMode, updateDrawerScrollMetrics } from "./runtime-shell.js";
 import {
     refreshRuntimeHeader,
     refreshRuntimeRailIcons as refreshRuntimeRailIconImages,
@@ -1069,7 +1051,6 @@ configureLoredeckWorkflowComposition({
     saveSettings,
     getDefaultState,
     isBasicExperience,
-    isRuntimeMobileShell,
     getCanonLoreDatabaseSync,
     loadCanonLoreDatabase,
     clearCanonLoreDatabaseCache,
@@ -1236,7 +1217,6 @@ configureLoredeckCreatorPanel({
     attemptLoredeckHealthFixes,
     refreshPanelBody,
     refreshHeader,
-    isRuntimeMobileShell,
     getLoredeckCreatorPipelineReadinessView: (pack, cached = null) => {
         if (!isGeneratedLoredeckPack(pack)) return null;
         const linkedJob = cached || getLoredeckCreatorJobForPack(pack);
@@ -1313,7 +1293,6 @@ configureContextComposition({
     },
     renderContextWorkbench,
     closeContextWorkbench,
-    isRuntimeMobileShell,
     clearContextIndexCache,
     loadContextIndex,
     getContextWorkbenchPack,
@@ -1642,9 +1621,7 @@ export function refreshLorePanel() {
     return runtimeRenderer.refresh(existing, state, () => {
         normalizePanelLayoutState(state);
         applyRuntimeTheme(existing, getSettings());
-        if (existing.classList.contains('saga-runtime-mobile') || isRuntimeMobileShell()) {
-            return runtimeRenderer.replace(existing, state);
-        }
+
         const hasDrawer = !!existing.querySelector('.saga-runtime-drawer');
         const drawerOpen = state.lorePanel.drawerOpen === true;
         const railMode = normalizeRailMode(state.lorePanel.railMode);
@@ -10808,10 +10785,7 @@ function navigateRuntimeTab(tabId, options = {}) {
     const settings = getSettings();
     const activeTab = normalizeTabForExperience(tabId, settings);
     void options;
-    if (isRuntimeMobileShell()) {
-        toggleRuntimeDrawerForTab(activeTab);
-        return true;
-    }
+
     const patch = { activeTab, drawerOpen: true, collapsed: false };
     setPanelState(patch);
     refreshPanelBody({ preserveScroll: false });
@@ -12219,7 +12193,6 @@ async function handleSuggestCanonLore(btn) {
     });
 }
 
-
 function createBulkLoreLedgerStatusCard(state) {
     const ledger = state?.loreBulkGeneration || {};
     const batchId = ledger.activeBatchId || ledger.lastBatchId || '';
@@ -12553,14 +12526,6 @@ function updateAcceptedLoreScrollRegionHeight() {
 
 if (typeof window !== 'undefined') {
     window.addEventListener('resize', () => {
-        const existing = document.getElementById(PANEL_ID);
-        const wasMobile = existing?.classList?.contains('saga-runtime-mobile') === true;
-        const shouldBeMobile = isRuntimeMobileShell();
-        if (existing && wasMobile !== shouldBeMobile) {
-            refreshLorePanel();
-            scheduleAcceptedLoreLayoutUpdate();
-            return;
-        }
         clampRuntimeShellToViewport();
         scheduleAcceptedLoreLayoutUpdate();
     });
@@ -12631,20 +12596,7 @@ function refreshPanelBodyUnsafe(options = {}) {
     if (!panelRoot) return;
     const stateForShell = getState();
     normalizePanelLayoutState(stateForShell);
-    if (panelRoot.classList.contains('saga-runtime-mobile')) {
-        const mobileTabScroll = getActiveTabScrollElement(panelRoot);
-        const mobileTabScrollTop = options.preserveScroll && mobileTabScroll ? mobileTabScroll.scrollTop : 0;
-        renderPanelShell(panelRoot, stateForShell);
-        if (options.preserveScroll) {
-            const restoreMobileScroll = () => {
-                const nextMobileTabScroll = getActiveTabScrollElement(panelRoot);
-                if (nextMobileTabScroll) nextMobileTabScroll.scrollTop = mobileTabScrollTop;
-            };
-            restoreMobileScroll();
-            if (typeof requestAnimationFrame === 'function') requestAnimationFrame(restoreMobileScroll);
-        }
-        return;
-    }
+
     const body = panelRoot.querySelector('.saga-lore-panel-body');
     if (!body) {
         if (stateForShell?.lorePanel?.drawerOpen === true) renderPanelShell(panelRoot, stateForShell);

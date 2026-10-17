@@ -186,7 +186,6 @@ const LORE_TIMELINE_SENDER_PALETTE = [
     '#d0b05e',
 ];
 
-
 let loreTimelineOpen = false;
 let loreTimelineSelectedId = '';
 let loreTimelineViewport = null;
@@ -1189,6 +1188,17 @@ function createLoreTimelineEventDetail(event) {
     title.className = 'saga-runtime-card-title';
     title.textContent = event.summary || event.type;
     wrap.appendChild(title);
+
+    if (event.patch?.layer1Analysis) {
+        const analysis = event.patch.layer1Analysis;
+        wrap.appendChild(createKeyValue('Sources changed', analysis.changedSources.join(', ') || 'Unchanged', 'Original source identities.'));
+        wrap.appendChild(createKeyValue('Analysis revision', `${analysis.status} · ${analysis.revision}`, 'Revision used to derive this result.'));
+        const pending = (getState().pendingLoreEntries || []).filter(e => e.extensions?.layer1?.revision === analysis.revision);
+        const review = createButton(pending.length ? 'Review proposals' : 'No proposals', 'Open this analysis in Pending Review.', async () => {
+            const { openLayer1Review } = await import('./lorecards-panel.js'); openLayer1Review(analysis.revision);
+        });
+        review.disabled = !pending.length; wrap.appendChild(review);
+    }
 
     wrap.appendChild(createKeyValue('When', formatLongDate(event.timestamp), 'When this lore event was recorded.'));
     wrap.appendChild(createKeyValue('Message', event.messageRange?.latest ? `Latest ${event.messageRange.latest}` : 'No anchor', 'Approximate chat message anchor at the time of the lore change.'));

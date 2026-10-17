@@ -9,6 +9,7 @@ import { hasRuntimeAction, listRuntimeActions, runRuntimeAction } from '../runti
 import { getLastLoreInjectionAudit, getLastLoredeckRetrievalAudit, searchAcceptedLorecards } from '../lorecards/retrieval-audit.js';
 import { registerSagaToolManagerTools } from './saga-tool-registry.js';
 import { getSagaNamespace, getSagaNamespaceSection } from '../saga-namespace.js';
+import { querySemanticCanon, semanticCanonStatus } from '../context/semantic-canon.js';
 
 const LEGACY_GLOBAL_BRIDGE_KEYS = Object.freeze([
     '_sagaBuildMemo',
@@ -57,6 +58,8 @@ export function exposeGlobalBridge() {
         getLastLoredeckRetrievalAudit,
         searchLorecards: (query, options = {}) => searchAcceptedLorecards(getState(), query, options),
         registerToolManagerTools: registerSagaToolManagerTools,
+        queryCanon: querySemanticCanon,
+        canonStatus: semanticCanonStatus,
     });
     clearLegacyGlobalBridgeAliases();
     console.log(`${LOG_PREFIX} Global bridge exposed`);

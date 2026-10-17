@@ -14,6 +14,7 @@ import { getSettings, getState } from '../state/state-manager.js';
 import { buildMemo, buildContinuityMemo, buildLoreMemo } from './memo-builder.js';
 import { buildLoreInjectionAudit, recordLoreInjectionAudit } from '../lorecards/retrieval-audit.js';
 import { getSagaNamespaceSection } from '../saga-namespace.js';
+import { clearSemanticCanon, prepareSemanticCanon, syncCanonPrompts, semanticCanonStatus } from '../context/semantic-canon.js';
 
 const COMBINED_MARKER = '[Saga Continuity State]';
 const CONTINUITY_PROMPT_KEY = 'saga_continuity_state';
@@ -21,7 +22,6 @@ const LORE_PROMPT_KEY = 'saga_lore_entries'; // legacy aggregate key, cleared fo
 const LORE_HIGH_PROMPT_KEY = 'saga_lore_high_relevance';
 const LORE_NORMAL_PROMPT_KEY = 'saga_lore_normal_relevance';
 const LORE_LOW_PROMPT_KEY = 'saga_lore_low_relevance';
-
 
 // Do not statically import SillyTavern's root script.js here. Some ST builds do
 // not export the exact names we need, and a missing named export prevents this
@@ -167,8 +167,16 @@ export function syncPromptInjection() {
             return lastSyncInfo;
         }
 
-        const injectContinuity = settings.injectContinuity !== false && settings.injectMemo !== false;
-        const injectLore = settings.injectLore !== false;
+        if (settings.semanticCanonEnabled) {
+            setSagaExtensionPrompt(CONTINUITY_PROMPT_KEY, '', 1, 4, 0, false);
+            setSagaExtensionPrompt(LORE_PROMPT_KEY, '', 1, 4, 0, false);
+            syncCanonPrompts();
+            const canon = semanticCanonStatus();
+            lastSyncInfo = { transport: 'extension_prompt', continuityChars: 0, loreChars: canon.text.length, combinedChars: canon.text.length, syncedAt: Date.now(), fallback: false };
+            return lastSyncInfo;
+        }
+        const injectContinuity = false; // Layer 2 owns continuity in this fork.
+        const injectLore = false; // Only explicitly selected original evidence enters Layer 1 prompts.
 
         const continuityText = injectContinuity ? wrapContinuityPrompt(buildContinuityMemo(state)) : '';
         const loreHighText = injectLore && settings.loreHighInjectionEnabled !== false ? wrapLorePrompt(buildLoreMemo(state, { relevanceTier: 'high' }), 'HIGH RELEVANCE LORE') : '';
@@ -266,6 +274,7 @@ export function clearExtensionPrompts() {
         api.setExtensionPrompt(LORE_HIGH_PROMPT_KEY, '', api.extension_prompt_types.IN_CHAT, 4, false, api.extension_prompt_roles.SYSTEM);
         api.setExtensionPrompt(LORE_NORMAL_PROMPT_KEY, '', api.extension_prompt_types.IN_CHAT, 4, false, api.extension_prompt_roles.SYSTEM);
         api.setExtensionPrompt(LORE_LOW_PROMPT_KEY, '', api.extension_prompt_types.IN_CHAT, 4, false, api.extension_prompt_roles.SYSTEM);
+        clearSemanticCanon();
     } catch (e) {
         console.warn(`${LOG_PREFIX} Failed to clear extension prompts`, e);
     }
@@ -342,22 +351,23 @@ function wrapLorePrompt(text, label = 'LORE') {
  * to 'interceptor'. It prepends the combined memo to the last user message, so
  * it has no role/depth semantics beyond the last user message's role.
  */
-function sagaInterceptor(chat, contextSize, abort, type) {
+async function sagaInterceptor(chat, contextSize, abort, type) {
+    await prepareSemanticCanon(chat, type);
     if (type === 'quiet') return;
     try {
         const settings = getSettings();
         if ((settings.injectionTransport || 'extension_prompt') !== 'interceptor') return;
 
         if (!settings.enabled) return;
-        const injectContinuity = settings.injectContinuity !== false && settings.injectMemo !== false;
-        const injectLore = settings.injectLore !== false;
+        const injectContinuity = false; // Layer 2 owns continuity in this fork.
+        const injectLore = false;
         if (!injectContinuity && !injectLore) return;
         if (!chat || !Array.isArray(chat) || chat.length === 0) return;
 
         const state = getState();
         if (!state) return;
 
-        const memo = buildMemo(state);
+        const memo = buildMemo(state, { injectLore });
         if (!memo || typeof memo !== 'string' || memo.trim().length === 0) return;
 
         const estimatedTokens = estimateTokens(memo);

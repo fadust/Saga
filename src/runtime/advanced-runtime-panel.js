@@ -25,11 +25,7 @@ import {
     normalizeAutomationMode,
     normalizeExperienceMode,
 } from './runtime-navigation.js';
-import {
-    getRuntimeMobileActiveSubview,
-    isRuntimeMobileShell,
-    pushRuntimeMobileSubview,
-} from './runtime-shell.js';
+
 import { createStoryOpenerCreatorSection } from './story-opener-panel.js';
 
 let advancedRuntimePanelDeps = {};
@@ -111,11 +107,11 @@ function startRuntimeWalkthrough(mode, options = {}) {
 }
 
 export function renderSessionTab(container, state) {
+    renderLayer1Panel(container, state);
     const settings = getSettings();
     const basic = isBasicExperience(settings);
     const guideMode = basic ? 'basic' : 'advanced';
     const guide = getRuntimeGuideContent(guideMode);
-    const mobileSubview = getSessionMobileSubview(state, settings);
     container.classList.add('saga-operator-tab', 'saga-session-operator-tab');
 
     container.appendChild(createSectionHeader(
@@ -123,7 +119,7 @@ export function renderSessionTab(container, state) {
         basic ? 'Review Session Readiness and runtime state for this chat.' : 'Set how Saga behaves during roleplay.'
     ));
     container.appendChild(createSagaActiveSection(settings));
-    container.appendChild(createSessionOperatorSummary(state, settings, { basic, guideMode, mobileSubview }));
+    container.appendChild(createSessionOperatorSummary(state, settings, { basic, guideMode }));
 
     if (basic) {
         container.appendChild(createBasicStartReadinessCard(state, settings));
@@ -136,7 +132,7 @@ export function renderSessionTab(container, state) {
     container.appendChild(createSessionMetricsCard(state, settings));
     container.appendChild(createSessionWalkthroughSection(guideMode, guide, basic));
 
-    const storySectionOptions = isRuntimeMobileShell() ? { sectionId: 'session.storyMaker.mobile' } : {};
+    const storySectionOptions = {};
     container.appendChild(createStoryOpenerSessionSection(state, storySectionOptions));
 }
 
@@ -238,7 +234,7 @@ function createSessionMetricsCard(state, settings) {
     stats.appendChild(createKeyValue('Active chat', getActiveChatMetricName(), 'The active SillyTavern chat whose Saga metrics and chat metadata are being shown.'));
     stats.appendChild(createKeyValue('Pending continuity changes', state?.lastDelta ? '1' : '0', 'Legacy extracted state delta waiting in the Continuity tab. New scans apply directly to Continuity sections.'));
     stats.appendChild(createKeyValue('Pending Review', String((state?.pendingLoreEntries || []).length), 'Generated Lorecards waiting in the Lorecards tab Pending Review section.'));
-    stats.appendChild(createKeyValue('Accepted Lorecards', String(counts.all - counts.pending), 'Accepted Lorecards currently stored in the lore matrix.'));
+    stats.appendChild(createKeyValue('Accepted Lorecards', String(counts.all), 'Accepted Lorecards currently stored in the lore matrix.'));
     stats.appendChild(createKeyValue('High-relevance Accepted Lorecards', String(counts.active), 'Accepted Lorecards currently assigned to the High-Relevance injection tier.'));
     stats.appendChild(createKeyValue('Lorecards selected for injection', String(selectedLoreCount), 'Accepted Lorecards selected for Lore Injection after relevance, Elevate, Mute, Context activation, and fallback priority selection. There is no hidden entry cap; mute entries to exclude them.'));
     stats.appendChild(createKeyValue('Injection token estimate', injectionStats.totalChars ? `${injectionStats.totalTokens} tokens` : 'empty', 'Approximate token count for the combined Continuity + Lore injection previews.'));
@@ -246,22 +242,9 @@ function createSessionMetricsCard(state, settings) {
     return stats;
 }
 
-function getSessionMobileSubview(state, settings = getSettings()) {
-    if (!isRuntimeMobileShell()) return null;
-    return getRuntimeMobileActiveSubview(state?.lorePanel, 'session', settings);
-}
-
-function openSessionMobileDetails() {
-    pushRuntimeMobileSubview('session', {
-        id: 'session-details',
-        title: 'Session Details',
-    });
-}
-
 function createSessionOperatorSummary(state, settings, options = {}) {
     const basic = options.basic === true;
     const guideMode = options.guideMode || (basic ? 'basic' : 'advanced');
-    const mobileSubview = options.mobileSubview || null;
     const readiness = basic ? getBasicReadinessModel(state, settings) : null;
     const counts = getPanelLoreState(state).counts;
     const pendingLore = (state?.pendingLoreEntries || []).length;
@@ -269,7 +252,6 @@ function createSessionOperatorSummary(state, settings, options = {}) {
     const injectionStats = getInjectionCharacterStats(state, settings);
     const enabled = settings.enabled !== false;
     const currentMode = normalizeAutomationMode(settings.automationMode || settings.workflowMode);
-    const mobileRoot = isRuntimeMobileShell() && !mobileSubview;
 
     const card = document.createElement('div');
     card.className = 'saga-runtime-card saga-operator-summary-card saga-session-operator-summary';
@@ -282,7 +264,7 @@ function createSessionOperatorSummary(state, settings, options = {}) {
     const title = document.createElement('div');
     title.className = 'saga-runtime-card-title saga-operator-summary-title';
     title.textContent = 'Session Readiness';
-    addTooltip(title, 'Mobile operator summary for Saga runtime readiness and the next useful Session action.');
+    addTooltip(title, 'Saga runtime readiness and the next useful Session action.');
     titleWrap.appendChild(title);
     const subtitle = document.createElement('div');
     subtitle.className = 'saga-runtime-help saga-operator-summary-subtitle';
@@ -299,37 +281,14 @@ function createSessionOperatorSummary(state, settings, options = {}) {
     if (pendingLore) chips.appendChild(createStatusPill(`${pendingLore} pending`, 'Pending Review entries waiting for review.', { tone: 'review', kind: 'count' }));
     chips.appendChild(createStatusPill(`${selectedLore} selected`, 'Accepted Lorecards selected for the next injection.', { tone: selectedLore ? 'selected' : 'muted', kind: 'count' }));
     header.appendChild(chips);
-    if (mobileRoot) {
-        header.classList.add('saga-operator-summary-header-tappable');
-        header.tabIndex = 0;
-        header.setAttribute('role', 'button');
-        addTooltip(header, 'Tap to open runtime toggles, walkthrough notes, and Session metrics.');
-        header.setAttribute('aria-label', 'Open Session Details');
-        const openDetails = event => {
-            if (event?.target?.closest?.('button, input, select, textarea, label, a')) return;
-            openSessionMobileDetails();
-        };
-        header.addEventListener('click', openDetails);
-        header.addEventListener('keydown', event => {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
-            event.preventDefault();
-            openDetails(event);
-        });
-        markTourTarget(header, 'session.operator.details');
-    }
+
     card.appendChild(header);
 
     const stats = document.createElement('div');
     stats.className = 'saga-operator-stat-grid';
     stats.appendChild(createKeyValue('Active chat', getActiveChatMetricName(), 'The active SillyTavern chat whose Saga runtime state is shown.'));
-    if (mobileRoot) {
-        stats.appendChild(createKeyValue('Pending Review', String(pendingLore), 'Generated Lorecards waiting in Pending Review.'));
-        stats.appendChild(createKeyValue('Accepted Lorecards', String(Math.max(0, (counts?.all || 0) - (counts?.pending || 0))), 'Accepted Lorecards stored in the lore matrix.'));
-        stats.appendChild(createKeyValue('High relevance', String(counts?.active || 0), 'Accepted Lorecards currently assigned to the High-Relevance injection tier.'));
-        stats.appendChild(createKeyValue('Selected for injection', String(selectedLore), 'Accepted Lorecards selected for the next injection.'));
-        stats.appendChild(createKeyValue('Injection estimate', injectionStats.totalChars ? `${injectionStats.totalTokens} tokens` : 'empty', 'Approximate current injection token count.'));
-    } else {
-        stats.appendChild(createKeyValue('Accepted Lorecards', String(Math.max(0, (counts?.all || 0) - (counts?.pending || 0))), 'Accepted Lorecards stored in the lore matrix.'));
+    {
+        stats.appendChild(createKeyValue('Accepted Lorecards', String(counts?.all || 0), 'Accepted Lorecards stored in the lore matrix.'));
         stats.appendChild(createKeyValue('Injection estimate', injectionStats.totalChars ? `${injectionStats.totalTokens} tokens` : 'empty', 'Approximate current injection token count.'));
     }
     card.appendChild(stats);
@@ -423,3 +382,4 @@ function createInstructionsCard(guideMode = normalizeExperienceMode(getSettings(
 
     return wrap;
 }
+import { renderLayer1Panel } from './layer1-panel.js';

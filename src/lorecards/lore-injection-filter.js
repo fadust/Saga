@@ -5,7 +5,7 @@
 
 import { evaluateEntryContextGate } from '../context/context-gating.js';
 import { getContextIndexSync } from '../context/context-index.js';
-import { normalizeLoreMatrix } from './lore-matrix.js';
+import { normalizeLoreMatrix, evaluateLoreEntryLifecycle } from './lore-matrix.js';
 import { normalizeLoreRelevance, sortLoreEntriesForInjection } from './lore-relevance.js';
 import { getLoreEntryEffectiveRelevance, getLoreSelectionSets } from './lore-selection.js';
 
@@ -44,6 +44,7 @@ export function getInjectableLoreEntriesForInjection(state = {}, options = {}) {
         .filter(entry => entry.status !== 'archived' && entry.status !== 'disabled')
         .filter(entry => entry.injectableByDefault !== false)
         .filter(entry => !muted.has(entry.id))
+        .filter(entry => evaluateLoreEntryLifecycle(entry, state).shouldInject)
         .filter(entry => !tier || getLoreEntryEffectiveRelevance(entry, state) === tier)
         .filter(entry => getLoreEntryInjectionContextGate(entry, state, options).eligible)
         .map(entry => ({

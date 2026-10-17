@@ -1,3 +1,4 @@
+import { analyzeCanonSources, invalidateCanon, clearSemanticCanon, semanticCanonStatus } from '../context/semantic-canon.js';
 import { getInjectableLoreEntries, getLoreRelevanceCounts } from '../lorecards/lore-matrix.js';
 import {
     buildContinuityPreview,
@@ -65,113 +66,29 @@ const COMPRESSION_RETRY_SYSTEM_PROMPT = 'You are Saga Compression. Your previous
 
 export function renderInjectionTab(container, state) {
     const settings = getSettings();
-    if (isBasicExperience(settings)) {
-        setPanelState({ activeTab: 'session' });
-        renderSessionTab(container, state);
-        return;
+    container.appendChild(createSectionHeader('Canon injection', 'Complete applicable evidence, up to 1,000 host-tokenizer tokens across relevance tiers. Continuity belongs to BaiBai.'));
+    const toggle = createToggleCard('Retrieve applicable canon', settings.semanticCanonEnabled === true,
+        'Select original lorebooks in Session. Imported or generated decks remain drafts until explicitly reviewed.', checked => {
+            const next = getSettings(); next.semanticCanonEnabled = checked; saveSettings(next);
+            invalidateCanon(); if (checked) void analyzeCanonSources();
+            refreshPanelBody({ preserveScroll: true });
+        });
+    container.appendChild(toggle);
+    container.appendChild(createCollapsibleSection('injection.promptPlacement', 'Prompt Placement', 'Extension prompts', false,
+        createInjectionPlacementCard(settings), { tooltip: 'Saga relevance-tier role, position and depth.' }));
+    const status = semanticCanonStatus();
+    for (const tier of ['high', 'normal', 'low']) {
+        const prefix = `lore${tier[0].toUpperCase()}${tier.slice(1)}`;
+        const enabled = settings[`${prefix}InjectionEnabled`] !== false;
+        const text = (status.selected || []).filter(e => (e.tier || 'normal') === tier)
+            .map(e => `[${e.kind}: ${e.title}]\n${e.text}`).join('\n\n');
+        container.appendChild(createToggleCard(`${RELEVANCE_META[tier].label} relevance`, enabled, 'Include this tier within the shared canon budget.', checked => {
+            const next = getSettings(); next[`${prefix}InjectionEnabled`] = checked; saveSettings(next);
+            clearSemanticCanon(); refreshPanelBody({ preserveScroll: true });
+        }));
+        container.appendChild(createInjectionPreviewCard(`${RELEVANCE_META[tier].label} relevance`, `saga-lore-${tier}-injection-preview`, text,
+            enabled, 'Last native-eligible evidence. A new generation recalculates this preview.', null, `No applicable evidence (${status.status}).`));
     }
-
-    const continuityPreview = buildContinuityPreview(state, settings.continuityInjectionMode || 'direct');
-    const loreHighPreview = buildLorePreview(state, getLoreTierMode(settings, 'high'), 'high');
-    const loreNormalPreview = buildLorePreview(state, getLoreTierMode(settings, 'normal'), 'normal');
-    const loreLowPreview = buildLorePreview(state, getLoreTierMode(settings, 'low'), 'low');
-    updateCompressionTurnStatus(state, 'lore-high');
-    updateCompressionTurnStatus(state, 'lore-normal');
-    updateCompressionTurnStatus(state, 'lore-low');
-    updateCompressionTurnStatus(state, 'continuity');
-
-    container.appendChild(createSectionHeader(
-        'Injection',
-        'Final workflow step. Decide whether to inject structured Continuity state, Lore entries, or both, and whether each is direct or model-compressed.'
-    ));
-
-    const toggles = document.createElement('div');
-    toggles.className = 'saga-runtime-grid';
-    markTourTarget(toggles, 'injection.toggles');
-    toggles.appendChild(createToggleCard(
-        'Inject Continuity',
-        settings.injectContinuity !== false && settings.injectMemo !== false,
-        'Injects the editable lightweight Continuity state: scene/timeline, active characters, key items, and active goals/threads. Durable memory is handled by Lore entries.',
-        (checked) => {
-            const next = getSettings();
-            next.injectContinuity = checked;
-            next.injectMemo = checked;
-            saveSettings(next);
-            syncPromptInjectionFromCurrentSettings();
-            refreshPanelBody({ preserveScroll: false });
-            refreshHeader();
-        }
-    ));
-    toggles.appendChild(createToggleCard(
-        'Inject Lore',
-        settings.injectLore !== false,
-        'Injects accepted, unmuted Lore entries through relevance-tiered prompt groups. Turn this off if you want Saga to track/edit lore without sending lore to the roleplay model.',
-        (checked) => {
-            const next = getSettings();
-            next.injectLore = checked;
-            saveSettings(next);
-            syncPromptInjectionFromCurrentSettings();
-            refreshPanelBody({ preserveScroll: false });
-            refreshHeader();
-        }
-    ));
-    container.appendChild(toggles);
-
-    const placementStatus = `${settings.injectionTransport === 'interceptor' ? 'Legacy prepend' : 'Extension Prompt'} · C ${formatPlacementSummary(settings, 'continuity')} · H ${formatPlacementSummary(settings, 'loreHigh')} · N ${formatPlacementSummary(settings, 'loreNormal')} · L ${formatPlacementSummary(settings, 'loreLow')}`;
-    const placementSection = createCollapsibleSection('injection.promptPlacement', 'Prompt Placement', placementStatus, false, createInjectionPlacementCard(settings), { tooltip: 'Role, position, and depth used for prompt injection.' });
-    markTourTarget(placementSection, 'injection.promptPlacement');
-    container.appendChild(placementSection);
-
-    const continuityEnabled = settings.injectContinuity !== false && settings.injectMemo !== false;
-    const continuityEmptyReason = getInjectionEmptyReason('continuity', state, settings, continuityEnabled);
-    container.appendChild(createCollapsibleSection(
-        'injection.preview.continuity',
-        'Continuity Injection Preview',
-        getInjectionPreviewSectionSummary(continuityPreview, continuityEnabled),
-        true,
-        createInjectionPreviewCard('Continuity Injection', 'saga-continuity-injection-preview', continuityPreview, continuityEnabled, 'This is the actual Continuity block currently configured for prompt injection. It can be placed at a different depth because it is separated from Lore.', createContinuityHandlingDropdown(state, settings), continuityEmptyReason),
-        { tooltip: 'Read-only preview of the Continuity prompt block Saga will inject.' }
-    ));
-    const highEnabled = settings.injectLore !== false && settings.loreHighInjectionEnabled !== false;
-    const highEmptyReason = getInjectionEmptyReason('high', state, settings, highEnabled);
-    container.appendChild(createCollapsibleSection(
-        'injection.preview.loreHigh',
-        'High-Relevance Lore Preview',
-        getInjectionPreviewSectionSummary(loreHighPreview, highEnabled),
-        true,
-        createInjectionPreviewCard('High-Relevance Lore Injection', 'saga-lore-high-injection-preview', loreHighPreview, highEnabled, 'Lore injected in the high-relevance prompt group.', createLoreTierHandlingDropdown('high', state, settings), highEmptyReason),
-        { tooltip: 'Read-only preview of the high-relevance Lore prompt block.' }
-    ));
-    const normalEnabled = settings.injectLore !== false && settings.loreNormalInjectionEnabled !== false;
-    const normalEmptyReason = getInjectionEmptyReason('normal', state, settings, normalEnabled);
-    container.appendChild(createCollapsibleSection(
-        'injection.preview.loreNormal',
-        'Normal-Relevance Lore Preview',
-        getInjectionPreviewSectionSummary(loreNormalPreview, normalEnabled),
-        false,
-        createInjectionPreviewCard('Normal-Relevance Lore Injection', 'saga-lore-normal-injection-preview', loreNormalPreview, normalEnabled, 'Lore injected in the normal-relevance prompt group.', createLoreTierHandlingDropdown('normal', state, settings), normalEmptyReason),
-        { tooltip: 'Read-only preview of the normal-relevance Lore prompt block.' }
-    ));
-    const lowEnabled = settings.injectLore !== false && settings.loreLowInjectionEnabled !== false;
-    const lowEmptyReason = getInjectionEmptyReason('low', state, settings, lowEnabled);
-    container.appendChild(createCollapsibleSection(
-        'injection.preview.loreLow',
-        'Low-Relevance Lore Preview',
-        getInjectionPreviewSectionSummary(loreLowPreview, lowEnabled),
-        false,
-        createInjectionPreviewCard('Low-Relevance Lore Injection', 'saga-lore-low-injection-preview', loreLowPreview, lowEnabled, 'Lore injected in the low-relevance prompt group.', createLoreTierHandlingDropdown('low', state, settings), lowEmptyReason),
-        { tooltip: 'Read-only preview of the low-relevance Lore prompt block.' }
-    ));
-    const compressionSection = createCollapsibleSection(
-        'injection.compressionPrompts',
-        'Compression Prompts',
-        'Editable templates for model compression',
-        false,
-        createCompressionPromptEditorCard(),
-        { tooltip: 'Editable prompt templates used by Compress Continuity Now and tiered Compress Lore actions.' }
-    );
-    markTourTarget(compressionSection, 'injection.compression');
-    container.appendChild(compressionSection);
 }
 
 function getInjectionEmptyReason(kind, state, settings, enabled = true) {
@@ -204,7 +121,6 @@ function getInjectionPreviewSectionSummary(text, enabled = true) {
     if (!clean) return 'empty';
     return `${clean.length} chars`;
 }
-
 
 function createContinuityHandlingDropdown(state, settings) {
     return createCollapsibleSection(
@@ -321,7 +237,6 @@ function createLoreTierModeButton(tier, mode, label, tooltip) {
     return btn;
 }
 
-
 function createCompressionLevelControl(kind, settings) {
     const parsed = parseLoreCompressionKind(kind);
     const levelKey = parsed.base === 'continuity' ? 'continuityCompressionLevel' : parsed.tier ? tierSettingKey(parsed.tier, 'CompressionLevel') : 'loreCompressionLevel';
@@ -408,8 +323,6 @@ function createCompressionPromptTextarea(labelText, settingKey, defaultValue) {
     wrap.appendChild(actions);
     return wrap;
 }
-
-
 
 function formatPlacementSummary(settings, kind) {
     const prefix = kind === 'continuity' ? 'continuity' : kind === 'loreHigh' ? 'loreHigh' : kind === 'loreNormal' ? 'loreNormal' : kind === 'loreLow' ? 'loreLow' : 'lore';
@@ -504,36 +417,13 @@ function createInjectionPlacementCard(settings) {
     const title = document.createElement('div');
     title.className = 'saga-runtime-card-title';
     title.textContent = 'Prompt Placement';
-    addTooltip(title, 'Controls how Saga injects Continuity and Lore into SillyTavern prompts. Extension Prompt mode uses SillyTavern role/depth injection; Interceptor mode prepends a combined block to the last user message.');
+    addTooltip(title, 'Places applicable canon in the existing relevance-tier extension prompts.');
     card.appendChild(title);
 
     appendSettingsResetButton(card, PROMPT_PLACEMENT_SETTING_KEYS, 'Prompt placement settings');
 
     const placement = document.createElement('div');
     placement.className = 'saga-prompt-placement-lines';
-
-    const methodRow = document.createElement('div');
-    methodRow.className = 'saga-prompt-placement-line saga-prompt-placement-method-line';
-    markTourTarget(methodRow, 'injection.placement.method');
-    methodRow.appendChild(createPlacementSelect('Injection method', 'injectionTransport', settings.injectionTransport || 'extension_prompt', [
-        ['extension_prompt', 'Extension Prompt'],
-        ['interceptor', 'Legacy prepend'],
-    ], 'Extension Prompt uses SillyTavern setExtensionPrompt and supports role/depth. Interceptor mode appears as part of the last user message.', 'saga-placement-method'));
-    placement.appendChild(methodRow);
-
-    placement.appendChild(createPromptPlacementLine('Continuity', [
-        createPlacementSelect('Position', 'continuityInjectionPosition', String(settings.continuityInjectionPosition ?? 1), [
-            ['1', 'In-chat'],
-            ['0', 'After prompt'],
-            ['2', 'Before prompt'],
-        ], 'Where the Continuity Injection block is inserted. Depth only applies to In-chat.', 'saga-placement-position'),
-        createPlacementNumber('Depth', 'continuityInjectionDepth', settings.continuityInjectionDepth ?? 3, 0, 1000, 'Depth 0 is closest to the latest message. Higher depth moves the block earlier in chat history.', 'saga-placement-depth'),
-        createPlacementSelect('Role', 'continuityInjectionRole', String(settings.continuityInjectionRole ?? 0), [
-            ['0', 'System'],
-            ['1', 'User'],
-            ['2', 'Assistant'],
-        ], 'Role used for the injected Continuity block when using In-chat extension prompt placement.', 'saga-placement-role'),
-    ]));
 
     for (const [tier, label, depth] of [['high', 'High-Relevance Lore', 2], ['normal', 'Normal-Relevance Lore', 5], ['low', 'Low-Relevance Lore', 9]]) {
         placement.appendChild(createPromptPlacementLine(label, [
@@ -956,7 +846,6 @@ async function runModelCompression(kind = 'lore', btn = null) {
     }
 }
 
-
 function validateCompressedText(cleaned, directText, budget, level) {
     const text = String(cleaned || '').trim();
     const source = String(directText || '');
@@ -1120,7 +1009,6 @@ Compression target guidance:
 - If information must be sacrificed, preserve active continuity constraints, secrets, knowledge boundaries, Elevated/protected details, and current-scene hazards first.
 - Output only the compressed injection text.`;
 }
-
 
 function cleanCompressedText(text) {
     let cleaned = extractLoreResponseText(text)

@@ -54,7 +54,6 @@ export function configureContextComposition(deps = {}) {
         setContextWorkbenchSelectedKey: deps.setContextWorkbenchSelectedKey,
         renderContextWorkbench: deps.renderContextWorkbench,
         closeContextWorkbench: deps.closeContextWorkbench,
-        isRuntimeMobileShell: deps.isRuntimeMobileShell,
         refreshContextHeader: deps.refreshHeader,
         clearContextIndexCache: deps.clearContextIndexCache,
         loadContextIndex: deps.loadContextIndex,

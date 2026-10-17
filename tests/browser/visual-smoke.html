@@ -104,7 +104,6 @@
     <script type="module">
         import { DEFAULT_SETTINGS, getDefaultState } from '../../src/state/constants.js';
         import { refreshLorePanel, showLorePanel } from '../../src/runtime/lore-panel.js';
-        import { getDefaultMobilePanelState } from '../../src/runtime/runtime-shell.js';
         import { hydrateSagaThemeIconStorage } from '../../src/storage/saga-theme-icon-storage.js';
         import { hydrateSagaLorepackLibraryStorage } from '../../src/storage/saga-lorepack-library-storage.js';
         import { hydrateSagaCreatorProjectStorage } from '../../src/storage/saga-creator-project-storage.js';
@@ -433,7 +432,6 @@
             railX: 24,
             railY: 24,
             activeTab: smokeActiveTab,
-            mobile: getDefaultMobilePanelState(smokeActiveTab, settings),
             selectedLoredeckId: customPack.packId,
             contextResolutionProposals: [
                 {

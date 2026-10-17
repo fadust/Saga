@@ -273,6 +273,22 @@ function collectChatEntries(state = {}) {
 }
 
 export async function buildStoryOpenerContextPacket(session = {}, state = {}, options = {}) {
+    const bridge = globalThis.Saga?.bridge;
+    if (bridge?.canonStatus?.().enabled) {
+        const controls = session.controls || {};
+        const result = await bridge.queryCanon([controls.characterFocus, controls.context, controls.userPrompt].filter(Boolean).join('\n'), { signal: options.signal });
+        const facts = (result.entries || []).map(e => ({ id: e.id, title: e.title, fact: e.text, sourceType: e.kind, lifecycleStatus: 'active', score: 100 }));
+        const context = buildStoryOpenerContextLabel(state, controls);
+        const fingerprint = hashString(stringifyStable([result.revision, context, facts]));
+        const diagnostics = result.status === 'matched' ? [] : [{ severity: 'warning', code: 'canon_incomplete', message: 'Applicable canon retrieval is incomplete; do not fill gaps from original versions.' }];
+        return {
+            sourceIntent: { context, packIds: [], fandoms: [], sourceMode: 'loredeck_only' },
+            packet: { schemaVersion: 1, builtAt: Date.now(), sourceMode: 'loredeck_only', context, contextState: state.loreContext || {},
+                fandoms: [], packIds: [], fingerprint, mustUse: facts, supporting: [], fresh: [], mustAvoid: [], diagnostics,
+                counts: { sourceCount: new Set((result.entries || []).flatMap(e => e.basis.map(b => b.source))).size, entryCount: facts.length, allowedFactCount: facts.length, blockedFactCount: 0, mustUseCount: facts.length, supportingCount: 0, freshFactCount: 0, mustAvoidCount: 0 } },
+            sourceResolution: { status: result.status === 'matched' ? 'current' : facts.length ? 'partial' : 'missing', resolvedAt: Date.now(), sourceMode: 'loredeck_only', packCount: 0, eligibleFactCount: facts.length, blockedFactCount: 0, freshFactCount: 0, diagnostics, fingerprint },
+        };
+    }
     const registry = options.registry || getLoredeckLibraryRegistry(state);
     const sourceIntent = normalizeStoryOpenerSourceIntent(session.sourceIntent?.stackItems?.length || session.sourceIntent?.packIds?.length
         ? session.sourceIntent

@@ -180,17 +180,6 @@
     max-width: 100%;
 }
 
-.saga-lore-panel.saga-runtime-shell.saga-runtime-mobile .saga-settings-provider-card .saga-provider-runtime-field input,
-.saga-lore-panel.saga-runtime-shell.saga-runtime-mobile .saga-settings-provider-card .saga-provider-runtime-field select {
-    min-height: var(--saga-provider-control-touch-min-height, 34px);
-    font-size: var(--saga-provider-control-touch-font-size, 0.84rem);
-}
-
-.saga-lore-panel.saga-runtime-shell.saga-runtime-mobile .saga-settings-provider-card .saga-provider-runtime-control-row .saga-runtime-button {
-    min-height: var(--saga-provider-control-touch-min-height, 34px);
-    font-size: 0.82rem;
-}
-
 .saga-provider-connection-warning {
     border-left: 3px solid var(--saga-warning, #b9903c);
     padding-left: 7px;

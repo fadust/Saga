@@ -10,6 +10,7 @@ import { hydrateSagaThemeIconStorage } from '../storage/saga-theme-icon-storage.
 import { hydrateSagaLorepackLibraryStorage } from '../storage/saga-lorepack-library-storage.js';
 import { hydrateSagaCreatorProjectStorage } from '../storage/saga-creator-project-storage.js';
 import { migrateSagaInlineStorage } from '../storage/saga-inline-settings-migration.js';
+import { installCanonEvents } from '../context/semantic-canon.js';
 
 export async function bootstrapSagaExtension() {
     console.log(`${LOG_PREFIX} Saga extension initializing...`);
@@ -50,6 +51,7 @@ export async function bootstrapSagaExtension() {
     registerSlashCommands(ctx);
     activateSagaResources(ctx);
     await mountSettingsPanel(ctx);
+    installCanonEvents();
 
     console.log(`${LOG_PREFIX} Extension initialized successfully`);
 }

@@ -80,7 +80,7 @@ function sanitizeFileStem(value) { return dep('sanitizeFileStem', value => Strin
 function downloadJson(data, filename) { return dep('downloadJson', () => {})(data, filename); }
 function openDuplicateLoredeckDialog(pack) { return dep('openDuplicateLoredeckDialog', () => {})(pack); }
 function canValidateLoredeckInEditor(pack) { return dep('canValidateLoredeckInEditor', () => false)(pack); }
-function isRuntimeMobileShell() { return dep('isRuntimeMobileShell', () => false)() === true; }
+
 function isBasicExperienceMode() { return dep('isBasicExperience', () => false)() === true; }
 function isLoredeckMalformedTagIssueGroup(group) { return dep('isLoredeckMalformedTagIssueGroup', () => false)(group); }
 function queueLoredeckMalformedTagRepairFromHealthGroup(pack, group, button) { return dep('queueLoredeckMalformedTagRepairFromHealthGroup', async () => {})(pack, group, button); }
@@ -267,7 +267,7 @@ export function renderLoredeckHealthCenterOverlay(options = {}) {
     let overlay = null;
     try {
         const context = getLoredeckHealthCenterContext(loredeckHealthCenterPackId);
-        const mobile = isRuntimeMobileShell();
+        const mobile = false;
 
         overlay = document.createElement('div');
         overlay.className = 'saga-lore-workbench-overlay saga-loredeck-health-center-overlay';
@@ -275,7 +275,7 @@ export function renderLoredeckHealthCenterOverlay(options = {}) {
 
         const shell = document.createElement('div');
         shell.className = 'saga-lore-workbench-shell saga-loredeck-health-center-shell';
-        if (mobile) shell.classList.add('saga-loredeck-health-center-shell-mobile');
+
         overlay.appendChild(shell);
 
         const header = document.createElement('div');
@@ -293,7 +293,7 @@ export function renderLoredeckHealthCenterOverlay(options = {}) {
         titleWrap.appendChild(subtitle);
         header.appendChild(titleWrap);
 
-        if (!mobile) header.appendChild(createLoredeckHealthCenterActions(context));
+        header.appendChild(createLoredeckHealthCenterActions(context));
         shell.appendChild(header);
 
         const body = document.createElement('div');
@@ -308,7 +308,7 @@ export function renderLoredeckHealthCenterOverlay(options = {}) {
         else content.appendChild(createLoredeckHealthOverviewView(context));
         body.appendChild(content);
         shell.appendChild(body);
-        if (mobile) shell.appendChild(createLoredeckHealthCenterActions(context, { mobile: true }));
+
     } catch (e) {
         console.error('[Saga] Pack Health Center render failed:', e);
         toast('Pack Health Center failed to render. Keeping the previous view open.', 'error');
@@ -324,14 +324,14 @@ export function renderLoredeckHealthCenterOverlay(options = {}) {
 }
 
 function createLoredeckHealthCenterRenderErrorOverlay(error = null) {
-    const mobile = isRuntimeMobileShell();
+    const mobile = false;
     const overlay = document.createElement('div');
     overlay.className = 'saga-lore-workbench-overlay saga-loredeck-health-center-overlay';
     wireOverlayBackdropClose(overlay, closeLoredeckHealthCenter);
 
     const shell = document.createElement('div');
     shell.className = 'saga-lore-workbench-shell saga-loredeck-health-center-shell';
-    if (mobile) shell.classList.add('saga-loredeck-health-center-shell-mobile');
+
     overlay.appendChild(shell);
 
     const header = document.createElement('div');
@@ -348,7 +348,7 @@ function createLoredeckHealthCenterRenderErrorOverlay(error = null) {
     titleWrap.appendChild(subtitle);
     header.appendChild(titleWrap);
 
-    if (!mobile) header.appendChild(createLoredeckHealthCenterErrorActions());
+    header.appendChild(createLoredeckHealthCenterErrorActions());
     shell.appendChild(header);
 
     const body = document.createElement('div');
@@ -358,7 +358,7 @@ function createLoredeckHealthCenterRenderErrorOverlay(error = null) {
         message: error?.message || 'Close and reopen the Health Center after rerunning the scan.',
     }));
     shell.appendChild(body);
-    if (mobile) shell.appendChild(createLoredeckHealthCenterErrorActions({ mobile: true }));
+
     return overlay;
 }
 

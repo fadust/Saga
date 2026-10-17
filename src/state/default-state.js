@@ -317,20 +317,7 @@ export function getDefaultState() {
             y: 220,
             width: 560,
             height: 640,
-            mobile: {
-                activeRoute: 'session',
-                lastPrimaryRoute: 'session',
-                lorecardsStage: '',
-                subviewStacks: {
-                    loredecks: [],
-                    session: [],
-                    continuity: [],
-                    context: [],
-                    lore: [],
-                    injection: [],
-                    settings: [],
-                },
-            },
+
         },
         loreTimeline: {
             schemaVersion: 1,
@@ -353,4 +340,3 @@ export function getDefaultState() {
         _version: SCHEMA_VERSION,
     };
 }
-

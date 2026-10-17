@@ -98,11 +98,6 @@
     line-height: 1.38;
 }
 
-.saga-runtime-mobile .saga-injection-preview {
-    max-height: none;
-    overflow: visible;
-}
-
 .saga-lore-panel input[type="range"] {
     accent-color: var(--saga-gold, #d7b56d);
 }

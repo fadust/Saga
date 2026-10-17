@@ -43,7 +43,6 @@ export function configureLoredeckWorkflowComposition(deps = {}) {
         normalizeLoredeckPendingTimelineIdList: deps.normalizeLoredeckPendingTimelineIdList,
         getFreshLoredeckLibraryPack: deps.getFreshLoredeckLibraryPack,
         persistLoredeckLibraryRecordMutation: deps.persistLoredeckLibraryRecordMutation,
-        isRuntimeMobileShell: deps.isRuntimeMobileShell,
         markTourTarget: deps.markTourTarget,
     });
 
@@ -52,7 +51,6 @@ export function configureLoredeckWorkflowComposition(deps = {}) {
         saveState: deps.saveState,
         getSettings: deps.getSettings,
         isBasicExperience: () => deps.isBasicExperience?.(deps.getSettings?.()),
-        isRuntimeMobileShell: deps.isRuntimeMobileShell,
         saveSettings: deps.saveSettings,
         getDefaultState: deps.getDefaultState,
         getCanonLoreDatabaseSync: deps.getCanonLoreDatabaseSync,

@@ -83,6 +83,7 @@ function prePruneLoreEntryForNormalization(entry) {
     const loreAutomation = entry.extensions?.loreAutomation;
     const pendingReview = entry.extensions?.sagaPendingReview;
     const extensions = {};
+    if (entry.extensions?.layer1) extensions.layer1 = compactLayer1(entry.extensions.layer1);
     if (generation && typeof generation === 'object') {
         extensions.sagaGeneration = {
             mode: truncateText(generation.mode, 40),
@@ -184,7 +185,6 @@ function compactPlainObjectMapForStorage(value, limit = 16, textLimit = 120) {
     return out;
 }
 
-
 function compactSagaLoredeckExtension(sagaLoredeck = {}) {
     if (!sagaLoredeck || typeof sagaLoredeck !== 'object' || Array.isArray(sagaLoredeck)) return null;
     const compact = {
@@ -272,6 +272,7 @@ function compactLoreCoordinatesForStorage(coordinates = []) {
 
 function compactLoreExtensionsForStorage(normalized) {
     const out = {};
+    if (normalized?.extensions?.layer1) out.layer1 = compactLayer1(normalized.extensions.layer1);
     const generation = normalized?.extensions?.sagaGeneration;
     if (generation && typeof generation === 'object') {
         out.sagaGeneration = {
@@ -324,6 +325,12 @@ function compactLoreExtensionsForStorage(normalized) {
     const pendingReview = normalized?.extensions?.sagaPendingReview;
     if (pendingReview && typeof pendingReview === 'object') out.sagaPendingReview = pendingReview;
     return Object.keys(out).length ? out : undefined;
+}
+
+function compactLayer1(value) {
+    return { revision: truncateText(value.revision, 64), entity: truncateText(value.entity, 160),
+        basis: compactStringArray(value.basis, 100, 500), basisRevision: truncateText(value.basisRevision, 64),
+        interpretation: value.interpretation === true, stale: value.stale === true };
 }
 
 function compactLoreAutomationExtension(value = {}) {

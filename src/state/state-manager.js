@@ -143,58 +143,6 @@ export {
 
 const MAX_CHAT_STATE_BYTES_BEFORE_AUTO_PERSIST = 200000;
 const migratedStateRefs = new WeakSet();
-const MOBILE_PRIMARY_PANEL_ROUTES = new Set(['loredecks', 'session', 'continuity', 'context', 'lore', 'injection', 'settings']);
-const MOBILE_BOTTOM_PANEL_ROUTES = new Set(MOBILE_PRIMARY_PANEL_ROUTES);
-
-function normalizeMobilePanelRouteForStorage(route, fallback = 'session') {
-    const value = String(route || '').trim();
-    return MOBILE_BOTTOM_PANEL_ROUTES.has(value) ? value : fallback;
-}
-
-function normalizeMobileSubviewStackForStorage(stack) {
-    if (!Array.isArray(stack)) return [];
-    return stack
-        .filter(item => item && typeof item === 'object')
-        .slice(-12)
-        .map((item, index) => {
-            const id = String(item.id || item.route || `subview-${index + 1}`).trim() || `subview-${index + 1}`;
-            const title = String(item.title || item.label || id).trim() || id;
-            const params = item.params && typeof item.params === 'object' && !Array.isArray(item.params)
-                ? { ...item.params }
-                : {};
-            return { id, title, params };
-        });
-}
-
-function normalizeLorePanelMobileState(panelState, defaultsPanel = getDefaultState().lorePanel) {
-    if (!panelState || typeof panelState !== 'object') return;
-    const mobile = panelState.mobile && typeof panelState.mobile === 'object' && !Array.isArray(panelState.mobile)
-        ? panelState.mobile
-        : {};
-    const activeTabRoute = MOBILE_PRIMARY_PANEL_ROUTES.has(panelState.activeTab)
-        ? panelState.activeTab
-        : defaultsPanel.mobile.activeRoute;
-    const activeRoute = normalizeMobilePanelRouteForStorage(mobile.activeRoute, activeTabRoute);
-    const lastPrimaryRoute = MOBILE_PRIMARY_PANEL_ROUTES.has(mobile.lastPrimaryRoute)
-        ? mobile.lastPrimaryRoute
-        : (MOBILE_PRIMARY_PANEL_ROUTES.has(activeRoute) ? activeRoute : defaultsPanel.mobile.lastPrimaryRoute);
-    const stacks = mobile.subviewStacks && typeof mobile.subviewStacks === 'object' && !Array.isArray(mobile.subviewStacks)
-        ? mobile.subviewStacks
-        : {};
-    panelState.mobile = {
-        activeRoute,
-        lastPrimaryRoute,
-        subviewStacks: {
-            loredecks: normalizeMobileSubviewStackForStorage(stacks.loredecks),
-            session: normalizeMobileSubviewStackForStorage(stacks.session),
-            continuity: normalizeMobileSubviewStackForStorage(stacks.continuity),
-            context: normalizeMobileSubviewStackForStorage(stacks.context),
-            lore: normalizeMobileSubviewStackForStorage(stacks.lore),
-            injection: normalizeMobileSubviewStackForStorage(stacks.injection),
-            settings: normalizeMobileSubviewStackForStorage(stacks.settings),
-        },
-    };
-}
 
 configureLoreGenerationStateStore({
     getState: () => getState(),
@@ -908,7 +856,6 @@ export function migrateState(state) {
         state.lorePanel.activeTab = ['loredecks', 'session', 'continuity', 'context', 'lore', 'injection', 'settings'].includes(state.lorePanel.activeTab)
             ? state.lorePanel.activeTab
             : (state.lorePanel.activeTab === 'generate' ? 'context' : (state.lorePanel.activeTab === 'review' ? 'lore' : 'session'));
-        normalizeLorePanelMobileState(state.lorePanel, defaultsPanel);
         state.lorePanel.reviewSelectedIds = Array.isArray(state.lorePanel.reviewSelectedIds) ? state.lorePanel.reviewSelectedIds : [];
         state.lorePanel.generationStatus = typeof state.lorePanel.generationStatus === 'string' ? state.lorePanel.generationStatus : 'Idle.';
         state.lorePanel.generationProgress = Number.isFinite(Number(state.lorePanel.generationProgress)) ? Number(state.lorePanel.generationProgress) : 0;
@@ -972,7 +919,6 @@ export function migrateState(state) {
         state.loreBulkGeneration.lastBatchId = String(state.loreBulkGeneration.lastBatchId || '');
     }
 
-
     if (!state.continuityScan || typeof state.continuityScan !== 'object' || Array.isArray(state.continuityScan)) {
         state.continuityScan = getDefaultState().continuityScan;
     } else {
@@ -993,9 +939,6 @@ export function migrateState(state) {
 
     return state;
 }
-
-
-
 
 // ── State import (validated) ────────────────────────────────────────────────────
 
