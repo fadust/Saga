@@ -88,7 +88,15 @@ events.get('WORLD_INFO_ACTIVATED')(groups.globalLore);
 assert.ok(prompts.get('saga_lore_normal_relevance').includes('Mira Vale would be 44'));
 assert.ok(!prompts.get('saga_lore_normal_relevance').includes('greater healing'));
 assert.ok(ctx.getTokenCountAsync && Math.ceil([...prompts.values()].join('').length / 4) <= 1000);
+// NPC scans outlive foreground generation and make quiet provider requests.
+// Prompt cleanup must not claim that their source evidence changed.
+const scanCanonToken = runtime.semanticCanonRevision();
+events.get('GENERATION_ENDED')();
+assert.equal(runtime.semanticCanonRevision(), scanCanonToken, 'Completion must preserve the canon token held by NPC scans');
+await runtime.prepareSemanticCanon([], 'quiet');
+assert.equal(runtime.semanticCanonRevision(), scanCanonToken, 'Quiet scanner requests must not invalidate canon');
 events.get('GENERATION_STOPPED')(); assert.ok([...prompts.values()].every(text => !text));
+assert.equal(runtime.semanticCanonRevision(), scanCanonToken, 'Cancellation clears prompts, not source evidence');
 settings.loreNormalInjectionEnabled = false;
 await runtime.prepareSemanticCanon([{ is_user: true, mes: 'Ari Vale enters.' }], 'normal');
 assert.equal(runtime.semanticCanonStatus().selected.length, 0, 'Disabled tiers consume no generation budget');
@@ -96,7 +104,7 @@ settings.loreNormalInjectionEnabled = true;
 await runtime.prepareSemanticCanon([{ is_user: true, mes: 'Ari Vale enters.' }], 'normal');
 assert.ok(runtime.semanticCanonStatus().selected.length, 'Tier changes invalidate retrieval cache');
 settings.enabled = false; assert.equal(runtime.semanticCanonStatus().enabled, false); settings.enabled = true;
-runtime.invalidateCanon(); runtime.syncCanonPrompts();
+runtime.invalidateCanon(); assert.notEqual(runtime.semanticCanonRevision(), scanCanonToken, 'Real source invalidation rejects NPC scan tokens'); runtime.syncCanonPrompts();
 await runtime.analyzeCanonSources();
 
 const accepted = structuredClone(state.pendingLoreEntries[0]);

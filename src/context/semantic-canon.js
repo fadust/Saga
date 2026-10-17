@@ -14,6 +14,7 @@ const profileRevision = () => {
     const extensions = host()?.extensionSettings, id = extensions?.npc_state_delta?.scannerConnectionProfile;
     return JSON.stringify(extensions?.connectionManager?.profiles?.find(p => p.id === id) || id || '');
 };
+let canonRevision = 0; // Source lifetime is independent of temporary generation prompts.
 let revision = 0, running = null, current = null, controller = null, wired = false;
 let lastResult = { entries: [], text: '', status: 'idle' };
 let previous = null, generation = null, nativeApproved = new Set();
@@ -51,6 +52,7 @@ export function clearSemanticCanon(keepPreview = false) {
     setEvidencePrompts();
 }
 export function invalidateCanon() {
+    canonRevision++;
     if (current) previous = current;
     clearSemanticCanon(); queryCache.clear(); nativeApproved.clear(); controller?.abort(); current = null; running = null;
     const state = getState();
@@ -293,7 +295,7 @@ export async function prepareSemanticCanon(chat, type) {
     // Book passages await the host's native activation rules; card evidence is immediately usable.
     setEvidencePrompts(generation.entries.filter(e => !current || e.basis.every(b => !b.source.startsWith('book:'))));
 }
-export function semanticCanonRevision() { return `${chatKey()}|${revision}|${current?.key || ''}|${getSettings().enabled !== false && !!getSettings().semanticCanonEnabled}`; }
+export function semanticCanonRevision() { return `${chatKey()}|${canonRevision}|${current?.key || ''}|${getSettings().enabled !== false && !!getSettings().semanticCanonEnabled}`; }
 export function semanticCanonStatus() {
     return { status: lastResult.status, summary: getState().layer1Analysis || null, metrics: { ...metrics },
         enabled: getSettings().enabled !== false && !!getSettings().semanticCanonEnabled,
