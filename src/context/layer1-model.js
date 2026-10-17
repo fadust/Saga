@@ -135,7 +135,10 @@ export async function retrieveCanon(view, query, { search, countTokens, budget =
     const eligibleEntities = purpose === 'identity' ? view.entities.filter(e => e.type === 'character') : view.entities;
     const full = eligibleEntities.filter(e => mentions(query, e.name));
     const aliases = eligibleEntities.filter(e => e.aliases.some(a => mentions(query, a)));
-    let targets = full.length ? full : aliases;
+    const uniqueShort = eligibleEntities.filter(e => e.name.split(/\s+/).some(part => part.length >= 3
+        && mentions(query, part) && eligibleEntities.filter(other => other.name.split(/\s+/).some(word => word.toLowerCase() === part.toLowerCase())).length === 1));
+    let targets = full.length ? [...new Set([...full, ...aliases.filter(e => e.aliases.some(a => mentions(query, a)
+        && eligibleEntities.filter(other => other.aliases.includes(a)).length === 1)), ...uniqueShort])] : aliases.length ? aliases : uniqueShort;
     if (!full.length && targets.length > 1) {
         targets = disambiguate(query, targets, view.evidence);
     }
