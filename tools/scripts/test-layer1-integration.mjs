@@ -105,3 +105,17 @@ try {
 } finally { restoreProvider(); }
 delete globalThis.Saga;
 console.log('Shared fixture Story Maker: applicable passages only, manual workflow, and generated-deck exclusion passed.');
+
+// Prompt composition must preserve identity uncertainty and scope dependencies without changing evidence.
+const storyOnly = await retrieveCanon(view, 'Ari Vale enters.', { ...options, purpose: 'story' });
+assert.ok(!storyOnly.text.includes('Mira Vale would'), 'Unasked dependent ages do not consume the story budget');
+assert.ok(storyOnly.text.includes('confirmed death forbids living action'));
+const familyStory = await retrieveCanon(view, 'Ari Vale asks about family.', { ...options, purpose: 'story' });
+assert.ok(familyStory.text.includes('Mira Vale would be 44') && familyStory.text.includes('if alive'));
+const uncertainStory = await retrieveCanon(view, 'Who is Ari?', { ...options, purpose: 'story' });
+assert.ok(uncertainStory.text.includes('UNRESOLVED IDENTITY'));
+assert.ok(uncertainStory.text.includes('Ari Vale') && uncertainStory.text.includes('Ari Senn'));
+const tiers = structuredClone(view);
+tiers.evidence.forEach((e, i) => { e.tier = i % 2 ? 'high' : 'normal'; });
+const boundedTiers = await retrieveCanon(tiers, 'Ari Vale family', { ...options, purpose: 'story', budget: 240 });
+assert.ok(Math.ceil(boundedTiers.text.length / 4) <= 240, 'Tier policy headers count against the shared budget');

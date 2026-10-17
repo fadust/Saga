@@ -2,7 +2,7 @@ import { getSettings, getState, saveState } from '../state/state-manager.js';
 import { sendLoreRequest } from '../providers/lore-llm-client.js';
 import { recordLoreTimelineEvent } from '../lorecards/lore-timeline.js';
 import { buildCanonQuery } from './semantic-canon-index.js';
-import { canonHash, compileCanon, analysisSummary, retrieveCanon, CANON_ANALYSIS_PROMPT, CANON_SCHEMA_VERSION } from './layer1-model.js';
+import { canonHash, compileCanon, analysisSummary, retrieveCanon, formatCanonEvidence, CANON_ANALYSIS_PROMPT, CANON_SCHEMA_VERSION } from './layer1-model.js';
 import { createCanonStore } from './layer1-store.js';
 import { getInjectableLoreEntriesForInjection, getLoreEntryInjectionContextGate } from '../lorecards/lore-injection-filter.js';
 
@@ -32,8 +32,7 @@ function setEvidencePrompts(entries = []) {
     const settings = getSettings();
     for (const tier of ['high', 'normal', 'low']) {
         const prefix = `lore${tier[0].toUpperCase()}${tier.slice(1)}`;
-        const text = settings[`${prefix}InjectionEnabled`] === false ? '' : entries.filter(e => (e.tier || 'normal') === tier)
-            .map(e => `[${e.kind}: ${e.title}]\n${e.text}`).join('\n\n');
+        const text = settings[`${prefix}InjectionEnabled`] === false ? '' : formatCanonEvidence(entries.filter(e => (e.tier || 'normal') === tier));
         host()?.setExtensionPrompt?.(`saga_lore_${tier}_relevance`, text,
             settings[`${prefix}InjectionPosition`] ?? settings.loreInjectionPosition ?? 1,
             settings[`${prefix}InjectionDepth`] ?? settings.loreInjectionDepth ?? 3, false,

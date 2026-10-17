@@ -117,6 +117,17 @@ export function reviewProposals(state, revision) {
         .filter(({ entry }) => entry.extensions?.layer1?.revision === revision);
 }
 
+export function formatCanonEvidence(entries = []) {
+    if (!entries.length) return '';
+    const rules = 'CANON BASELINE: source-era facts are background. Accepted NPC identity/development, locks, knowledge and lifecycle govern current portrayal; confirmed death forbids living action. Canon grants neither survival nor knowledge.';
+    return ['high', 'normal', 'low'].map(tier => {
+        const group = entries.filter(e => (e.tier || 'normal') === tier);
+        if (!group.length) return '';
+        const ambiguity = group.some(e => e.identityAmbiguous) ? '\nUNRESOLVED IDENTITY: multiple people match this name. Do not choose, merge them, or assign their facts until context resolves identity.' : '';
+        return `${rules}${ambiguity}\n${group.map(e => `[${e.kind}: ${e.title}]\n${e.text}`).join('\n\n')}`;
+    }).filter(Boolean).join('\n\n');
+}
+
 export async function retrieveCanon(view, query, { search, countTokens, budget = 1000, purpose = 'story', signal } = {}) {
     signal?.throwIfAborted();
     if (!view) return { status: 'unavailable', entries: [], text: '', stage: 0 };
@@ -151,7 +162,8 @@ export async function retrieveCanon(view, query, { search, countTokens, budget =
         if (purpose === 'identity' && targets.length > 1) return { status: 'ambiguous', entries: [], text: '', candidates: targets.map(e => e.name), stage, revision: view.revision };
     }
     if (!targets.length) return { status: incomplete ? 'unavailable' : 'no-match', entries: [], text: '', stage: 3, revision: view.revision };
-    const ids = new Set([...targets.map(e => e.id), ...targets.flatMap(e => e.dependencies)]);
+    const includeDependencies = purpose === 'identity' || /\b(family|relatives?|relationships?|mother|father|parents?|siblings?|brothers?|sisters?|connected|dependencies|affiliations?)\b/i.test(query);
+    const ids = new Set([...targets.map(e => e.id), ...(includeDependencies ? targets.flatMap(e => e.dependencies) : [])]);
     const relevant = view.evidence.filter(e => ids.has(e.entity) || e.elevated);
     const ordered = relevant.filter((e, i) => !relevant.some((other, j) => j !== i && other.entity === e.entity && other.kind === e.kind
         && other.source === e.source && other.text.includes(e.text) && (other.text.length > e.text.length || j < i)))
@@ -159,11 +171,12 @@ export async function retrieveCanon(view, query, { search, countTokens, budget =
     const selected = []; let text = '', omitted = false;
     for (const entry of ordered) {
         signal?.throwIfAborted();
-        const candidate = `${text}${text ? '\n\n' : ''}[${entry.kind}: ${entry.title}]\n${entry.text}`;
+        const passage = purpose === 'story' && targets.length > 1 && !full.length ? { ...entry, identityAmbiguous: true } : entry;
+        const candidate = formatCanonEvidence([...selected, passage]);
         const tokens = await countTokens(candidate);
         signal?.throwIfAborted();
         if (!Number.isFinite(tokens) || tokens > budget) { omitted = true; continue; }
-        selected.push(entry); text = candidate;
+        selected.push(passage); text = candidate;
     }
     return { status: incomplete || (omitted && purpose === 'identity') ? 'unavailable' : selected.length ? 'matched' : 'unavailable',
         entries: selected, text, stage, revision: view.revision, candidates: targets.map(e => e.name), omitted };

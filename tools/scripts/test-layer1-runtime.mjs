@@ -78,7 +78,7 @@ assert.equal((await runtime.querySemanticCanon('Ari', { purpose: 'identity' })).
 assert.equal((await runtime.querySemanticCanon('Ari headmistress', { purpose: 'identity' })).candidates[0], 'Ari Senn');
 assert.equal((await runtime.querySemanticCanon('Ari Vale', { purpose: 'identity' })).status, 'matched');
 runtime.installCanonEvents();
-await runtime.prepareSemanticCanon([{ is_user: true, mes: 'Ari Vale enters.' }], 'normal');
+await runtime.prepareSemanticCanon([{ is_user: true, mes: 'Ari Vale asks about family.' }], 'normal');
 assert.ok(prompts.get('saga_lore_normal_relevance').includes('storm magic'));
 assert.ok(!prompts.get('saga_lore_normal_relevance').includes('Mira Vale would'));
 const groups = { globalLore: [{ world: 'Original', uid: 1, content: 'UNFILTERED ORIGINAL' }], characterLore: [], chatLore: [], personaLore: [] };
