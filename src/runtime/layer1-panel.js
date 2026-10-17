@@ -46,6 +46,10 @@ export function renderLayer1Panel(container, state) {
             ? `${summary.status}: ${summary.changedSources.length} changed sources; ${summary.proposalsCreated} proposals created. ${summary.error || ''}`
             : 'Select original sources, then analyze. Source files remain unchanged.';
         entities.textContent = summary?.entities.length ? `Entities touched: ${summary.entities.map(e => e.name).join(', ')}` : '';
+        for (const entity of summary?.entities || []) {
+            if (!globalThis.NPCStateDelta?.actorProfiles?.().some(n => n.name === entity.name)) continue;
+            entities.appendChild(createButton(`Open ${entity.name} dossier`, 'Inspect the accepted actor in NPC Codex.', () => globalThis.NPCStateDelta?.openDossier?.(entity.name), 'saga-small-button'));
+        }
         analysisDetails.hidden = !summary;
         analysisHeading.textContent = `Analysis revision: ${summary?.revision?.slice(0, 12) || 'unavailable'}`;
         changedSources.textContent = summary?.changedSources.length ? `Changed sources: ${summary.changedSources.join(', ')}` : 'No source content changed.';

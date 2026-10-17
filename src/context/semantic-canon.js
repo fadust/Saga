@@ -294,6 +294,7 @@ export async function prepareSemanticCanon(chat, type) {
     // Book passages await the host's native activation rules; card evidence is immediately usable.
     setEvidencePrompts(generation.entries.filter(e => !current || e.basis.every(b => !b.source.startsWith('book:'))));
 }
+export function semanticCanonRevision() { return `${chatKey()}|${revision}|${current?.key || ''}|${getSettings().enabled !== false && !!getSettings().semanticCanonEnabled}`; }
 export function semanticCanonStatus() {
     return { status: lastResult.status, summary: getState().layer1Analysis || null, metrics: { ...metrics },
         enabled: getSettings().enabled !== false && !!getSettings().semanticCanonEnabled,
