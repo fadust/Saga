@@ -45,7 +45,7 @@
 .saga-settings-reset-row .saga-small-button {
     margin: 0;
     padding: 2px 8px;
-    font-size: 0.76em;
+    font-size: 14px;
 }
 
 .saga-lore-entry-title-wrap,
@@ -413,7 +413,7 @@
         0 0 0 1px color-mix(in srgb, var(--saga-border-strong, rgba(215, 181, 109, 0.58)) 24%, transparent) inset,
         0 0 6px var(--saga-lorecard-sort-shadow);
     box-sizing: border-box;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 800;
     line-height: 1;
     cursor: pointer;
@@ -440,7 +440,7 @@
 
 .saga-lorecard-workspace-utilities .saga-runtime-button {
     min-height: 34px;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .saga-lorecard-workspace-filter-chip {
@@ -482,7 +482,7 @@
     justify-content: space-between;
     min-width: 0;
     padding: 3px 0;
-    font-size: 13px;
+    font-size: 14px;
     color: var(--saga-muted, rgba(226, 219, 207, 0.72));
 }
 
@@ -496,7 +496,7 @@
 .saga-lorecard-workspace-list-summary-hint {
     flex: 0 0 auto;
     color: var(--saga-text-muted, rgba(239, 224, 194, 0.72));
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 650;
     white-space: nowrap;
 }
@@ -568,7 +568,7 @@
 
 .saga-lorecard-detail-card .saga-lore-editor-field,
 .saga-lorecard-detail-card .saga-new-lore-field {
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .saga-lorecard-detail-card .saga-lore-editor-input,
@@ -585,7 +585,7 @@
 
 .saga-lorecard-detail-card .saga-runtime-button {
     min-height: 34px;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .saga-lorecard-detail-actions {
@@ -778,7 +778,7 @@
     display: inline-grid !important;
     place-items: center;
     border-radius: 50% !important;
-    font-size: 0 !important;
+    font-size: 14px !important;
     line-height: 0 !important;
     box-sizing: border-box;
 }
@@ -887,7 +887,7 @@
 
 .saga-collapsible-summary::before {
     content: '▸';
-    font-size: 0.8em;
+    font-size: 14px;
     opacity: 0.75;
     width: 10px;
     flex: 0 0 10px;
@@ -899,7 +899,7 @@
 
 .saga-collapsible-title {
     font-weight: 650;
-    font-size: 0.88em;
+    font-size: 16px;
     white-space: nowrap;
 }
 
@@ -910,7 +910,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.72em;
+    font-size: 12px;
     opacity: 0.68;
     color: #9fb0bf;
     text-align: right;
@@ -940,7 +940,7 @@
 }
 
 .saga-compression-template-title {
-    font-size: 0.82em;
+    font-size: 16px;
     margin-bottom: 4px;
 }
 
@@ -955,7 +955,7 @@
     background: rgba(0, 0, 0, 0.32);
     color: var(--SmartThemeBodyColor, #e0e0e0);
     font-family: 'Courier New', monospace;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.32;
     padding: 6px 7px;
 }
@@ -986,7 +986,7 @@
 }
 
 .saga-lore-bulk-summary {
-    font-size: 0.76em;
+    font-size: 14px;
     color: #b9c6cf;
 }
 
@@ -1011,7 +1011,7 @@
     border-radius: 5px;
     background: rgba(0, 0, 0, 0.36);
     color: var(--SmartThemeBodyColor, #e0e0e0);
-    font-size: 0.72em;
+    font-size: 14px;
     padding: 1px 5px;
 }
 
@@ -1052,7 +1052,7 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
-    font-size: 0.76em;
+    font-size: 14px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
 }
 
@@ -1096,7 +1096,7 @@
 }
 
 .saga-lore-context-status-label {
-    font-size: 0.72em;
+    font-size: 14px;
     font-weight: 700;
     color: #d7b56d;
     white-space: nowrap;
@@ -1107,7 +1107,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.72em;
+    font-size: 14px;
     color: #d5dfeb;
 }
 
@@ -1118,7 +1118,7 @@
 .saga-context-brief-status-chips {
     justify-content: flex-end;
     min-width: 0;
-    font-size: 0.72em;
+    font-size: 14px;
 }
 
 .saga-context-brief-status-chips .saga-status-pill {
@@ -1147,7 +1147,7 @@
 }
 
 .saga-lore-generation-panel-title {
-    font-size: 0.82em;
+    font-size: 16px;
     font-weight: 700;
     color: #d4c8a8;
     margin-bottom: 3px;
@@ -1155,7 +1155,7 @@
 
 .saga-compact-action-button {
     padding: 3px 7px !important;
-    font-size: 0.72em !important;
+    font-size: 14px !important;
     white-space: nowrap;
 }
 
@@ -1167,7 +1167,7 @@
 }
 
 .saga-canon-preview-summary {
-    font-size: 0.76em;
+    font-size: 14px;
     color: #d7b56d;
     line-height: 1.3;
 }
@@ -1184,7 +1184,7 @@
     border-radius: 6px;
     background: rgba(22, 28, 36, 0.72);
     color: var(--SmartThemeBodyColor, #e8e1d3);
-    font-size: 0.70em;
+    font-size: 14px;
     line-height: 1.1;
     padding: 4px 7px;
     cursor: pointer;
@@ -1232,13 +1232,13 @@
 }
 
 .saga-canon-pack-label {
-    font-size: 0.76em;
+    font-size: 14px;
     font-weight: 700;
     line-height: 1.25;
 }
 
 .saga-canon-pack-meta {
-    font-size: 0.68em;
+    font-size: 12px;
     color: #aebcca;
     line-height: 1.2;
 }
@@ -1297,7 +1297,7 @@
 }
 
 .saga-canon-preview-row-title {
-    font-size: 0.78em;
+    font-size: 16px;
     font-weight: 700;
     color: #e4dccb;
     line-height: 1.25;
@@ -1305,7 +1305,7 @@
 }
 
 .saga-canon-preview-row-text {
-    font-size: 0.72em;
+    font-size: 14px;
     color: #b9c6cf;
     line-height: 1.3;
     overflow-wrap: anywhere;
@@ -1325,7 +1325,7 @@
     border: 1px solid rgba(126, 145, 165, 0.42);
     background: rgba(20, 26, 34, 0.88);
     color: var(--SmartThemeBodyColor, #e8e1d3);
-    font-size: 0.76em;
+    font-size: 14px;
     padding: 2px 5px;
 }
 
@@ -1606,7 +1606,7 @@
     background: rgba(0, 0, 0, 0.32);
     color: var(--SmartThemeBodyColor, #e8e1d3);
     font-family: var(--mainFontFamily, inherit);
-    font-size: 0.78em;
+    font-size: 14px;
     line-height: 1.35;
     padding: 6px 7px;
 }
@@ -1742,7 +1742,7 @@
 .saga-instructions-note {
     margin: 0;
     color: rgba(238, 226, 196, 0.84);
-    font-size: 0.86em;
+    font-size: 14px;
     line-height: 1.45;
 }
 
@@ -1799,7 +1799,7 @@
 .saga-instructions-section-title {
     color: #f3d38b;
     font-weight: 700;
-    font-size: 0.82em;
+    font-size: 16px;
 }
 
 .saga-instructions-step-title {
@@ -1809,7 +1809,7 @@
 .saga-instructions-step-body,
 .saga-instructions-section-body {
     color: rgba(238, 226, 196, 0.78);
-    font-size: 0.78em;
+    font-size: 14px;
     line-height: 1.35;
 }
 
@@ -1843,7 +1843,7 @@
         linear-gradient(180deg, rgba(42, 32, 24, 0.98), rgba(18, 16, 18, 0.98));
     box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
     padding: 10px;
-    font-size: 12px;
+    font-size: 14px;
     max-height: calc(100vh - 24px);
     overflow-y: auto;
 }
@@ -1861,7 +1861,7 @@
 
 .saga-tour-progress {
     color: rgba(220, 184, 111, 0.82);
-    font-size: 0.74em;
+    font-size: 14px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 5px;
@@ -1869,20 +1869,20 @@
 
 .saga-tour-title {
     color: #f3d38b;
-    font-size: 1em;
+    font-size: 16px;
     font-weight: 700;
     margin-bottom: 5px;
 }
 
 .saga-tour-body {
     color: rgba(238, 226, 196, 0.82);
-    font-size: 0.9em;
+    font-size: 14px;
     line-height: 1.38;
 }
 
 .saga-tour-detail {
     color: rgba(238, 226, 196, 0.76);
-    font-size: 0.82em;
+    font-size: 14px;
     line-height: 1.35;
     margin-top: 7px;
 }
@@ -2147,7 +2147,7 @@
 
 /* Bulk story-lore scan controls and ledger */
 .saga-runtime-subtitle {
-    font-size: 0.92em;
+    font-size: 12px;
     font-weight: 700;
     margin: 8px 0 4px;
     opacity: 0.9;
@@ -2166,7 +2166,7 @@
 .saga-lore-generation-panel .saga-runtime-help,
 .saga-lore-scan-settings-block .saga-runtime-help,
 .saga-lore-scan-help {
-    font-size: 0.74em;
+    font-size: 14px;
     line-height: 1.28;
 }
 
@@ -2186,11 +2186,11 @@
 }
 
 .saga-compact-subsection > .saga-collapsible-summary .saga-collapsible-title {
-    font-size: 0.8em;
+    font-size: 16px;
 }
 
 .saga-compact-subsection > .saga-collapsible-summary .saga-collapsible-subtitle {
-    font-size: 0.68em;
+    font-size: 12px;
     max-width: 50%;
 }
 
@@ -2208,7 +2208,7 @@
 .saga-lore-scan-setting-row,
 .saga-lore-scan-settings-block .saga-slider-row {
     margin: 3px 0;
-    font-size: 0.76em;
+    font-size: 14px;
     gap: 6px;
 }
 
@@ -2220,7 +2220,7 @@
 .saga-lore-scan-settings-block select,
 .saga-lore-scan-settings-block .text_pole {
     min-height: 22px;
-    font-size: 0.76em;
+    font-size: 14px;
 }
 
 .saga-lore-scan-compact-grid {
@@ -2231,7 +2231,7 @@
 
 .saga-continuity-emotion-freshness .saga-setting-row {
     margin: 3px 0;
-    font-size: 0.76em;
+    font-size: 14px;
     gap: 6px;
 }
 
@@ -2246,7 +2246,7 @@
     max-width: 220px;
     min-height: 22px;
     padding: 2px 22px 2px 6px;
-    font-size: 0.76em;
+    font-size: 14px;
     line-height: 1.15;
 }
 
@@ -2327,7 +2327,7 @@
 .saga-lore-automation-cadence-option {
     min-height: 30px;
     padding: 4px 9px;
-    font-size: 0.78em;
+    font-size: 14px;
     line-height: 1.1;
 }
 
@@ -2400,7 +2400,7 @@
 .saga-lore-automation-choice-title {
     min-width: 0;
     color: var(--saga-muted, rgba(241, 234, 216, 0.74));
-    font-size: 0.82em;
+    font-size: 16px;
     font-weight: 760;
     line-height: 1.2;
 }
@@ -2421,7 +2421,7 @@
         linear-gradient(180deg, var(--saga-button, rgba(18, 18, 24, 0.74)), rgba(8, 12, 18, 0.68));
     color: var(--saga-text, #f1ead8);
     font: inherit;
-    font-size: 0.82em;
+    font-size: 14px;
     font-weight: 760;
     line-height: 1.12;
     letter-spacing: 0;
@@ -2452,7 +2452,7 @@
 .saga-lore-automation-advanced > summary {
     cursor: pointer;
     color: var(--SmartThemeBodyColor, #e0e0e0);
-    font-size: 0.78em;
+    font-size: 16px;
 }
 
 .saga-lore-automation-toggle {
@@ -2503,6 +2503,6 @@
 .saga-lore-automation-run-meta {
     min-width: 0;
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.78em;
+    font-size: 12px;
     line-height: 1.25;
 }

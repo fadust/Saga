@@ -14,7 +14,7 @@
 .saga-lore-workbench-launch-text {
     min-width: 0;
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.78em;
+    font-size: 14px;
     line-height: 1.25;
 }
 
@@ -77,7 +77,7 @@
 
 .saga-lore-workbench-title {
     color: var(--saga-gold, #d7b56d);
-    font-size: 1.02em;
+    font-size: 16px;
     font-weight: 800;
     line-height: 1.15;
 }
@@ -85,7 +85,7 @@
 .saga-lore-workbench-subtitle {
     margin-top: 2px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.76em;
+    font-size: 12px;
     line-height: 1.2;
 }
 
@@ -104,7 +104,7 @@
     color: var(--saga-text, #f1ead8);
     cursor: pointer;
     font: inherit;
-    font-size: 0.82em;
+    font-size: 14px;
 }
 
 .saga-lore-workbench-mode-tab:hover,
@@ -149,7 +149,7 @@
     background: var(--saga-input, rgba(10, 12, 16, 0.62));
     color: var(--saga-text, #f1ead8);
     font: inherit;
-    font-size: 0.82em;
+    font-size: 14px;
     padding: 4px 8px;
     box-sizing: border-box;
 }
@@ -220,7 +220,7 @@
     min-height: 30px;
     background: var(--saga-bg-2, rgba(20, 24, 32, 0.96));
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.72em;
+    font-size: 14px;
     font-weight: 800;
     text-transform: uppercase;
 }
@@ -255,18 +255,18 @@
 
 .saga-lore-workbench-cell-main {
     color: var(--saga-text, #f1ead8);
-    font-size: 0.78em;
+    font-size: 14px;
 }
 
 .saga-lore-workbench-cell-sub {
     color: var(--saga-muted, rgba(241, 234, 216, 0.58));
-    font-size: 0.68em;
+    font-size: 14px;
 }
 
 .saga-lore-workbench-row-note {
     padding: 8px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.76em;
+    font-size: 14px;
 }
 
 .saga-lore-workbench-detail {
@@ -354,7 +354,7 @@
     border-radius: 4px;
     background: var(--saga-input, rgba(8, 10, 14, 0.55));
     color: var(--saga-gold, #f1b65a);
-    font-size: 11px;
+    font-size: 14px;
     line-height: 1;
 }
 
@@ -378,7 +378,7 @@
 .saga-loredeck-workbench-bulk-summary {
     min-width: 86px;
     color: var(--saga-muted, rgba(210, 215, 220, 0.74));
-    font-size: 0.78em;
+    font-size: 14px;
     font-weight: 650;
 }
 
@@ -482,7 +482,7 @@
 .saga-loredeck-workbench-registry-row-description,
 .saga-loredeck-workbench-registry-subtitle {
     color: var(--saga-muted, rgba(210, 215, 220, 0.74));
-    font-size: 0.8em;
+    font-size: 12px;
     line-height: 1.35;
 }
 
@@ -518,7 +518,7 @@
     border-radius: 7px;
     background: var(--saga-input, rgba(10, 12, 16, 0.46));
     color: var(--saga-text, #f1ead8);
-    font-size: 0.82em;
+    font-size: 14px;
     line-height: 1.42;
     white-space: pre-wrap;
 }
@@ -544,7 +544,7 @@
     flex-direction: column;
     gap: 4px;
     color: var(--saga-muted, #c8d1d8);
-    font-size: 0.78em;
+    font-size: 14px;
 }
 
 .saga-loredeck-workbench-editor-field > span {
@@ -571,7 +571,7 @@
 
 .saga-loredeck-workbench-editor-hint {
     color: var(--saga-muted, rgba(210, 215, 220, 0.72));
-    font-size: 0.76em;
+    font-size: 14px;
     line-height: 1.35;
 }
 
@@ -723,7 +723,7 @@
     min-height: 30px;
     background: var(--saga-bg-2, rgba(20, 24, 32, 0.96));
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.72em;
+    font-size: 14px;
     font-weight: 800;
     text-transform: uppercase;
     cursor: default;
@@ -763,7 +763,7 @@
     align-items: center;
     gap: 7px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.78em;
+    font-size: 14px;
 }
 
 .saga-context-workbench-lock input {
@@ -784,7 +784,7 @@
 
 .saga-context-workbench-inspector-title {
     color: var(--saga-gold, #d7b56d);
-    font-size: 1em;
+    font-size: 16px;
     font-weight: 800;
     line-height: 1.25;
     margin-bottom: 7px;
@@ -851,7 +851,7 @@
     grid-row: 1;
     align-self: center;
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.78em;
+    font-size: 16px;
     font-weight: 800;
     white-space: nowrap;
 }
@@ -876,7 +876,7 @@
     grid-row: 2;
     min-width: 0;
     color: var(--saga-muted, rgba(241, 234, 216, 0.70));
-    font-size: 0.72em;
+    font-size: 14px;
     line-height: 1.35;
     overflow-wrap: anywhere;
 }
@@ -937,7 +937,7 @@
 
 .saga-context-workbench-resolver-reason {
     color: var(--saga-muted, rgba(241, 234, 216, 0.62));
-    font-size: 0.68em;
+    font-size: 14px;
     line-height: 1.3;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -957,7 +957,7 @@
 
 .saga-context-workbench-resolver-diagnostic-line {
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.72em;
+    font-size: 14px;
     line-height: 1.35;
 }
 
@@ -978,13 +978,13 @@
 
 .saga-context-workbench-context-picker-title {
     color: var(--saga-text, #f1ead8);
-    font-size: 0.8em;
+    font-size: 16px;
     font-weight: 750;
 }
 
 .saga-context-workbench-context-picker-meta {
     color: var(--saga-muted, rgba(241, 234, 216, 0.62));
-    font-size: 0.7em;
+    font-size: 12px;
 }
 
 .saga-context-workbench-mini-list {
@@ -1001,7 +1001,7 @@
     background: rgba(10, 12, 16, 0.28);
     color: var(--saga-muted, rgba(241, 234, 216, 0.74));
     padding: 7px 8px;
-    font-size: 0.78em;
+    font-size: 14px;
     line-height: 1.35;
 }
 

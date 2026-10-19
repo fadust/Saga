@@ -42,7 +42,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 3px;
-    font-size: 0.72em;
+    font-size: 14px;
     opacity: 0.9;
 }
 
@@ -52,15 +52,15 @@
     align-items: center;
     justify-content: center;
     gap: var(--saga-chip-gap, 3px);
-    min-height: var(--saga-chip-line-height-compact, 14px);
+    min-height: var(--saga-chip-line-height-compact, 18px);
     border: 1px solid var(--saga-chip-neutral-border, rgba(216, 198, 163, 0.22));
     border-radius: var(--saga-chip-radius, 6px);
     background: var(--saga-chip-neutral-bg, rgba(216, 198, 163, 0.08));
     color: var(--saga-chip-neutral-fg, #d8c6a3);
     padding: var(--saga-chip-padding-compact, 0 4px);
-    font-size: var(--saga-chip-font-size-compact, 10px);
+    font-size: var(--saga-chip-font-size-compact, 12px);
     font-weight: 400;
-    line-height: var(--saga-chip-line-height-compact, 14px);
+    line-height: var(--saga-chip-line-height-compact, 18px);
     letter-spacing: 0;
     box-sizing: border-box;
     white-space: nowrap;
@@ -72,17 +72,17 @@
 }
 
 .saga-chip-density-standard {
-    min-height: var(--saga-chip-line-height-standard, 15px);
+    min-height: var(--saga-chip-line-height-standard, 18px);
     padding: var(--saga-chip-padding-standard, 0 5px);
-    font-size: var(--saga-chip-font-size-standard, 10px);
-    line-height: var(--saga-chip-line-height-standard, 15px);
+    font-size: var(--saga-chip-font-size-standard, 12px);
+    line-height: var(--saga-chip-line-height-standard, 18px);
 }
 
 .saga-chip-density-touch {
     min-height: 24px;
     padding: 2px 8px;
-    font-size: var(--saga-chip-font-size-standard, 10px);
-    line-height: var(--saga-chip-line-height-standard, 15px);
+    font-size: var(--saga-chip-font-size-standard, 12px);
+    line-height: var(--saga-chip-line-height-standard, 18px);
     border-radius: 8px;
 }
 
@@ -198,7 +198,7 @@
     color: var(--SmartThemeBodyColor, #e0e0e0);
     cursor: pointer;
     padding: 5px 6px;
-    font-size: 0.82em;
+    font-size: 14px;
 }
 
 .saga-runtime-tab:hover,
@@ -220,14 +220,14 @@
 
 .saga-section-header h3 {
     margin: 0 0 2px 0;
-    font-size: 1em;
+    font-size: 16px;
     color: #d4c8a8;
 }
 
 .saga-section-header p,
 .saga-runtime-help {
     margin: 0;
-    font-size: 0.78em;
+    font-size: 14px;
     opacity: 0.72;
     line-height: 1.35;
 }
@@ -272,7 +272,7 @@
 
 .saga-toggle-state {
     opacity: 0.7;
-    font-size: 0.78em;
+    font-size: 14px;
 }
 
 .saga-toggle-card-switch {
@@ -434,7 +434,7 @@
 }
 
 .saga-toggle-card.saga-session-active-toggle-card .saga-toggle-label {
-    font-size: 0.9rem;
+    font-size: 14px;
 }
 
 .saga-mode-buttons,
@@ -453,7 +453,7 @@
     color: var(--SmartThemeBodyColor, #e0e0e0);
     cursor: pointer;
     padding: 5px 9px;
-    font-size: 0.83em;
+    font-size: 14px;
 }
 
 .saga-mode-button:hover,
@@ -508,7 +508,7 @@
     gap: 8px;
     align-items: flex-start;
     justify-content: space-between;
-    font-size: 0.82em;
+    font-size: 14px;
     padding: 2px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -546,7 +546,7 @@
     border: 1px solid rgba(215, 181, 109, 0.18);
     border-radius: 6px;
     background: rgba(215, 181, 109, 0.06);
-    font-size: 0.84em;
+    font-size: 14px;
 }
 
 .saga-basic-readiness-list {
@@ -573,13 +573,13 @@
 }
 
 .saga-basic-readiness-label {
-    font-size: 0.83em;
+    font-size: 14px;
     font-weight: 700;
     color: var(--SmartThemeBodyColor, #e4dccb);
 }
 
 .saga-basic-readiness-state {
-    font-size: 0.76em;
+    font-size: 14px;
     line-height: 1.3;
     opacity: 0.72;
 }
@@ -857,7 +857,7 @@
     width: 100% !important;
     min-width: 0;
     max-width: none !important;
-    font-size: 0.86em;
+    font-size: 14px;
     line-height: 1.25;
     white-space: normal !important;
     overflow-wrap: normal;
@@ -882,7 +882,7 @@
     min-width: 0 !important;
     max-width: none !important;
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.74em;
+    font-size: 14px;
     line-height: 1.3;
     white-space: normal !important;
     overflow-wrap: normal !important;
@@ -931,14 +931,14 @@
 
 .saga-loredeck-row-title {
     color: var(--SmartThemeBodyColor, #e4dccb);
-    font-size: 0.82em;
+    font-size: 16px;
     font-weight: 700;
     line-height: 1.2;
     overflow-wrap: anywhere;
 }
 
 .saga-loredeck-row-description {
-    font-size: 0.76em;
+    font-size: 14px;
     line-height: 1.35;
     opacity: 0.76;
 }
@@ -967,7 +967,7 @@
 .saga-loredeck-creator-launch-text {
     min-width: 0;
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.78em;
+    font-size: 14px;
     line-height: 1.3;
 }
 
@@ -975,7 +975,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    font-size: 0.94em;
+    font-size: 14px;
 }
 
 .saga-loredeck-creator-project-header {
@@ -991,7 +991,7 @@
 
 .saga-loredeck-creator-project-title-wrap h4 {
     margin: 0 0 3px;
-    font-size: 0.9em;
+    font-size: 16px;
     line-height: 1.2;
 }
 
@@ -1013,14 +1013,14 @@
     min-height: 28px;
     width: 100%;
     padding: 4px 7px;
-    font-size: 12px !important;
+    font-size: 14px !important;
     line-height: 1.25 !important;
     box-sizing: border-box;
 }
 
 .saga-loredeck-creator-project-move-select {
     flex: 0 1 170px;
-    font-size: 0.74em;
+    font-size: 14px;
 }
 
 .saga-loredeck-creator-project-bulk {
@@ -1040,14 +1040,14 @@
     flex: 1 1 110px;
     min-width: 0;
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.72em;
+    font-size: 14px;
     line-height: 1.25;
 }
 
 .saga-loredeck-creator-project-bulk .saga-runtime-button {
     min-height: 28px;
     padding: 4px 8px;
-    font-size: 0.74em;
+    font-size: 14px;
 }
 
 .saga-loredeck-creator-project-list {
@@ -1132,7 +1132,7 @@
     white-space: nowrap;
     color: var(--saga-text, #f1ead8);
     font-weight: 700;
-    font-size: 0.84em;
+    font-size: 16px;
     line-height: 1.22;
 }
 
@@ -1160,7 +1160,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--saga-muted, rgba(241, 234, 216, 0.74));
-    font-size: 0.72em;
+    font-size: 12px;
     line-height: 1.25;
 }
 
@@ -1181,7 +1181,7 @@
 
 .saga-loredeck-creator-project-footer {
     color: var(--saga-muted, rgba(241, 234, 216, 0.62));
-    font-size: 0.68em;
+    font-size: 14px;
 }
 
 .saga-loredeck-creator-project-footer span {
@@ -1201,7 +1201,7 @@
 .saga-loredeck-creator-project-actions .saga-runtime-button {
     min-height: 26px;
     padding: 4px 9px;
-    font-size: 0.72em;
+    font-size: 14px;
 }
 
 .saga-loredeck-creator-project-actions .saga-loredeck-creator-project-select-active {
@@ -1248,7 +1248,7 @@
     border-radius: 7px;
     background: var(--saga-surface-2, rgba(18, 18, 24, 0.62));
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.76em;
+    font-size: 14px;
     line-height: 1.3;
     box-sizing: border-box;
 }
@@ -1307,7 +1307,7 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
-    font-size: 0.78em;
+    font-size: 14px;
 }
 
 .saga-loredeck-editor-field-full {
@@ -1338,7 +1338,7 @@
     border-radius: 6px;
     background: rgba(0, 0, 0, 0.14);
     padding: 4px 6px;
-    font-size: 0.74em;
+    font-size: 14px;
     line-height: 1.25;
 }
 
@@ -1366,7 +1366,7 @@
     background: rgba(0, 0, 0, 0.14);
     color: var(--saga-muted, rgba(241, 234, 216, 0.76));
     padding: 5px 7px;
-    font-size: 0.76em;
+    font-size: 14px;
     line-height: 1.35;
 }
 
@@ -1422,7 +1422,7 @@
 }
 
 .saga-context-resolver-actions .saga-runtime-button {
-    font-size: 0.78em;
+    font-size: 14px;
 }
 
 .saga-context-automation-panel {
@@ -1550,7 +1550,7 @@
 .saga-context-proposal-review-title {
     min-width: 0;
     color: var(--saga-text, #f1ead8);
-    font-size: 0.9em;
+    font-size: 16px;
     font-weight: 800;
     line-height: 1.25;
 }
@@ -1559,7 +1559,7 @@
 .saga-context-proposal-review-patch {
     min-width: 0;
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.76em;
+    font-size: 14px;
     line-height: 1.35;
     overflow-wrap: anywhere;
 }
@@ -1626,7 +1626,7 @@
     background: rgba(0, 0, 0, 0.13);
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
     padding: 5px 6px;
-    font-size: 0.76em;
+    font-size: 14px;
     line-height: 1.35;
     overflow-wrap: anywhere;
 }
@@ -1728,7 +1728,7 @@
 .saga-context-anchor-title {
     min-width: 0;
     color: var(--saga-text, #f1ead8);
-    font-size: 0.82em;
+    font-size: 16px;
     font-weight: 700;
     line-height: 1.25;
     overflow-wrap: anywhere;
@@ -1737,7 +1737,7 @@
 .saga-context-anchor-meta {
     min-width: 0;
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.74em;
+    font-size: 12px;
     line-height: 1.3;
     overflow-wrap: anywhere;
 }
@@ -1751,7 +1751,7 @@
     border-radius: 7px;
     background: rgba(0, 0, 0, 0.14);
     padding: 7px;
-    font-size: 0.78em;
+    font-size: 14px;
     cursor: pointer;
 }
 
@@ -1875,7 +1875,7 @@
 
 .saga-loredeck-creator-current-kicker {
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.72rem;
+    font-size: 14px;
     font-weight: 800;
     text-transform: uppercase;
 }
@@ -1972,7 +1972,7 @@
     border-radius: 6px;
     background: var(--saga-surface, rgba(43, 28, 28, 0.72));
     color: var(--saga-muted, rgba(241, 234, 216, 0.74));
-    font-size: 0.86rem;
+    font-size: 14px;
     font-weight: 800;
     line-height: 1;
     opacity: 0;
@@ -2006,7 +2006,7 @@
     border: 1px solid var(--saga-border-soft, rgba(185, 139, 54, 0.18));
     border-radius: 50%;
     color: var(--saga-muted, rgba(241, 234, 216, 0.7));
-    font-size: 0.8rem;
+    font-size: 14px;
     font-weight: 800;
 }
 
@@ -2023,13 +2023,13 @@
 
 .saga-loredeck-creator-stage-label {
     color: var(--saga-text, #f2eadc);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
 }
 
 .saga-loredeck-creator-stage-detail {
     color: var(--saga-muted, #b8aa98);
-    font-size: 11px;
+    font-size: 12px;
     margin-top: 2px;
 }
 
@@ -2116,7 +2116,7 @@
         0 0 0 1px rgba(0, 0, 0, 0.22) inset,
         0 0 10px color-mix(in srgb, var(--saga-gold, #d7b56d) 16%, transparent);
     color: var(--saga-gold, #d7b56d);
-    font-size: 10.5px;
+    font-size: 14px;
     font-weight: 850;
     line-height: 1;
     overflow: hidden;
@@ -2147,7 +2147,7 @@
 
 .saga-loredeck-creator-current-title {
     color: var(--saga-text, #f1ead8);
-    font-size: 1.35rem;
+    font-size: 16px;
     font-weight: 800;
     line-height: 1.2;
 }
@@ -2155,7 +2155,7 @@
 .saga-loredeck-creator-current-description {
     max-width: 760px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.78));
-    font-size: 0.86rem;
+    font-size: 14px;
     line-height: 1.45;
 }
 
@@ -2178,12 +2178,12 @@
 
 .saga-loredeck-creator-output-item strong {
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.8rem;
+    font-size: 14px;
 }
 
 .saga-loredeck-creator-output-item span {
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.76rem;
+    font-size: 14px;
     line-height: 1.35;
 }
 
@@ -2196,7 +2196,7 @@
 .saga-loredeck-creator-current-actions .saga-primary-button {
     min-height: 36px;
     padding: 8px 14px;
-    font-size: 0.88rem;
+    font-size: 14px;
 }
 
 .saga-loredeck-creator-current-sidebar {
@@ -2216,7 +2216,7 @@
 
 .saga-loredeck-creator-side-title {
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.78rem;
+    font-size: 16px;
     font-weight: 800;
     text-transform: uppercase;
     margin-bottom: 7px;
@@ -2235,7 +2235,7 @@
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.78rem;
+    font-size: 14px;
     line-height: 1.3;
 }
 
@@ -2262,14 +2262,14 @@
 
 .saga-loredeck-creator-diagnostic-header strong {
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.76rem;
+    font-size: 14px;
     font-weight: 800;
 }
 
 .saga-loredeck-creator-diagnostic-copy {
     min-height: 26px;
     padding: 4px 8px;
-    font-size: 0.72rem;
+    font-size: 14px;
 }
 
 .saga-loredeck-creator-diagnostic-row {
@@ -2278,7 +2278,7 @@
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
     gap: 8px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.74rem;
+    font-size: 14px;
     line-height: 1.3;
 }
 
@@ -2295,7 +2295,7 @@
     background: var(--saga-red-surface, rgba(92, 23, 36, 0.24));
     color: var(--saga-muted, rgba(241, 234, 216, 0.78));
     font-family: var(--monoFontFamily, ui-monospace, SFMono-Regular, Consolas, monospace);
-    font-size: 0.72rem;
+    font-size: 14px;
     line-height: 1.35;
     padding: 6px;
     white-space: pre-wrap;
@@ -2306,7 +2306,7 @@
     margin: 8px 0 0;
     padding-left: 18px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.78rem;
+    font-size: 14px;
     line-height: 1.45;
 }
 
@@ -2335,7 +2335,7 @@
 
 .saga-loredeck-creator-artifact-state {
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.72rem;
+    font-size: 12px;
     font-weight: 700;
 }
 
@@ -2375,7 +2375,7 @@
     border-radius: 7px;
     background: var(--saga-surface-2, rgba(18, 18, 24, 0.62));
     color: var(--saga-muted, rgba(241, 234, 216, 0.76));
-    font-size: 0.76rem;
+    font-size: 14px;
     padding: 7px 8px;
 }
 
@@ -2426,7 +2426,7 @@
     background: var(--saga-surface-2, rgba(18, 18, 24, 0.62));
     color: var(--saga-muted, rgba(241, 234, 216, 0.74));
     padding: 8px;
-    font-size: 0.78rem;
+    font-size: 14px;
     line-height: 1.4;
 }
 
@@ -2493,7 +2493,7 @@
     border-radius: 6px;
     background: var(--saga-input, rgba(18, 18, 24, 0.76));
     color: var(--saga-text, #f1ead8);
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.35;
     padding: 6px 7px;
 }
@@ -2548,7 +2548,7 @@
     list-style: none;
     padding: 7px 8px;
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.78rem;
+    font-size: 16px;
     font-weight: 800;
 }
 
@@ -2576,7 +2576,7 @@
 
 .saga-story-opener-session-picker > summary span:last-child {
     color: var(--saga-muted, rgba(241, 234, 216, 0.64));
-    font-size: 0.72rem;
+    font-size: 16px;
     font-weight: 700;
     white-space: nowrap;
 }
@@ -2663,7 +2663,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: clip;
-    font-size: 0.83em;
+    font-size: 14px;
 }
 
 .saga-story-opener-session-main strong,
@@ -2677,14 +2677,14 @@
 
 .saga-story-opener-session-main strong {
     color: var(--SmartThemeBodyColor, #e4dccb);
-    font-size: 0.82em;
+    font-size: 14px;
     font-weight: 700;
     line-height: 1.2;
 }
 
 .saga-story-opener-session-main span {
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.76em;
+    font-size: 14px;
     line-height: 1.35;
 }
 
@@ -2781,7 +2781,7 @@
     display: grid;
     gap: 4px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.78));
-    font-size: 0.78rem;
+    font-size: 14px;
 }
 
 .saga-story-opener-field-label,
@@ -2852,7 +2852,7 @@
     box-shadow: none;
     color: var(--saga-chip-muted-fg, #b8ad98);
     cursor: pointer;
-    font-size: 0.78rem;
+    font-size: 14px;
     font-weight: 800;
     line-height: 1;
     overflow: hidden;
@@ -2896,7 +2896,7 @@
     width: fit-content;
     color: var(--saga-text, #f1ead8);
     text-shadow: 0 0 9px color-mix(in srgb, var(--saga-gold, #d7b56d) 34%, transparent);
-    font-size: 0.72rem;
+    font-size: 12px;
     font-weight: 800;
     line-height: 1;
 }
@@ -2993,7 +2993,7 @@
     align-items: center;
     gap: 6px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.78));
-    font-size: 0.8rem;
+    font-size: 14px;
 }
 
 .saga-story-opener-checkbox input {
@@ -3023,7 +3023,7 @@
     background: var(--saga-surface-2, rgba(18, 18, 24, 0.54));
     color: var(--saga-muted, rgba(241, 234, 216, 0.74));
     padding: 7px;
-    font-size: 0.78rem;
+    font-size: 14px;
     line-height: 1.35;
 }
 
@@ -3075,7 +3075,7 @@
     margin: 0;
     padding-left: 22px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.78));
-    font-size: 0.8rem;
+    font-size: 14px;
     line-height: 1.4;
 }
 
@@ -3088,7 +3088,7 @@
     background: var(--saga-input, rgba(18, 18, 24, 0.74));
     color: var(--saga-text, #f1ead8);
     padding: 10px;
-    font-size: 0.86rem;
+    font-size: 14px;
     line-height: 1.5;
 }
 
@@ -3118,7 +3118,7 @@
     color: var(--saga-gold, #d7b56d);
     padding: 0 3px;
     font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-    font-size: 0.88em;
+    font-size: 14px;
 }
 
 .saga-story-opener-output blockquote {
@@ -3200,7 +3200,7 @@
 
 .saga-loredeck-creator-form-title {
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.82rem;
+    font-size: 16px;
     font-weight: 800;
     text-transform: uppercase;
 }
@@ -3246,7 +3246,7 @@
 }
 
 .saga-loredeck-creator-title-label .saga-loredeck-row-title {
-    font-size: max(1em, 16px);
+    font-size: 16px;
     line-height: 1.5;
     color: var(--saga-text, #f1ead8);
     overflow-wrap: anywhere;
@@ -3254,7 +3254,7 @@
 
 .saga-loredeck-creator-title-list .saga-loredeck-row-description {
     margin-top: 6px;
-    font-size: max(1em, 14px);
+    font-size: 16px;
     line-height: 1.6;
     color: var(--saga-text, #f1ead8);
 }
@@ -3353,7 +3353,7 @@
     gap: 5px;
     align-items: center;
     min-width: 0;
-    font-size: 0.82rem;
+    font-size: 14px;
     line-height: 1.25;
 }
 
@@ -3380,7 +3380,7 @@
 .saga-generation-live-elapsed {
     flex: 0 0 auto;
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.76rem;
+    font-size: 14px;
     margin-left: auto;
     white-space: nowrap;
 }
@@ -3389,7 +3389,7 @@
     flex: 0 0 auto;
     padding: 2px 7px;
     min-height: 22px;
-    font-size: 0.72rem;
+    font-size: 14px;
     border-color: var(--saga-red-soft, rgba(176, 58, 58, 0.42));
     color: var(--saga-chip-danger-fg, #e1a0a0);
 }
@@ -3399,7 +3399,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--saga-muted, rgba(241, 234, 216, 0.66));
-    font-size: 0.72rem;
+    font-size: 12px;
     line-height: 1.25;
 }
 
@@ -3415,7 +3415,7 @@
     border-radius: 6px;
     padding: 6px;
     font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-    font-size: 0.72rem;
+    font-size: 14px;
     line-height: 1.35;
 }
 
@@ -3447,7 +3447,7 @@
     border-radius: 7px;
     background: rgba(0, 0, 0, 0.12);
     padding: 7px;
-    font-size: 0.82em;
+    font-size: 14px;
     cursor: pointer;
 }
 
@@ -3507,7 +3507,7 @@
 
 .saga-loredeck-install-match-title {
     color: var(--saga-text, #f1ead8);
-    font-size: 0.84em;
+    font-size: 16px;
     font-weight: 700;
     line-height: 1.25;
     overflow-wrap: anywhere;
@@ -3515,7 +3515,7 @@
 
 .saga-loredeck-install-match-meta {
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.74em;
+    font-size: 12px;
     line-height: 1.3;
     overflow-wrap: anywhere;
 }
@@ -3618,7 +3618,7 @@
 .saga-lore-workbench-shell,
 .saga-new-lore-shell {
     font-family: var(--SmartThemeFont, 'Segoe UI', sans-serif);
-    font-size: 13px;
+    font-size: 14px;
     color: var(--saga-text);
 }
 
@@ -3641,7 +3641,7 @@
     background: var(--saga-button);
     border-color: var(--saga-border-soft);
     color: var(--saga-button-text);
-    font-size: 11px;
+    font-size: 14px;
     line-height: 1.2;
 }
 
@@ -3679,7 +3679,7 @@
     border-radius: 6px;
     background: var(--saga-input);
     color: var(--saga-text);
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .saga-lore-workbench-shell input[type="range"],
@@ -3697,7 +3697,7 @@
     border: 0;
     background: transparent;
     color: var(--saga-text);
-    font-size: 12px;
+    font-size: 14px;
     padding: 0;
 }
 
@@ -3725,7 +3725,7 @@
     right: 8px;
     transform: translateY(-50%);
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.72em;
+    font-size: 14px;
     font-weight: 900;
     line-height: 1;
 }
@@ -3872,7 +3872,7 @@
     border-radius: 7px;
     background: rgba(10, 12, 18, 0.46);
     color: var(--saga-text-strong, #f2e5cf);
-    font-size: 0.95em;
+    font-size: 14px;
     font-weight: 700;
     padding: 10px 14px;
 }
@@ -3963,7 +3963,7 @@
     justify-content: center;
     gap: 8px;
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.72em;
+    font-size: 14px;
     font-weight: 800;
     line-height: 1;
     text-align: center;
@@ -4022,7 +4022,7 @@
 
 .saga-loredeck-library-pane-title {
     color: var(--saga-gold, #d7b56d);
-    font-size: 1.02em;
+    font-size: 16px;
     font-weight: 800;
     letter-spacing: 0;
     line-height: 1.15;
@@ -4030,7 +4030,7 @@
 
 .saga-loredeck-library-pane-subtitle {
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.76em;
+    font-size: 12px;
     line-height: 1.3;
 }
 
@@ -4081,7 +4081,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.74em;
+    font-size: 14px;
     font-weight: 720;
     line-height: 1.25;
 }
@@ -4168,7 +4168,7 @@
     border-radius: 6px;
     background: var(--saga-button, rgba(0, 0, 0, 0.24));
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.72em;
+    font-size: 14px;
     font-weight: 900;
     line-height: 1;
     padding: 0;
@@ -4234,7 +4234,7 @@
         radial-gradient(circle at 45% 25%, var(--saga-gold-surface, rgba(215, 181, 109, 0.2)), transparent 62%),
         var(--saga-bg-2, rgba(8, 10, 14, 0.9));
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.64em;
+    font-size: 14px;
     font-weight: 900;
     line-height: 1;
     overflow: hidden;
@@ -4299,7 +4299,7 @@
 
 .saga-loredeck-library-folder-cover-empty {
     color: var(--saga-muted, rgba(241, 234, 216, 0.62));
-    font-size: 0.68em;
+    font-size: 14px;
     line-height: 1;
 }
 
@@ -4307,14 +4307,14 @@
     flex: 1 1 110px;
     min-width: 0;
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.72em;
+    font-size: 14px;
     line-height: 1.25;
 }
 
 .saga-loredeck-library-small-button {
     min-width: 0;
     padding: 4px 8px;
-    font-size: 0.74em;
+    font-size: 14px;
 }
 
 .saga-loredeck-library-deck-list,
@@ -4443,7 +4443,7 @@
 .saga-loredeck-library-monogram {
     width: 52px;
     height: 52px;
-    font-size: 1.1em;
+    font-size: 14px;
 }
 
 .saga-loredeck-library-visual {
@@ -4528,7 +4528,7 @@
     border-radius: 6px;
     background: var(--saga-button, rgba(7, 7, 10, 0.82));
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.78em;
+    font-size: 14px;
     font-weight: 900;
     line-height: 1;
     padding: 0;
@@ -4594,7 +4594,7 @@
 .saga-loredeck-library-deck-title {
     min-width: 0;
     color: var(--saga-text, #f1ead8);
-    font-size: 0.94em;
+    font-size: 16px;
     font-weight: 760;
     line-height: 1.22;
     overflow: hidden;
@@ -4720,7 +4720,7 @@
 .saga-loredeck-library-deck-description,
 .saga-loredeck-library-detail-description {
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.75em;
+    font-size: 14px;
     line-height: 1.35;
     overflow-wrap: anywhere;
 }
@@ -4748,7 +4748,7 @@
 
 .saga-loredeck-library-card-stats {
     color: rgba(241, 234, 216, 0.74);
-    font-size: 0.72em;
+    font-size: 14px;
     line-height: 1.25;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -4850,7 +4850,7 @@
         linear-gradient(90deg, rgba(226, 177, 98, 0.12), rgba(104, 34, 42, 0.08)),
         rgba(8, 10, 14, 0.56);
     color: var(--saga-gold-bright, #f0cf8a);
-    font-size: 0.78rem;
+    font-size: 14px;
     line-height: 1.35;
 }
 
@@ -4888,7 +4888,7 @@
 }
 
 .saga-loredeck-library-stack-folder-visual .saga-loredeck-library-folder-cover-empty {
-    font-size: 0.58em;
+    font-size: 14px;
 }
 
 .saga-loredeck-library-stack-card-bulk-selected {
@@ -5013,11 +5013,11 @@
     border-radius: var(--saga-chip-radius, 6px);
     background: var(--saga-chip-warning-bg, rgba(224, 193, 132, 0.12));
     color: var(--saga-chip-warning-fg, #e0c184);
-    min-height: var(--saga-chip-line-height-standard, 15px);
+    min-height: var(--saga-chip-line-height-standard, 18px);
     padding: var(--saga-chip-padding-standard, 0 5px);
-    font-size: var(--saga-chip-font-size-standard, 10px);
+    font-size: var(--saga-chip-font-size-standard, 12px);
     font-weight: 400;
-    line-height: var(--saga-chip-line-height-standard, 15px);
+    line-height: var(--saga-chip-line-height-standard, 18px);
     pointer-events: none;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
 }
@@ -5096,7 +5096,7 @@
     border-radius: 6px;
     background: rgba(0, 0, 0, 0.2);
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.68em;
+    font-size: 14px;
     font-weight: 900;
     line-height: 1;
     padding: 0;
@@ -5169,7 +5169,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.72em;
+    font-size: 16px;
     font-weight: 700;
     line-height: 1.2;
 }
@@ -5299,7 +5299,7 @@
 .saga-loredeck-library-square-action-label {
     max-width: 58px;
     color: var(--saga-muted, rgba(224, 216, 196, 0.74));
-    font-size: 0.68em;
+    font-size: 14px;
     font-weight: 700;
     line-height: 1.1;
     text-align: center;
@@ -5395,7 +5395,7 @@
     margin: 0;
     padding: 0 12px;
     color: var(--saga-muted, rgba(255, 255, 255, 0.52));
-    font-size: 0.9em;
+    font-size: 14px;
     font-style: normal;
     letter-spacing: 0;
     white-space: nowrap;
@@ -5433,13 +5433,13 @@
 .saga-loredeck-library-detail-monogram {
     width: 128px;
     height: 128px;
-    font-size: 2.35em;
+    font-size: 14px;
 }
 
 .saga-loredeck-library-detail-title {
     min-width: 0;
     color: var(--saga-gold, #d7b56d);
-    font-size: 1.02em;
+    font-size: 16px;
     font-weight: 800;
     line-height: 1.2;
     overflow-wrap: anywhere;
@@ -5588,7 +5588,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.82em;
+    font-size: 16px;
     font-weight: 700;
 }
 
@@ -5631,7 +5631,7 @@
 
 .saga-loredeck-library-health-top-title {
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.86em;
+    font-size: 16px;
     font-weight: 760;
     line-height: 1.2;
 }
@@ -5736,7 +5736,7 @@
 .saga-loredeck-library-mobile-selected-summary {
     min-width: 0;
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.82em;
+    font-size: 14px;
     font-weight: 800;
     line-height: 1.2;
 }
@@ -5758,7 +5758,7 @@
     border-radius: 999px;
     background: var(--saga-chip-neutral-bg, rgba(255, 255, 255, 0.06));
     color: var(--saga-chip-neutral-fg, rgba(241, 234, 216, 0.84));
-    font-size: 0.78em;
+    font-size: 12px;
     font-weight: 720;
     line-height: 1.2;
     overflow: hidden;
@@ -5799,7 +5799,7 @@
         radial-gradient(circle at 50% 32%, rgba(255, 225, 162, 0.22), transparent 58%),
         linear-gradient(180deg, rgba(45, 27, 30, 0.98), rgba(8, 10, 15, 0.98));
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.78em;
+    font-size: 12px;
     font-weight: 900;
     line-height: 1;
     box-shadow:
@@ -5883,7 +5883,7 @@
 .saga-loredeck-library-mobile-detail-sheet-title {
     min-width: 0;
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.95em;
+    font-size: 16px;
     font-weight: 820;
     line-height: 1.2;
     overflow: hidden;
@@ -5894,7 +5894,7 @@
 .saga-loredeck-library-mobile-reorder-title {
     min-width: 0;
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.95em;
+    font-size: 16px;
     font-weight: 820;
     line-height: 1.2;
 }
@@ -5939,7 +5939,7 @@
     border: 1px solid var(--saga-border-strong, rgba(255, 207, 105, 0.72));
     border-radius: 999px;
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.78em;
+    font-size: 14px;
     font-weight: 900;
 }
 
@@ -5973,7 +5973,7 @@
 .saga-loredeck-library-mobile-reorder-meta {
     min-width: 0;
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.78em;
+    font-size: 12px;
     line-height: 1.25;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -6029,14 +6029,14 @@
 
 .saga-loredeck-health-metric span {
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.72em;
+    font-size: 14px;
 }
 
 .saga-loredeck-health-metric strong {
     min-width: 0;
     overflow-wrap: anywhere;
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.92em;
+    font-size: 14px;
     line-height: 1.2;
 }
 
@@ -6073,14 +6073,14 @@
 
 .saga-loredeck-health-issue-code {
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.76em;
+    font-size: 14px;
     font-weight: 700;
     overflow-wrap: anywhere;
 }
 
 .saga-loredeck-health-issue-message {
     margin: 3px 0;
-    font-size: 0.76em;
+    font-size: 14px;
     line-height: 1.35;
     opacity: 0.84;
     overflow-wrap: anywhere;
@@ -6195,7 +6195,7 @@
     border-radius: 0;
     background: transparent;
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.78em;
+    font-size: 14px;
     font-weight: 650;
 }
 
@@ -6272,7 +6272,7 @@
     border: 2px solid var(--saga-border-strong, rgba(215, 181, 109, 0.72));
     border-radius: 50%;
     color: var(--saga-gold, #d7b56d);
-    font-size: 1.05em;
+    font-size: 14px;
     font-weight: 800;
     box-shadow: 0 0 24px var(--saga-gold-surface, rgba(185, 139, 54, 0.16)) inset;
 }
@@ -6280,7 +6280,7 @@
 .saga-loredeck-health-hero-compact .saga-loredeck-health-emblem {
     width: 38px;
     height: 38px;
-    font-size: 0.78em;
+    font-size: 14px;
 }
 
 .saga-loredeck-health-hero-main {
@@ -6292,7 +6292,7 @@
 
 .saga-loredeck-health-deck-title {
     color: var(--saga-text, #f1ead8);
-    font-size: 1em;
+    font-size: 16px;
     font-weight: 700;
     line-height: 1.2;
     overflow-wrap: anywhere;
@@ -6300,7 +6300,7 @@
 
 .saga-loredeck-health-status-label {
     color: var(--saga-gold, #d7b56d);
-    font-size: 1.08em;
+    font-size: 14px;
     font-weight: 750;
     line-height: 1.2;
 }
@@ -6310,7 +6310,7 @@
 .saga-loredeck-health-group-message,
 .saga-loredeck-health-detail-block p {
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.8em;
+    font-size: 14px;
     line-height: 1.4;
     margin: 0;
 }
@@ -6339,7 +6339,7 @@
 .saga-loredeck-health-severity-card span,
 .saga-loredeck-health-severity-card small {
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.72em;
+    font-size: 14px;
     line-height: 1.2;
 }
 
@@ -6454,7 +6454,7 @@
 
 .saga-loredeck-health-group-title {
     color: var(--saga-text, #f1ead8);
-    font-size: 0.86em;
+    font-size: 16px;
     font-weight: 700;
     line-height: 1.24;
     overflow-wrap: anywhere;
@@ -6478,7 +6478,7 @@
 
 .saga-loredeck-health-detail-block strong {
     color: var(--saga-gold, #d7b56d);
-    font-size: 0.78em;
+    font-size: 14px;
 }
 
 .saga-loredeck-health-affected-list {
@@ -6494,7 +6494,7 @@
     border-bottom: 1px solid rgba(180, 160, 140, 0.1);
     padding: 4px 0;
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
-    font-size: 0.74em;
+    font-size: 14px;
 }
 
 .saga-loredeck-health-category-list {
@@ -6510,7 +6510,7 @@
     align-items: center;
     border-bottom: 1px solid rgba(180, 160, 140, 0.11);
     padding: 8px 2px;
-    font-size: 0.82em;
+    font-size: 14px;
 }
 
 .saga-loredeck-health-category-row:last-child {
@@ -6568,12 +6568,12 @@
 
 .saga-loredeck-health-inventory-item span {
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
-    font-size: 0.7em;
+    font-size: 14px;
 }
 
 .saga-loredeck-health-inventory-item strong {
     color: var(--saga-text, #f1ead8);
-    font-size: 0.92em;
+    font-size: 14px;
 }
 
 .saga-loredeck-health-view-header {
@@ -6597,7 +6597,7 @@
     align-items: center;
     border-bottom: 1px solid rgba(180, 160, 140, 0.11);
     padding: 8px 10px;
-    font-size: 0.78em;
+    font-size: 14px;
 }
 
 .saga-loredeck-health-issue-table-row summary,

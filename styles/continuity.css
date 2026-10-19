@@ -19,7 +19,7 @@
 }
 
 .saga-context-field span {
-    font-size: 0.78em;
+    font-size: 14px;
     opacity: 0.72;
 }
 
@@ -33,7 +33,7 @@
     border-radius: 5px;
     padding: 5px 7px;
     font-family: inherit;
-    font-size: 0.86em;
+    font-size: 14px;
 }
 
 .saga-context-field input[type="text"]:focus,
@@ -49,7 +49,7 @@
 }
 
 .saga-generation-status-text {
-    font-size: 0.84em;
+    font-size: 14px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.72));
     margin-bottom: 6px;
 }
@@ -94,7 +94,7 @@
     background: rgba(0, 0, 0, 0.42);
     color: #eadfbe;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 0.76em;
+    font-size: 14px;
     line-height: 1.38;
 }
 
@@ -112,7 +112,7 @@
 }
 
 .saga-runtime-card-subtitle {
-    font-size: 0.82em;
+    font-size: 12px;
     margin-top: 2px;
 }
 
@@ -141,7 +141,7 @@
     justify-content: space-between;
     gap: 8px;
     color: #f3d38b;
-    font-size: 0.82em;
+    font-size: 14px;
     font-weight: 700;
     margin-bottom: 5px;
 }
@@ -154,7 +154,7 @@
 
 .saga-character-field-summary-row {
     color: rgba(238, 226, 196, 0.78);
-    font-size: 0.78em;
+    font-size: 14px;
     line-height: 1.35;
     padding-top: 3px;
 }
@@ -189,7 +189,7 @@
     background: rgba(8, 6, 10, 0.72);
     color: var(--SmartThemeBodyColor, #e8dfc5);
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.78em;
+    font-size: 14px;
     line-height: 1.45;
     padding: 10px;
     outline: none;
@@ -218,7 +218,7 @@
     content: '▸';
     float: right;
     opacity: 0.65;
-    font-size: 0.85em;
+    font-size: 14px;
 }
 
 .saga-instructions-card[open] summary::after {
@@ -229,7 +229,7 @@
     margin: 8px 0 0 18px;
     padding: 0;
     color: rgba(238, 226, 196, 0.82);
-    font-size: 0.86em;
+    font-size: 14px;
     line-height: 1.45;
 }
 
@@ -283,7 +283,7 @@
 
 .saga-small-button {
     margin: 6px 0 0 0;
-    font-size: 0.82em;
+    font-size: 14px;
     padding: 4px 8px;
 }
 
@@ -301,11 +301,11 @@
 }
 
 .saga-lore-entry-title {
-    font-size: 1.0em;
+    font-size: 16px;
 }
 
 .saga-review-lore-title {
-    font-size: 1.05em;
+    font-size: 16px;
 }
 
 
@@ -319,11 +319,11 @@
 }
 
 .saga-lore-entry-title {
-    font-size: 1.12em !important;
+    font-size: 16px !important;
 }
 
 .saga-review-lore-title {
-    font-size: 1.13em !important;
+    font-size: 16px !important;
 }
 
 .saga-danger-button {
@@ -337,7 +337,7 @@
 
 /* ── Lore performance refactor: paged accepted list and lightweight rows ───── */
 .saga-lore-list-summary {
-    font-size: 0.72em;
+    font-size: 14px;
     color: rgba(232, 218, 185, 0.62);
     padding: 2px 4px 4px 4px;
     flex: 0 0 auto;
@@ -359,7 +359,7 @@
 
 /* ── Injection placement compact layout and final live feedback polish ─────── */
 .saga-prompt-placement-card .saga-runtime-help {
-    font-size: 0.70em;
+    font-size: 14px;
     line-height: 1.25;
 }
 
@@ -383,7 +383,7 @@
 }
 
 .saga-prompt-placement-line-label {
-    font-size: 0.72em;
+    font-size: 14px;
     font-weight: 700;
     color: var(--saga-text-muted);
     white-space: nowrap;
@@ -404,7 +404,7 @@
     gap: 3px;
     margin: 0;
     min-width: 0;
-    font-size: 0.68em;
+    font-size: 14px;
     line-height: 1;
 }
 
@@ -422,7 +422,7 @@
     border-radius: 5px;
     background: rgba(10, 12, 16, 0.86);
     color: var(--saga-text);
-    font-size: 0.90em;
+    font-size: 14px;
     line-height: 1;
     padding: 0 4px;
 }

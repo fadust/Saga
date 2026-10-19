@@ -1,0 +1,70 @@
+/* Keep larger text inside Saga's existing responsive and scrollable surfaces. */
+.saga-lore-panel,
+.saga-settings,
+.saga-lore-workbench-shell,
+.saga-new-lore-shell {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.saga-runtime-button,
+.saga-settings .menu_button,
+.saga-lore-workbench-shell button,
+.saga-auto-relevance-card .saga-inline-field input,
+.saga-auto-relevance-card .saga-inline-field select {
+    min-height: 32px;
+    height: auto !important;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.saga-chip,
+.saga-status-pill {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    height: auto;
+    padding: 2px 6px;
+}
+
+.saga-loredeck-row-description,
+.saga-runtime-help {
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.saga-prompt-placement-card .saga-inline-field input[type="number"],
+.saga-prompt-placement-card .saga-inline-field select {
+    min-height: 32px;
+    height: auto;
+}
+
+.saga-loredeck-entry-row,
+.saga-runtime-card {
+    padding: 12px;
+}
+
+.saga-lore-workbench-shell {
+    width: min(1560px, calc(100vw - 36px));
+}
+
+.saga-loredeck-creator-stage-list {
+    grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+}
+
+.saga-loredeck-creator-stage-label,
+.saga-loredeck-creator-stage-detail {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+    .saga-loredeck-creator-stage-guide {
+        position: static;
+    }
+    .saga-loredeck-entry-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .saga-lore-workbench-header {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

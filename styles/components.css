@@ -45,12 +45,12 @@
 .saga-settings small {
     color: var(--SmartThemeBodyColor, #999);
     opacity: 0.65;
-    font-size: 0.78em;
+    font-size: 14px;
 }
 
 /* ── Buttons ──────────────────────────────────────────────────────────────────── */
 .saga-settings .menu_button {
-    font-size: 0.85em;
+    font-size: 14px;
     padding: 5px 12px;
 }
 
@@ -84,7 +84,7 @@
 .saga-lore-context {
     white-space: pre-wrap;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 0.78em;
+    font-size: 14px;
     line-height: 1.35;
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(180, 150, 200, 0.2);
@@ -101,7 +101,7 @@
 .saga-lore-matrix {
     white-space: pre-wrap;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 0.78em;
+    font-size: 14px;
     line-height: 1.35;
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(180, 160, 140, 0.2);
@@ -131,7 +131,7 @@
     display: flex;
     flex-direction: column;
     font-family: var(--SmartThemeFont, 'Segoe UI', sans-serif);
-    font-size: 0.85em;
+    font-size: 14px;
     color: var(--SmartThemeBodyColor, #e0e0e0);
     user-select: none;
     transition: max-height 0.2s ease;
@@ -162,7 +162,7 @@
 .saga-lore-panel-title {
     flex: 1;
     font-weight: 600;
-    font-size: 0.95em;
+    font-size: 16px;
     color: #d4c8a8;
     white-space: nowrap;
     overflow: hidden;
@@ -175,7 +175,7 @@
     border: none;
     color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
-    font-size: 0.85em;
+    font-size: 14px;
     padding: 2px 4px;
     line-height: 1;
     border-radius: 3px;
@@ -212,7 +212,7 @@
     background: rgba(80, 120, 200, 0.15);
     border: 1px solid rgba(80, 140, 255, 0.25);
     border-radius: 4px;
-    font-size: 0.8em;
+    font-size: 14px;
     flex-shrink: 0;
 }
 
@@ -229,7 +229,7 @@
 
 .saga-lore-pending-accept,
 .saga-lore-pending-reject {
-    font-size: 0.78em;
+    font-size: 14px;
     padding: 2px 8px;
     border-radius: 3px;
     border: none;
@@ -263,7 +263,7 @@
 }
 
 .saga-lore-tab {
-    font-size: 0.72em;
+    font-size: 14px;
     padding: 2px 6px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 3px;
@@ -299,7 +299,7 @@
     border: 1px solid var(--saga-input-border, rgba(185, 139, 54, 0.34));
     border-radius: 3px;
     padding: 3px 6px;
-    font-size: 0.82em;
+    font-size: 14px;
     color: var(--saga-text, var(--SmartThemeBodyColor, #e0e0e0));
     font-family: inherit;
 }
@@ -310,7 +310,7 @@
 }
 
 .saga-lore-active-toggle {
-    font-size: 0.78em;
+    font-size: 14px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
     display: flex;
     align-items: center;
@@ -335,7 +335,7 @@
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
     font-style: italic;
     padding: 16px 8px;
-    font-size: 0.85em;
+    font-size: 14px;
 }
 
 /* ── Entry card ──────────────────────────────────────────────────────────────── */
@@ -383,7 +383,7 @@
 
 .saga-lore-entry-title {
     font-weight: 600;
-    font-size: 0.85em;
+    font-size: 16px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -400,7 +400,7 @@
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 0.75em;
+    font-size: 14px;
     padding: 1px 3px;
     border-radius: 2px;
     opacity: 0.5;
@@ -421,7 +421,7 @@
 
 /* ── Entry fact preview ──────────────────────────────────────────────────────── */
 .saga-lore-entry-fact {
-    font-size: 0.78em;
+    font-size: 14px;
     color: var(--saga-text, rgba(241, 234, 216, 0.9));
     margin-top: 3px;
     line-height: 1.35;
@@ -433,7 +433,7 @@
     margin-top: 6px;
     padding-top: 6px;
     border-top: 1px solid var(--saga-border-soft, rgba(185, 139, 54, 0.18));
-    font-size: 0.78em;
+    font-size: 14px;
     color: var(--saga-muted, rgba(241, 234, 216, 0.68));
     display: flex;
     flex-direction: column;
@@ -489,7 +489,7 @@
     border: none;
     color: rgba(255, 255, 255, 0.35);
     cursor: pointer;
-    font-size: 0.85em;
+    font-size: 14px;
     padding: 0 2px;
     line-height: 1;
 }
@@ -510,7 +510,7 @@
     border: 1px dashed rgba(255, 255, 255, 0.15);
     color: rgba(255, 255, 255, 0.3);
     cursor: pointer;
-    font-size: 0.75em;
+    font-size: 14px;
     padding: 0 4px;
     border-radius: 6px;
     line-height: 1.2;
@@ -528,7 +528,7 @@
     border: 1px solid rgba(80, 140, 200, 0.4);
     border-radius: 3px;
     padding: 2px 5px;
-    font-size: 0.72em;
+    font-size: 14px;
     color: #e0e0e0;
     width: 60px;
     font-family: inherit;

@@ -17,7 +17,7 @@
     box-shadow: none !important;
     color: var(--SmartThemeBodyColor, #e0e0e0);
     font-family: var(--SmartThemeFont, 'Segoe UI', sans-serif);
-    font-size: 0.85em;
+    font-size: 14px;
     user-select: none;
 }
 
@@ -73,7 +73,7 @@
 .saga-runtime-rail-subtitle {
     display: none;
     opacity: 0.72;
-    font-size: 0.74em;
+    font-size: 12px;
     line-height: 1;
     white-space: nowrap;
 }
@@ -196,7 +196,7 @@
         linear-gradient(180deg, var(--saga-button, rgba(18, 18, 24, 0.78)), var(--saga-surface-2, rgba(18, 12, 18, 0.66)));
     color: var(--saga-muted, rgba(241, 234, 216, 0.74));
     font: inherit;
-    font-size: 0.84em;
+    font-size: 14px;
     font-weight: 760;
     line-height: 1.1;
     letter-spacing: 0;
@@ -304,7 +304,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     opacity: 0.72;
-    font-size: 0.66em;
+    font-size: 14px;
     line-height: 1.1;
     text-align: right;
 }
@@ -515,7 +515,7 @@
     flex: 1 1 50%;
     min-width: 0;
     text-align: center;
-    font-size: 0.74em;
+    font-size: 14px;
     font-weight: 700;
     line-height: 1;
     white-space: nowrap;
@@ -576,12 +576,12 @@
 
 .saga-runtime-rail-compact .saga-experience-switch-label-basic::after {
     content: "B";
-    font-size: 10px;
+    font-size: 14px;
 }
 
 .saga-runtime-rail-compact .saga-experience-switch-label-advanced::after {
     content: "A";
-    font-size: 10px;
+    font-size: 14px;
 }
 
 .saga-settings-experience-card {
@@ -1103,13 +1103,13 @@
 
 .saga-auto-relevance-card .saga-runtime-card-title {
     margin: 0 !important;
-    font-size: 0.94em !important;
+    font-size: 16px !important;
     line-height: 1.2 !important;
 }
 
 .saga-auto-relevance-card > .saga-runtime-help {
     margin: 0 !important;
-    font-size: 0.78em !important;
+    font-size: 14px !important;
     line-height: 1.34 !important;
 }
 
@@ -1123,7 +1123,7 @@
     border: 1px solid var(--saga-border-soft, rgba(185, 139, 54, 0.18)) !important;
     border-radius: 7px !important;
     background: rgba(10, 12, 16, 0.34) !important;
-    font-size: 0.82em !important;
+    font-size: 14px !important;
     line-height: 1.2 !important;
     box-sizing: border-box !important;
 }
@@ -1145,7 +1145,7 @@
     border: 1px solid rgba(126, 145, 165, 0.24) !important;
     border-radius: 7px !important;
     background: rgba(10, 12, 16, 0.28) !important;
-    font-size: 0.78em !important;
+    font-size: 14px !important;
     line-height: 1.2 !important;
     box-sizing: border-box !important;
 }
@@ -1165,7 +1165,7 @@
     height: 24px !important;
     border-radius: 6px !important;
     box-sizing: border-box !important;
-    font-size: 0.95em !important;
+    font-size: 14px !important;
 }
 
 .saga-auto-relevance-card .saga-key-value {
@@ -1174,7 +1174,7 @@
     border: 1px solid rgba(126, 145, 165, 0.18) !important;
     border-radius: 7px !important;
     background: rgba(10, 12, 16, 0.26) !important;
-    font-size: 0.78em !important;
+    font-size: 14px !important;
 }
 
 .saga-auto-relevance-card .saga-primary-actions {
@@ -1196,7 +1196,7 @@
 }
 
 .saga-auto-relevance-suggestion-summary {
-    font-size: 0.78em !important;
+    font-size: 14px !important;
 }
 
 .saga-runtime-drawer .saga-lore-pending-collapsible .saga-pending-lore-list,
