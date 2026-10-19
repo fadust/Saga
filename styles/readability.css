@@ -1,4 +1,11 @@
 /* Keep larger text inside Saga's existing responsive and scrollable surfaces. */
+.saga-runtime-card-title,
+.saga-section-header h3,
+.saga-review-section h4 {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
 .saga-lore-panel,
 .saga-settings,
 .saga-lore-workbench-shell,
