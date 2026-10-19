@@ -38,7 +38,8 @@ export function getAcceptedVirtualLoredeckEntries(pack = {}) {
 }
 
 export function canUseVirtualLoredeckData(pack = {}) {
-    return isVirtualLoredeckPack(pack) && !String(pack?.manifest || '').trim() && getAcceptedVirtualLoredeckEntries(pack).length > 0;
+    return isVirtualLoredeckPack(pack) && !String(pack?.manifest || '').trim()
+        && (isGeneratedLoredeckPack(pack) || getAcceptedVirtualLoredeckEntries(pack).length > 0);
 }
 
 export function canUseGeneratedVirtualLoredeckData(pack = {}) {
