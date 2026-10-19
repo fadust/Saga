@@ -3238,6 +3238,31 @@
 
 .saga-loredeck-creator-title-label {
     min-width: 0;
+    gap: 10px;
+}
+
+.saga-loredeck-creator-title-list .saga-loredeck-creator-title-row {
+    padding: 12px;
+}
+
+.saga-loredeck-creator-title-label .saga-loredeck-row-title {
+    font-size: max(1em, 16px);
+    line-height: 1.5;
+    color: var(--saga-text, #f1ead8);
+    overflow-wrap: anywhere;
+}
+
+.saga-loredeck-creator-title-list .saga-loredeck-row-description {
+    margin-top: 6px;
+    font-size: max(1em, 14px);
+    line-height: 1.6;
+    color: var(--saga-text, #f1ead8);
+}
+
+.saga-loredeck-creator-title-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
 }
 
 .saga-loredeck-creator-title-json {
