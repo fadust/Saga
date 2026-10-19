@@ -168,7 +168,7 @@ function orderTimelineIds(ids = [], registryOrder = []) {
     return out;
 }
 
-function buildTargetTimelineReferences(draft = {}, timelineRegistry = {}) {
+export function buildTargetTimelineReferences(draft = {}, timelineRegistry = {}) {
     const anchorItems = collectTimelineItems(timelineRegistry, 'anchors');
     const windowItems = collectTimelineItems(timelineRegistry, 'windows');
     const anchorIds = anchorItems.map(item => item.id);
@@ -180,11 +180,13 @@ function buildTargetTimelineReferences(draft = {}, timelineRegistry = {}) {
     const hasExplicitTimelineReferences = !!(explicitAnchorIds.length || explicitWindowIds.length);
     if (!hasExplicitTimelineReferences) {
         return {
-            timelineReferenceMode: 'full_registry',
+            timelineReferenceMode: draft.contextScope === 'global' ? 'global' : 'unmapped',
+            contextMappingError: draft.contextScope === 'global' ? '' : 'Review a timeline anchor/window mapping or explicitly designate this title as global.',
+            allowedContexts: draft.contextScope === 'global' ? [{ scope: 'global' }] : [],
             explicitAnchorIds: [],
             explicitWindowIds: [],
-            allowedAnchorIds: anchorIds,
-            allowedWindowIds: windowIds,
+            allowedAnchorIds: [],
+            allowedWindowIds: [],
             omittedAnchorIds: [],
             omittedWindowIds: [],
         };
@@ -207,15 +209,26 @@ function buildTargetTimelineReferences(draft = {}, timelineRegistry = {}) {
             omittedWindowIds.push(id);
         }
     }
-    if (allowedAnchorSet.size >= 2) {
-        for (const windowDef of windowItems) {
-            if (windowDef.anchorFrom && windowDef.anchorTo && allowedAnchorSet.has(windowDef.anchorFrom) && allowedAnchorSet.has(windowDef.anchorTo)) {
-                allowedWindowSet.add(windowDef.id);
-            }
-        }
-    }
+    const allowedContexts = [
+        ...anchorItems.filter(anchor => explicitAnchorIds.includes(anchor.id)).map(anchor => ({
+            scope: 'anchor', anchorId: anchor.id, sortKeyFrom: anchor.sortKey, sortKeyTo: anchor.sortKey,
+        })),
+        ...windowItems.filter(window => explicitWindowIds.includes(window.id)).map(window => ({
+            scope: 'window', validFromAnchor: window.anchorFrom, validToAnchor: window.anchorTo,
+            sortKeyFrom: window.sortKeyFrom ?? anchorItems.find(anchor => anchor.id === window.anchorFrom)?.sortKey,
+            sortKeyTo: window.sortKeyTo ?? anchorItems.find(anchor => anchor.id === window.anchorTo)?.sortKey,
+        })),
+    ];
+    const invalidBounds = allowedContexts.some(context =>
+        !Number.isFinite(context.sortKeyFrom) || !Number.isFinite(context.sortKeyTo)
+        || context.sortKeyFrom > context.sortKeyTo
+        || (context.scope === 'window' && (!acceptedAnchorSet.has(context.validFromAnchor) || !acceptedAnchorSet.has(context.validToAnchor))));
+    const contextMappingError = draft.contextScope === 'global' || omittedAnchorIds.length || omittedWindowIds.length || invalidBounds || !allowedContexts.length
+        ? 'Review this title mapping: it contains conflicting scope, missing references, or invalid registry bounds.' : '';
     return {
         timelineReferenceMode: 'explicit',
+        contextMappingError,
+        allowedContexts,
         explicitAnchorIds,
         explicitWindowIds,
         allowedAnchorIds: orderTimelineIds([...allowedAnchorSet], anchorIds),
@@ -335,6 +348,10 @@ export function preflightLoredeckCreatorEntryTargets(input = {}) {
                 reasonCode: 'unknown_timeline_window',
                 message: `Accepted timeline registry is missing window ${id}.`,
             })),
+            ...(timelineReferences.contextMappingError ? [{
+                kind: 'context_mapping', id: titleId, reasonCode: 'context_mapping_required',
+                message: timelineReferences.contextMappingError,
+            }] : []),
         ];
         return {
             ...draft,
@@ -353,6 +370,8 @@ export function preflightLoredeckCreatorEntryTargets(input = {}) {
             timelineReferenceMode: timelineReferences.timelineReferenceMode,
             planningGaps,
             preflightStatus: planningGaps.length ? 'gaps' : 'ready',
+            contextMappingError: timelineReferences.contextMappingError,
+            allowedContexts: timelineReferences.allowedContexts,
         };
     });
     const omittedTagCount = targets.reduce((sum, target) => sum + target.omittedTitleTags.length, 0);

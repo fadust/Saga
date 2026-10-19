@@ -120,6 +120,7 @@ function assertCleanPackHealth(pack) {
 const pack = buildPack();
 const guarded = guardLoredeckCreatorEntryDraftChange(pack, buildChange(), {
   targetEntryIds: new Set(['nami-secret']),
+  targetTitleByEntryId: new Map([['nami-secret', { timelineWindowIds: ['arlong.pressure'] }]]),
 });
 assert.deepEqual(guarded.errors, []);
 assert.equal(guarded.repaired, true);
@@ -137,6 +138,7 @@ const unknownAnchor = guardLoredeckCreatorEntryDraftChange(pack, buildChange(bui
   },
 })), {
   targetEntryIds: new Set(['nami-secret']),
+  targetTitleByEntryId: new Map([['nami-secret', { timelineWindowIds: ['arlong.pressure'] }]]),
 });
 assert.equal(unknownAnchor.change, null);
 assert.ok(unknownAnchor.errors.some(error => error.includes('Unknown validToAnchor arlong.end.deal')));
@@ -145,6 +147,7 @@ const unknownTag = guardLoredeckCreatorEntryDraftChange(pack, buildChange(buildR
   tags: ['character:unknown'],
 })), {
   targetEntryIds: new Set(['nami-secret']),
+  targetTitleByEntryId: new Map([['nami-secret', { timelineWindowIds: ['arlong.pressure'] }]]),
 });
 assert.equal(unknownTag.change, null);
 assert.ok(unknownTag.errors.some(error => error.includes('Unknown tag character:unknown')));
@@ -153,12 +156,14 @@ const omittedTitleTag = guardLoredeckCreatorEntryDraftChange(pack, buildChange(b
   tags: ['character:nami', 'location:cocoyashi'],
 })), {
   targetEntryIds: new Set(['nami-secret']),
+  targetTitleByEntryId: new Map([['nami-secret', { timelineWindowIds: ['arlong.pressure'] }]]),
   targetTitleByEntryId: new Map([[
     'nami-secret',
     {
       titleId: 'nami-secret',
       targetEntryId: 'nami-secret',
       omittedTitleTags: ['location:cocoyashi'],
+      timelineWindowIds: ['arlong.pressure'],
     },
   ]]),
 });
@@ -181,6 +186,7 @@ const missingContextLabel = guardLoredeckCreatorEntryDraftChange(pack, buildChan
   },
 })), {
   targetEntryIds: new Set(['nami-secret']),
+  targetTitleByEntryId: new Map([['nami-secret', { timelineWindowIds: ['arlong.pressure'] }]]),
 });
 assert.equal(missingContextLabel.change, null);
 assert.ok(missingContextLabel.errors.some(error => error.includes('Missing context.label')));
@@ -193,6 +199,7 @@ const reversedContextSort = guardLoredeckCreatorEntryDraftChange(pack, buildChan
   },
 })), {
   targetEntryIds: new Set(['nami-secret']),
+  targetTitleByEntryId: new Map([['nami-secret', { timelineWindowIds: ['arlong.pressure'] }]]),
 });
 assert.equal(reversedContextSort.change, null);
 assert.ok(reversedContextSort.errors.some(error => error.includes('context.sortKeyFrom is after context.sortKeyTo')));
@@ -205,6 +212,7 @@ const missingRetrieval = guardLoredeckCreatorEntryDraftChange(pack, buildChange(
   },
 })), {
   targetEntryIds: new Set(['nami-secret']),
+  targetTitleByEntryId: new Map([['nami-secret', { timelineWindowIds: ['arlong.pressure'] }]]),
 });
 assert.equal(missingRetrieval.change, null);
 assert.ok(missingRetrieval.errors.some(error => error.includes('Missing retrieval.activation')));
@@ -217,6 +225,7 @@ const missingContent = guardLoredeckCreatorEntryDraftChange(pack, buildChange(bu
   },
 })), {
   targetEntryIds: new Set(['nami-secret']),
+  targetTitleByEntryId: new Map([['nami-secret', { timelineWindowIds: ['arlong.pressure'] }]]),
 });
 assert.equal(missingContent.change, null);
 assert.ok(missingContent.errors.some(error => error.includes('Missing content.fact')));

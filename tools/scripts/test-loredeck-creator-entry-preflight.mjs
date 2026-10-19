@@ -47,24 +47,22 @@ const preflight = preflightLoredeckCreatorEntryTargets({
 assert.equal(preflight.summary.targetCount, 2);
 assert.equal(preflight.summary.acceptedTagCount, 3);
 assert.equal(preflight.summary.omittedTagCount, 1);
-assert.equal(preflight.summary.planningGapCount, 1);
+assert.equal(preflight.summary.planningGapCount, 3);
 
 const genzoTarget = preflight.targetTitleDrafts[0];
 assert.deepEqual(genzoTarget.allowedEntryTags, ['character:genzo']);
 assert.deepEqual(genzoTarget.tags, ['character:genzo']);
 assert.deepEqual(genzoTarget.omittedTitleTags, ['location:cocoyashi']);
-assert.deepEqual(genzoTarget.allowedAnchorIds, [
-  'one-piece.arlong.occupation-begins',
-  'one-piece.arlong.reneges-deal',
-]);
-assert.deepEqual(genzoTarget.allowedWindowIds, ['one-piece.arlong.occupation-span']);
+assert.deepEqual(genzoTarget.allowedAnchorIds, []);
+assert.deepEqual(genzoTarget.allowedWindowIds, []);
+assert.ok(genzoTarget.contextMappingError);
 assert.equal(genzoTarget.preflightStatus, 'gaps');
 assert.equal(genzoTarget.planningGaps[0].id, 'location:cocoyashi');
 
 const namiTarget = preflight.targetTitleDrafts[1];
 assert.deepEqual(namiTarget.allowedEntryTags, ['character:nami', 'faction:arlong-pirates']);
 assert.deepEqual(namiTarget.omittedTitleTags, []);
-assert.equal(namiTarget.preflightStatus, 'ready');
+assert.equal(namiTarget.preflightStatus, 'gaps');
 
 assert.equal(preflight.diagnostics.length, 1);
 assert.equal(preflight.diagnostics[0].targetEntryId, 'genzos-vigil-over-cocoyashi');
@@ -128,7 +126,7 @@ assert.deepEqual(timelineTarget.omittedAnchorIds, ['one-piece.arlong.missing-anc
 assert.deepEqual(timelineTarget.omittedWindowIds, ['one-piece.arlong.missing-window']);
 assert.equal(timelinePreflight.summary.omittedAnchorCount, 1);
 assert.equal(timelinePreflight.summary.omittedWindowCount, 1);
-assert.equal(timelinePreflight.summary.planningGapCount, 2);
+assert.equal(timelinePreflight.summary.planningGapCount, 3);
 assert.deepEqual(timelinePreflight.diagnostics.map(item => item.reasonCode), ['unknown_anchor', 'unknown_timeline_window']);
 
 console.log('Deck Maker entry preflight tests passed.');

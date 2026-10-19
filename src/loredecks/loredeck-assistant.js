@@ -637,6 +637,9 @@ function normalizeCreatorTitleDraft(raw = {}, index = 0) {
         priority: cleanInteger(raw.priority ?? raw.weight ?? raw.rank, 50, 0, 100),
         relevance: relevance && relevance !== 'not_applicable' ? relevance : '',
         contextHint: cleanString(raw.contextHint || raw.timelineHint || raw.windowHint, 500),
+        contextScope: raw.contextScope === 'global' ? 'global' : '',
+        timelineAnchorIds: cleanStringArray([raw.timelineAnchorIds, raw.anchorIds, raw.contextAnchorIds, raw.anchorId, raw.validFromAnchor, raw.validToAnchor].flat().filter(Boolean), 24, 180),
+        timelineWindowIds: cleanStringArray([raw.timelineWindowIds, raw.windowIds, raw.contextWindowIds, raw.windowId, raw.validWindowId].flat().filter(Boolean), 24, 180),
         tags: cleanStringArray(raw.tags || raw.tagHints || raw.suggestedTags, 24, 140),
         reason: cleanString(raw.reason || raw.rationale || raw.description, 1000),
         creatorTitleBatchId: cleanPackId(raw.creatorTitleBatchId || raw.batchId || raw.sourceBatchId, 160),
@@ -1241,6 +1244,7 @@ Hard limits:
 - Use only acceptedTimelineRegistry anchors/windows and acceptedTagRegistry tags. Do not invent anchor IDs or tag IDs at this stage.
 - For each targetTitleDraft, use only targetTitleDraft.allowedEntryTags when writing entry.tags. Treat targetTitleDraft.suggestedTags as semantic hints and targetTitleDraft.omittedTitleTags as forbidden IDs.
 - For each targetTitleDraft, use only targetTitleDraft.allowedAnchorIds and targetTitleDraft.allowedWindowIds when they are present. Treat targetTitleDraft.omittedAnchorIds and targetTitleDraft.omittedWindowIds as forbidden IDs.
+- Choose one targetTitleDraft.allowedContexts record and copy its scope, anchor references and numeric bounds exactly. Window contexts use validFromAnchor/validToAnchor, not windowId. Global context requires the title's explicit contextScope=global and topic_or_entity/low/low retrieval. Never expand or substitute the reviewed mapping.
 - If targetTitleDraft.previousRejection or retryContext.previousRejections is supplied, correct that specific schema rejection. Do not emit listed unknownTags, unknownAnchors, omitted IDs, or invented references.
 - Every entry must be schemaVersion 3 with content.fact, content.injection, context, retrieval, tags, category, canon/canonStatus, relevance, and priority.
 - Do not write wiki summaries. The fact should state the useful story constraint; the injection should tell the roleplay prompt what changes in-scene.

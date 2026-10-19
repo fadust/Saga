@@ -7,6 +7,7 @@ import {
     normalizeSchemaV3RepairEntryTagList,
     repairSchemaV3EntryForPack,
 } from './loredeck-schema-v3-entry-repair.js';
+import { buildTargetTimelineReferences } from './loredeck-creator-entry-preflight.js';
 
 function isPlainObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -78,6 +79,19 @@ export function guardLoredeckCreatorEntryDraftChange(pack = {}, change = {}, opt
             rejectUnknownAnchors: true,
             rejectUnknownTags: true,
         });
+        const mapping = buildTargetTimelineReferences(getTargetTitleMeta(options, id) || {}, pack.timelineRegistry);
+        const context = repair.entry.context || {};
+        const matchesMapping = !mapping.contextMappingError && mapping.allowedContexts.some(allowed => {
+            if (context.scope !== allowed.scope) return false;
+            if (['anchorId', 'validFromAnchor', 'validToAnchor'].some(key => (context[key] || '') !== (allowed[key] || ''))) return false;
+            if (context.windowId || context.contextWindowId) return false;
+            if (allowed.scope === 'global') {
+                const retrieval = repair.entry.retrieval || {};
+                return retrieval.activation === 'topic_or_entity' && retrieval.frequency === 'low' && retrieval.contextBoost === 'low';
+            }
+            return context.sortKeyFrom === allowed.sortKeyFrom && context.sortKeyTo === allowed.sortKeyTo;
+        });
+        if (!matchesMapping) errors.push(`Entry ${id} does not match its reviewed title context mapping. Review the title mapping before retrying.`);
         const safeOmittedTitleTags = getSafeOmittedTitleTagSet(options, id);
         const { unsafeErrors, droppedTags } = splitSafeOmittedTitleTagErrors(repair.errors, safeOmittedTitleTags);
         if (droppedTags.length) {

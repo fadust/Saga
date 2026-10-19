@@ -5551,6 +5551,16 @@ async function draftLoredeckCreatorEntryBatch(cached = {}, pack = {}, planning =
         pack,
     });
     const preflightCachePatch = buildLoredeckCreatorEntryPreflightCachePatch(entryTargetPreflight);
+    const unmappedTitles = entryTargetPreflight.targetTitleDrafts.filter(title => title.contextMappingError);
+    if (unmappedTitles.length) {
+        const questions = unmappedTitles.map(title => `${title.title}: ${title.contextMappingError}`);
+        setLoredeckCreatorBriefCache({
+            ...getLoredeckCreatorBriefCache(), ...preflightCachePatch,
+            entryDraftSummary: 'Context mapping review required before Lorecard generation.',
+            entryDraftQuestions: questions, status: 'needs_input',
+        });
+        return { status: 'questions', changeCount: 0, targetCount: targetTitles.length, parsed: { proposals: [], clarifyingQuestions: questions }, warnings: [] };
+    }
     const retryContextByTarget = options.retryContextByTarget instanceof Map ? options.retryContextByTarget : new Map();
     const retryContexts = [];
     const entryDraftTargetTitles = entryTargetPreflight.targetTitleDrafts.map(draft => {
