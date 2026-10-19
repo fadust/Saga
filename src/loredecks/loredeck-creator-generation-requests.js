@@ -2,6 +2,8 @@ import {
     sendLoreRequest,
 } from '../providers/lore-llm-client.js';
 import {
+    LOREDECK_CREATOR_ENTRY_CONTEXT_RULES,
+    LOREDECK_CREATOR_PLANNING_CONTEXT_RULES,
     buildLoredeckCreatorBriefSystemPrompt,
     buildLoredeckCreatorBriefUserPrompt,
     buildLoredeckCreatorEntrySystemPrompt,
@@ -330,7 +332,9 @@ RETRY MODE:
 
 Return JSON only. Do not include markdown.
 
-Convert the malformed, partial, overlong, or structurally wrong response into the compact proposal contract. Preserve usable planning proposals from the source. Return only upsert_timeline_anchor, upsert_timeline_window, and upsert_tag_definition proposals. Do not generate Lorecards, facts, injection text, or entry overrides. If there is not enough usable planning information, ask 1-3 clarifyingQuestions and return an empty proposals array.`;
+Convert the malformed, partial, overlong, or structurally wrong response into the compact proposal contract. Preserve usable planning proposals from the source. Return only upsert_timeline_anchor, upsert_timeline_window, and upsert_tag_definition proposals. Do not generate Lorecards, facts, injection text, or entry overrides. If there is not enough usable planning information, ask 1-3 clarifyingQuestions and return an empty proposals array.
+
+${LOREDECK_CREATOR_PLANNING_CONTEXT_RULES}`;
         const proposalLimit = clampInteger(context.proposalLimit, 1, 24, 16);
         const userPrompt = JSON.stringify({
             sourceInputs: {
@@ -405,7 +409,9 @@ RETRY MODE:
 
 Return JSON only. Do not include markdown.
 
-Convert the malformed, partial, overlong, or structurally wrong response into the compact proposal contract. Preserve usable upsert_entry proposals from the source. Return only upsert_entry proposals for the supplied targetTitleDrafts. Do not generate timeline, tag, disable, restore, manifest, or settings proposals. If there is not enough usable entry information, ask 1-3 clarifyingQuestions and return an empty proposals array.`;
+Convert the malformed, partial, overlong, or structurally wrong response into the compact proposal contract. Preserve usable upsert_entry proposals from the source. Return only upsert_entry proposals for the supplied targetTitleDrafts. Do not generate timeline, tag, disable, restore, manifest, or settings proposals. If there is not enough usable entry information, ask 1-3 clarifyingQuestions and return an empty proposals array.
+
+${LOREDECK_CREATOR_ENTRY_CONTEXT_RULES}`;
         const entryBatchLimit = clampInteger(context.entryBatchLimit, 1, 6, 3);
         const userPrompt = JSON.stringify({
             sourceInputs: {

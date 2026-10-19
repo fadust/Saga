@@ -1113,6 +1113,8 @@ export function buildLoredeckCreatorTitleUserPrompt(context = {}) {
     }, null, 2);
 }
 
+export const LOREDECK_CREATOR_PLANNING_CONTEXT_RULES = `For every time-dependent approved title, cover its contextHint with semantically matching anchors/windows; compactness must not remove required timing coverage. Stable, spoiler-safe facts may remain global and need no invented event anchor. If fitting planning cannot be supported within this response, ask 1-3 clarifyingQuestions naming the uncovered titles and missing timing, and return an empty proposals array. Never relocate a character or event to make an unrelated anchor fit.`;
+
 export function buildLoredeckCreatorPlanningSystemPrompt() {
     return `You are Saga's Deck Maker timeline and tag planning assistant.
 
@@ -1135,6 +1137,7 @@ Hard limits:
 - If the target batch shape is insufficient, ask 1-3 clarifying questions and return an empty proposals array.
 
 Planning guidance:
+${LOREDECK_CREATOR_PLANNING_CONTEXT_RULES}
 - Use anchors for meaningful story moments, reveals, arrivals, battles, state changes, relationship pivots, or date/arc boundaries.
 - Use windows for spans where entries should be eligible between two anchors.
 - Use tag definitions for characters, factions, locations, arcs, concepts, powers, secrets, and relationship/state clusters that the approved titles imply.
@@ -1214,6 +1217,12 @@ export function buildLoredeckCreatorPlanningUserPrompt(context = {}) {
     }, null, 2);
 }
 
+export const LOREDECK_CREATOR_ENTRY_CONTEXT_RULES = `Context fit takes precedence over producing one card per title:
+- Allowed anchor/window IDs are an existence allowlist, not evidence of relevance. Check the title, contextHint, and the anchor/window meaning before using one.
+- Preserve the title's temporal meaning. Never relocate characters/events, invent attendance, or rewrite facts/injection to fit an available anchor. Do not choose the nearest or only available anchor as a fallback.
+- Use global context only for genuinely stable, spoiler-safe facts, with retrieval activation topic_or_entity, frequency low, and contextBoost low. Never make a time-dependent fact or reveal global to bypass missing planning.
+- If any target needs timing that accepted planning does not support, ask 1-3 clarifyingQuestions naming the title and missing timing and return an empty proposals array. Do not substitute another event or invent new anchor IDs.`;
+
 export function buildLoredeckCreatorEntrySystemPrompt() {
     return `You are Saga's Deck Maker Lorecard drafting assistant.
 
@@ -1239,6 +1248,7 @@ Hard limits:
 - Keep the whole JSON compact. Do not use markdown, commentary, or verbose per-proposal rubrics.
 
 Schema v3 entry requirements:
+${LOREDECK_CREATOR_ENTRY_CONTEXT_RULES}
 - entry.context.scope must be "anchor", "window", or "global".
 - entry.context.sortKeyFrom and entry.context.sortKeyTo must be numeric.
 - entry.context.precision and entry.context.label must be non-empty.

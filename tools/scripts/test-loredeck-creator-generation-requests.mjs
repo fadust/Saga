@@ -135,4 +135,33 @@ assert.equal(isLoredeckCreatorBriefRetryableError(new Error('Provider configurat
   assert.equal(payload.limits.upsertEntriesOnly, true);
 }
 
+// Context-fit rules must survive both transport retries and JSON repair.
+for (const stage of ['Planning', 'Entry']) {
+  const { handlers, calls } = createMockHandlers([new Error('truncated response'), { text: '{}' }, { text: '{}' }]);
+  const context = {
+    approvedTitleDrafts: [{ titleId: 'early-gate', contextHint: 'Early gate' }],
+    targetTitleDrafts: [{ titleId: 'early-gate', contextHint: 'Early gate', allowedAnchorIds: ['late-reunion'] }],
+    timelineRegistry: { anchors: [{ id: 'late-reunion', label: 'Late reunion' }], windows: [] },
+  };
+  const before = structuredClone(context);
+  await handlers[`requestLoredeckCreator${stage}Response`](context);
+  await handlers[`repairLoredeckCreator${stage}Response`]('{"proposals":', context);
+  assert.equal(calls.length, 3);
+  for (const call of calls) {
+    assert.match(call.systemPrompt, /contextHint/);
+    assert.match(call.systemPrompt, /empty proposals array/);
+    if (stage === 'Entry') {
+      assert.match(call.systemPrompt, /existence allowlist, not evidence of relevance/);
+      assert.match(call.systemPrompt, /Never make a time-dependent fact or reveal global/);
+      assert.match(call.systemPrompt, /takes precedence over producing one card per title/);
+    } else {
+      assert.match(call.systemPrompt, /compactness must not remove required timing coverage/);
+    }
+    const payload = JSON.parse(call.userPrompt);
+    const inputs = payload.sourceInputs || payload;
+    assert.equal((inputs.targetTitleDrafts || inputs.approvedTitleDrafts)[0].contextHint, 'Early gate');
+  }
+  assert.deepEqual(context, before, 'Prompt construction must not change the saved authoring input.');
+}
+
 console.log('Deck Maker generation request tests passed.');
