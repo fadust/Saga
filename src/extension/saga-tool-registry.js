@@ -18,6 +18,7 @@ import { areChatOperationsEnabled } from '../state/chat-operation.js';
 
 const managerOwners = new WeakMap();
 let activeToolOwner = null;
+const canonOwnedByTunnelVision = () => globalThis.TunnelVision?.bridge?.canonStatus?.().enabled === true;
 
 export function disposeSagaToolManagerTools() {
     const owner = activeToolOwner;
@@ -69,7 +70,7 @@ function normalizeToolArgs(args = {}) {
 }
 
 function buildToolDefinition(name, description, parameters, handler) {
-    const run = async (args = {}) => safeJson(areChatOperationsEnabled()
+    const run = async (args = {}) => safeJson(areChatOperationsEnabled() && !canonOwnedByTunnelVision()
         ? await handler(normalizeToolArgs(args)) : { ok: false, error: 'Saga disabled.' });
     return {
         name,
@@ -176,6 +177,10 @@ async function handleProposeLorecard(args = {}) {
 }
 
 export function registerSagaToolManagerTools(ctx = null) {
+    if (canonOwnedByTunnelVision()) {
+        disposeSagaToolManagerTools();
+        return { ok: false, reason: 'TunnelVision owns validated canon retrieval.' };
+    }
     const settings = getSettings();
     if (settings.enabled === false) return { ok: false, reason: 'Saga disabled.' };
 

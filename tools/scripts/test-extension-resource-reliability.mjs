@@ -65,6 +65,19 @@ await test('mutation tool checks current enabled settings at invocation', async 
   ctx.extensionSettings[MODULE_KEY].enabled = true;
 });
 
+await test('TunnelVision ownership blocks retained raw tools and unregisters them', async () => {
+  const search = ctx.ToolManager.tools.get('Saga_SearchLorecards');
+  const propose = ctx.ToolManager.tools.get('Saga_ProposeLorecard');
+  globalThis.TunnelVision = { bridge: { canonStatus: () => ({ enabled: true }) } };
+  try {
+    assert.equal(JSON.parse(await search.execute({ query: 'anything', include_muted: true })).ok, false);
+    assert.equal(JSON.parse(await propose.execute({ title: 'bypass', content: 'cannot write' })).ok, false);
+    assert.equal(registerSagaToolManagerTools(ctx).ok, false);
+    assert.equal(ctx.ToolManager.tools.size, 0);
+    assert.equal(ctx.extensionSettings[MODULE_KEY].enabled, true);
+  } finally { delete globalThis.TunnelVision; registerSagaToolManagerTools(ctx); }
+});
+
 await test('chat change still synchronizes prompts after renderer failure', async () => {
   registerRuntimeAction('runtime.refresh', () => { throw new Error('render unavailable'); }, { replace: true });
   const before = syncs; const errors = []; const original = console.error; console.error = (...args) => errors.push(args);
