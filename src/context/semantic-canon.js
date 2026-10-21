@@ -1,4 +1,4 @@
-import { getSettings, getState, saveState } from '../state/state-manager.js';
+import { getSettings as sagaSettings, getState, saveState } from '../state/state-manager.js';
 import { sendLoreRequest } from '../providers/lore-llm-client.js';
 import { recordLoreTimelineEvent } from '../lorecards/lore-timeline.js';
 import { buildCanonQuery } from './semantic-canon-index.js';
@@ -7,6 +7,9 @@ import { createCanonStore } from './layer1-store.js';
 import { getInjectableLoreEntriesForInjection, getLoreEntryInjectionContextGate } from '../lorecards/lore-injection-filter.js';
 
 export const SEMANTIC_CANON_PROMPT_KEY = 'saga_semantic_canon';
+// Yield runtime ownership without rewriting the user's Saga settings or authoring state.
+const getSettings = () => globalThis.TunnelVision?.bridge?.canonStatus?.().enabled
+    ? { ...sagaSettings(), enabled: false } : sagaSettings();
 const host = () => globalThis.SillyTavern?.getContext?.();
 export const canonCardKey = () => host()?.characters?.[host()?.characterId]?.avatar || '';
 const chatKey = () => String(host()?.getCurrentChatId?.() || host()?.chatId || '');
@@ -41,7 +44,7 @@ function setEvidencePrompts(entries = []) {
     }
 }
 export function syncCanonPrompts() {
-    if (!current || !generation || generation.key !== current.key || current.context !== JSON.stringify(getState().loreContext || {}) || getSettings().injectLore === false) {
+    if (getSettings().enabled === false || !current || !generation || generation.key !== current.key || current.context !== JSON.stringify(getState().loreContext || {}) || getSettings().injectLore === false) {
         clearSemanticCanon(); return;
     }
     setEvidencePrompts(generation.entries.filter(e => e.basis.every(b => !b.source.startsWith('book:') || nativeApproved.has(b.source))));
@@ -286,7 +289,7 @@ async function partialEvidence(scene, purpose, signal, rows) {
 }
 
 export async function prepareSemanticCanon(chat, type) {
-    clearSemanticCanon(); nativeApproved.clear(); if (type === 'quiet' || !getSettings().semanticCanonEnabled || getSettings().injectLore === false) return;
+    clearSemanticCanon(); nativeApproved.clear(); if (type === 'quiet' || getSettings().enabled === false || !getSettings().semanticCanonEnabled || getSettings().injectLore === false) return;
     const own = revision, owner = chatKey();
     const result = await querySemanticCanon(buildCanonQuery(chat), { purpose: 'generation' });
     if (own !== revision || owner !== chatKey()) return;
@@ -304,6 +307,7 @@ export function semanticCanonStatus() {
 }
 export function installCanonEvents() {
     if (wired) return; wired = true;
+    document.addEventListener?.('tunnelvision:canon-owner', () => { invalidateCanon(); void analyzeCanonSources(); });
     const ctx = host(), events = ctx.eventTypes || ctx.event_types || {};
     for (const name of ['CHAT_CHANGED', 'CHARACTER_EDITED', 'WORLDINFO_UPDATED', 'WORLDINFO_SETTINGS_UPDATED']) {
         if (events[name]) ctx.eventSource.on(events[name], () => { invalidateCanon(); void analyzeCanonSources(); });
@@ -328,7 +332,7 @@ export function installCanonEvents() {
         }
     });
     if (events.WORLD_INFO_ACTIVATED) ctx.eventSource.on(events.WORLD_INFO_ACTIVATED, entries => {
-        if (!current || !generation || generation.revision !== revision || generation.key !== current.key) return;
+        if (getSettings().enabled === false || !current || !generation || generation.revision !== revision || generation.key !== current.key) return;
         nativeApproved = new Set(entries.filter(e => e.layer1Source).map(e => e.layer1Source));
         const approved = generation.entries.filter(e => e.basis.every(b => !b.source.startsWith('book:') || nativeApproved.has(b.source)));
         lastResult = { ...lastResult, entries: approved, text: approved.map(e => `[${e.kind}: ${e.title}]\n${e.text}`).join('\n\n') };

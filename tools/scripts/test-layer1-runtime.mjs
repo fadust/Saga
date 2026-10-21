@@ -144,3 +144,17 @@ const stale = runtime.analyzeCanonSources();
 await new Promise(resolve => setTimeout(resolve, 15)); runtime.invalidateCanon(); release(); await stale;
 assert.equal(runtime.semanticCanonStatus().evidence.length, 0, 'Superseded analysis cannot publish');
 console.log(`Layer 1 runtime passed: SQLite cache, ${providerCalls} synthetic provider calls, ${embeddingCalls} embedding batches, review deduplication, native injection boundary, source edits/deletions, duplicate UIDs, failure, deadline and stale cancellation.`);
+
+// Installing the replacement must not leave a second canon owner or reset Saga settings.
+sandbox.TunnelVision = { bridge: { canonStatus: () => ({ enabled: true }) } };
+assert.equal(runtime.semanticCanonStatus().enabled, false);
+const beforeHandoverCalls = providerCalls;
+await runtime.prepareSemanticCanon([{ mes: 'Ari Vale returns.' }], 'normal');
+assert.equal(providerCalls, beforeHandoverCalls);
+assert.equal(settings.semanticCanonEnabled, true);
+const unmanaged = { globalLore: [{ world: 'Original', uid: 1, content: 'unchanged' }] };
+events.get('WORLDINFO_ENTRIES_LOADED')(unmanaged);
+assert.equal(unmanaged.globalLore[0].content, 'unchanged');
+delete sandbox.TunnelVision;
+assert.equal(runtime.semanticCanonStatus().enabled, true);
+console.log('TunnelVision ownership handover preserves Saga settings and disables its runtime.');

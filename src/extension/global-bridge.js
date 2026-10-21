@@ -10,6 +10,7 @@ import { getLastLoreInjectionAudit, getLastLoredeckRetrievalAudit, searchAccepte
 import { registerSagaToolManagerTools } from './saga-tool-registry.js';
 import { getSagaNamespace, getSagaNamespaceSection } from '../saga-namespace.js';
 import { querySemanticCanon, semanticCanonStatus, semanticCanonRevision } from '../context/semantic-canon.js';
+import { loadContextIndex } from '../context/context-index.js';
 
 const LEGACY_GLOBAL_BRIDGE_KEYS = Object.freeze([
     '_sagaBuildMemo',
@@ -61,6 +62,7 @@ export function exposeGlobalBridge() {
         queryCanon: querySemanticCanon,
         canonStatus: semanticCanonStatus,
         canonRevision: semanticCanonRevision,
+        canonContextIndex: async () => structuredClone(await loadContextIndex()),
     });
     clearLegacyGlobalBridgeAliases();
     console.log(`${LOG_PREFIX} Global bridge exposed`);
